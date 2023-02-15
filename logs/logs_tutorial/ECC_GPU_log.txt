@@ -1,0 +1,3 @@
+[STEP 1] : input path : D:/UAV_traffic_conflict_analysis_300/TrafficTrackerGUI-MOTC/demo/6K
+[STEP 1] : output video : ./result/6K_stab.avi
+[STEP 1] : cost time : 22.856
