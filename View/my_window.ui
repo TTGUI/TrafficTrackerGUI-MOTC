@@ -9,32 +9,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1434</width>
-    <height>930</height>
+    <width>1450</width>
+    <height>908</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>TrafficTrackerGUI - 1.2.0</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="title">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>-10</y>
-      <width>491</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
    <widget class="QFrame" name="frame">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>10</y>
+      <y>40</y>
       <width>1381</width>
       <height>831</height>
      </rect>
@@ -526,13 +513,26 @@
      </layout>
     </widget>
    </widget>
+   <widget class="QLabel" name="title">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>10</y>
+      <width>1361</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1434</width>
+     <width>1450</width>
      <height>21</height>
     </rect>
    </property>
@@ -542,6 +542,7 @@
     </property>
     <addaction name="bar_1"/>
     <addaction name="bar_2"/>
+    <addaction name="bar_3"/>
    </widget>
    <addaction name="menudebugMode"/>
   </widget>
@@ -554,6 +555,11 @@
   <action name="bar_2">
    <property name="text">
     <string>Change Stabilzation Mode</string>
+   </property>
+  </action>
+  <action name="bar_3">
+   <property name="text">
+    <string>Change Yolo Model</string>
    </property>
   </action>
  </widget>

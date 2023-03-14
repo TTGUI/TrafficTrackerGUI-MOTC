@@ -31,11 +31,11 @@ def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
 
 
         
-def con_step2(stab_video,yolo_txt) :
+def con_step2(stab_video, yolo_txt, yolo_model) :
     from Model.YOLOv4 import detect
     start = time.time()
 
-    detect.obb_object_detect(stab_video,yolo_txt)
+    detect.obb_object_detect(stab_video,yolo_txt, yolo_model)
 
     end = time.time()
     logger.info( "[Step 2] ->> Cost time : " + str(end-start)  )

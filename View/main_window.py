@@ -42,6 +42,7 @@ class MainWindow(object):
         """
         self.actionName = "inital_action_name"
         self.resultPath = "./result/"
+        
         self.scheduleType = False
         self.currentScheduleStep = -1
         self.currentScheduleIndex = 0
@@ -52,7 +53,7 @@ class MainWindow(object):
         self.pageLen = 10
 
         self.stabMode = conf.getStabMode() # 'CPU' 'GPU'
-
+        self.yoloModel = conf.getYoloModel() #  20211109172733_last_200_1920.pt / ect.
 
         self._window = None
         self.setup_ui()
@@ -106,7 +107,7 @@ class MainWindow(object):
         
     def set_title(self):
         """Setup label"""
-        self._window.title.setText(conf.version)
+        self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
         self._window.setWindowTitle(conf.version)
         self._window.cutinfo.setText('')
         self._window.display.setText('')
@@ -117,9 +118,9 @@ class MainWindow(object):
         font = QFont("Arial", 15, QFont.Bold)
         self._window.title.setFont(font)
         # set widget size (x, y, width, height)
-        self._window.title.setGeometry(0, 0, 300, 30)
+        # self._window.title.setGeometry(0, 0, 300, 30)
         # set alignment
-        self._window.title.setAlignment(Qt.AlignBottom | Qt.AlignCenter)
+        # self._window.title.setAlignment(Qt.AlignBottom | Qt.AlignCenter)
 
     def set_buttons(self):
         """Setup buttons"""
@@ -130,6 +131,8 @@ class MainWindow(object):
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
         elif self.stabMode == 'GPU':
             self._window.bar_2.setText("Change Stabilazation Mode | [ GPU ]")
+
+        self._window.bar_3.triggered.connect(self.changeYoloModel)
 
         self._window.DroneFolder_btn.setText('Set Drone Folder')
         self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
@@ -284,7 +287,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def selectName(self):
-        actName = QFileDialog.getOpenFileName(self._window, 'Select file to set Action Name')
+        actName = QFileDialog.getOpenFileName(self._window, 'Select file to set Action Name', self.resultPath)
 
         tempName = actName[0]
 
@@ -727,14 +730,17 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def loadSchedule(self):
-        self.scheduleLoadPath, filetype = QFileDialog.getOpenFileName(self._window,"Select Schedule File.", options=QFileDialog.DontUseNativeDialog)
-        print ("Load Schedule File : " + self.scheduleLoadPath)
+        self.scheduleLoadPath, filetype = QFileDialog.getOpenFileName(self._window,"Select Schedule File.", self.resultPath ,options=QFileDialog.DontUseNativeDialog)
+        if not self.scheduleLoadPath :
+            print ("[Cancel] schedule Load.")
+        else:
+            print ("Load Schedule File : " + self.scheduleLoadPath)
 
-        self.readScheduleFile()
-        self.scheduleType = True
-        self._window.ScheduleMode_btn.setText('Schedule Mode <ON>')
-        self.loadCurrentScheduleItem()
-        self.displayInfo(4)
+            self.readScheduleFile()
+            self.scheduleType = True
+            self._window.ScheduleMode_btn.setText('Schedule Mode <ON>')
+            self.loadCurrentScheduleItem()
+            self.displayInfo(4)
 
     def loadCurrentScheduleItem(self):
         self.actionName = self.ScheduleList[self.currentScheduleIndex].actionName
@@ -910,7 +916,7 @@ class MainWindow(object):
             self.AddScheudle()
         else :
             print("[STEP 2]")
-            controller.con_step2(self.stab_video,self.yolo_txt)
+            controller.con_step2(self.stab_video, self.yolo_txt, self.yoloModel )
 
     @QtCore.Slot()
     def step3(self): # Tracking
@@ -985,6 +991,19 @@ class MainWindow(object):
             conf.setStabMode('CPU')
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
             self._window.step1_btn.setText('[STEP 1] (C)\nStable')
+        self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
+    
+    @QtCore.Slot()
+    def changeYoloModel(self):
+        actName = QFileDialog.getOpenFileName(self._window, 'Select file to set Yolo Model.', "./Model/YOLOv4/weights")
+
+        tempName = actName[0].split('/')
+        print(tempName[-1])
+        self.yoloModel = tempName[-1]
+        self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
+        conf.setYoloModel(self.yoloModel)
+
+
 
     def setActionNameBtnText(self):
         out = ""

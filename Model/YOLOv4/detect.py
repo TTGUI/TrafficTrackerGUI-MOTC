@@ -286,12 +286,13 @@ def load_classes(path):
 #     print('Done. (%.3fs)' % (time.time() - t0))
 
 
-def obb_object_detect(source_path='', output_detect_result_path=''):
+def obb_object_detect(source_path='', output_detect_result_path='', yolo_model=''):
     yolo_root = Path(__file__).parent
     cfg_file_path = yolo_root / 'cfg' / 'yolov4-pacsp-mish-9anchor-headcxy-vehicle8cls-1920_w_layerID_wo_whrepair.cfg'
-    weight_file_path = yolo_root / 'weights' / '20211109172733_last_200_1920.pt'
+    weight_file_path = yolo_root / 'weights' / yolo_model
     cls_file_path = yolo_root / 'data' / 'classes_vehicle8cls.txt'
-
+    
+    print ( "Yolo Model : " + str(yolo_model))
     with torch.no_grad():
         out, source, weights, view_img, save_txt, imgsz, cfg, names, theta_format, \
         save_img_before_nms, which_dataset, save_label_car_tool_format_txt, \
