@@ -6,6 +6,8 @@ result/
 logs/logs_tutirial
 Model/YOLOv4/weights
 traffictrackergui-env/
+.vs/
+.vscode/
 
 ### CUDA ###
 *.i
