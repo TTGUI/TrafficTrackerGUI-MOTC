@@ -1,5 +1,12 @@
 ## Changelog
 
+### v3.0.2 (2023/3/14)
+#### Improvements
+
+- improved main_window.py : Support to select yolo model, and remeber the select next time.
+- improved mainwindows.py : information display.
+- improved conf.py : IO logic.
+
 ### v3.0.1 (2022/9/21)
 #### Improvements
 
