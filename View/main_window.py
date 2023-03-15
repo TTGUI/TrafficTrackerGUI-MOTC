@@ -998,10 +998,15 @@ class MainWindow(object):
         actName = QFileDialog.getOpenFileName(self._window, 'Select file to set Yolo Model.', "./Model/YOLOv4/weights")
 
         tempName = actName[0].split('/')
-        print(tempName[-1])
-        self.yoloModel = tempName[-1]
-        self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
-        conf.setYoloModel(self.yoloModel)
+
+        if tempName[-1] != '':
+        
+            print(tempName[-1])
+            self.yoloModel = tempName[-1]
+            self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
+            conf.setYoloModel(self.yoloModel)
+        else :
+            print("YoloModel change cancel.")
 
 
 
