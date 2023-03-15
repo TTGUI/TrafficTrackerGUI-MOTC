@@ -1,4 +1,8 @@
 ## Changelog
+### v3.0.3 (2023/3/15)
+#### Bug Fixes
+
+- Fixed Replay2.py : Fixed a old Bug about result video IDinfo display.
 
 ### v3.0.2 (2023/3/14)
 #### Improvements

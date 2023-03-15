@@ -88,8 +88,7 @@ def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, dis
                 if pos[0] > 0:    
                     
                     if displayType :
-                        cv2.putText(frame, str(V[j][0]), (int((pos[0]+pos[4])/2)-30, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,0), 6)
-                        cv2.putText(frame, str(V[j][0]), (int((pos[0]+pos[4])/2)-30, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
+
                         cv2.putText(frame, str(V[j][0])+V[j][3]+">"+V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,0), 6)
                         cv2.putText(frame, str(V[j][0])+V[j][3]+">"+V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
 

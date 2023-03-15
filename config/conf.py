@@ -1,7 +1,7 @@
 # logger setting
 # loggerLevel : degug, info, warning, error, critical 
 loggerLevel = 'debug'
-version = 'TrafficTrackerGUI - 3.0.2'
+version = 'TrafficTrackerGUI - 3.0.3'
 
 ###### Config format #####
 # [ 0 ] - Stable Mode <CPU/GPU>
