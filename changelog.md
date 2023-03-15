@@ -3,6 +3,7 @@
 #### Bug Fixes
 
 - Fixed Replay2.py : Fixed a old Bug about result video IDinfo display.
+- Fixed main_windows.py : Fixed a bug about yolomodelName.
 
 ### v3.0.2 (2023/3/14)
 #### Improvements

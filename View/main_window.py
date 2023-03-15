@@ -657,7 +657,7 @@ class MainWindow(object):
                 controller.con_step1(self.stab_input, self.stab_output, self.show, self.cutinfo_txt, self.stabMode)
             elif self.ScheduleList[i].step == 2:
                 print(sch + " - [STEP 2]")
-                controller.con_step2(self.stab_video,self.yolo_txt)
+                controller.con_step2(self.stab_video, self.yolo_txt, self.yoloModel)
             elif self.ScheduleList[i].step == 3:
                 print(sch + " - [STEP 3]")
                 controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv)                

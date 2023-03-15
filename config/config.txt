@@ -1,2 +1,2 @@
 GPU
-best.pt
+best_1920_hcioudhxdhy_image_weights.pt
