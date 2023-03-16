@@ -177,7 +177,7 @@ def Tracking_main(stab_video,yolo_txt,tracking_csv) :
 
             cv2.waitKey(10)
     ###############################################################################
-    i = 0
+    # i = 0
     for i in range(0, trackNumber) :
         print(i , end='\r')
         if ~enableID[i]:

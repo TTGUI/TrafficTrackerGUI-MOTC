@@ -28,9 +28,7 @@ def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
     elif StabMode == 'CPU':
         logger.info( "[Step 1] (C) ->> ALL step1 Cost time : " + str(end-start)  )
         print("[SEPT1 (C) Done.]")
-
-
-        
+  
 def con_step2(stab_video, yolo_txt, yolo_model) :
     from Model.YOLOv4 import detect
     start = time.time()
