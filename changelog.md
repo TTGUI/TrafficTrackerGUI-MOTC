@@ -1,5 +1,10 @@
 ## Changelog
 
+### v3.0.4 (2023/3/20)
+#### Bug Fixes
+
+- Fixed sort.py : Fixed tracking id doesn't initialized when running continuously.
+
 ### v3.0.3a (2023/3/16)
 
 #### organize 

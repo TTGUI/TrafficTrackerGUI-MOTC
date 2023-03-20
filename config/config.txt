@@ -1,2 +1,2 @@
-CPU
+GPU
 best_1920_hcioudhxdhy_image_weights.pt
