@@ -1,5 +1,11 @@
 ## Changelog
 
+### v3.0.5 
+
+#### Warning ignore
+
+- Add DeprecationWarning ignore in traffictrackergui-env\Lib\site-packages\sklearn\utils\linear_assignment_.py 
+
 ### v3.0.4 (2023/3/20)
 #### Bug Fixes
 

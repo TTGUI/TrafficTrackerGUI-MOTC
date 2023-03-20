@@ -35,7 +35,7 @@ else:
 #filehandler=logging.FileHandler(logfile)
 filehandler.setFormatter(formatter)
 logger.addHandler(filehandler)
-logger.info("[LOGGER START RECORD.][PID : "+ str(os.getpid())+ "\t[LOGGIN LEVEL : " + str(logger.level) + "]")
+logger.info("[LOGGER START RECORD.][PID : "+ str(os.getpid())+ "][LOGGIN LEVEL : " + str(logger.level) + "]")
 
 def debug(msg):
     logger.debug(msg)
