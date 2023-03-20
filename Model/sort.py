@@ -185,6 +185,7 @@ class Sort(object):
     self.min_hits = min_hits
     self.trackers = []
     self.frame_count = 0
+    KalmanBoxTracker.count = 0
 
   def update(self,dets):
     """
