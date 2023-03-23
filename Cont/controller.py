@@ -98,7 +98,19 @@ def con_DO1(originDataList, resultPath, cutinfo_txt, actionName) :
     PedestrianDataMaker.pedestrian_main(originDataList, resultPath, cutinfo_txt, actionName)
     print("[PedestrianDataMaker Done.]")
 
-   
+def con_TIVT(gateCsvPath, actionName, resutltPath):
+    from Model.tool import TrackIntegrityVerificationTool
+    
+    cuurentTIVT = TrackIntegrityVerificationTool.TIVT()
+    ans =  cuurentTIVT.trackIntegrity(gateCsvPath, actionName, resutltPath)
+    print("[TIVT Done.]")
+    return ans
+
+def con_singleTIVT():
+    pass
+
+def conFolderTIVT():
+    pass
 
 
 

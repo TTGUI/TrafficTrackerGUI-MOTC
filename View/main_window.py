@@ -5,6 +5,7 @@ from PySide2.QtCore import QFile
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtGui import QFont, QImage, QPixmap
 from PySide2.QtWidgets import QFileDialog, QInputDialog, QLineEdit, QWidget, QMessageBox
+from Model.tool import TrackIntegrityVerificationTool
 
 # https://github.com/vispy/vispy/blob/main/vispy/app/backends/_pyside2.py
 from PySide2 import QtTest
@@ -49,6 +50,8 @@ class MainWindow(object):
         self.ScheduleList = []
         self.scheduleLoadPath = ""
         self.scheduleSavePath = ""
+        self.scheduleName = "Default"
+        self.scheduleTIVpath = ""
         self.page = 0
         self.pageLen = 10
 
@@ -167,6 +170,9 @@ class MainWindow(object):
         self._window.step7_btn.setText('[STEP 7]\nReplay')
         self._window.step7_btn.clicked.connect(self.step7)
 
+        self._window.TVI_btn.setText("<TrackIntegrityVerification>")
+        self._window.TVI_btn.clicked.connect(self.singleTIV)
+
         #########################################################
         self._window.show_btn.setText('Show')
         self._window.show_btn.clicked.connect(self.show)
@@ -243,7 +249,6 @@ class MainWindow(object):
         self._window.SetEndFrame_btn.setText('SetEndFrame')
         self._window.SetEndFrame_btn.clicked.connect(self.setEndFrame)
 
-
     def set_video(self):
         self.video_init = True
         self.play_bool = False
@@ -283,8 +288,6 @@ class MainWindow(object):
         self._window.display.setScaledContents(True) # 自適應邊框  
         self._window.display.setPixmap(QPixmap.fromImage(showImage))
         
-         
-
     @QtCore.Slot()
     def selectName(self):
         actName = QFileDialog.getOpenFileName(self._window, 'Select file to set Action Name', self.resultPath)
@@ -299,7 +302,6 @@ class MainWindow(object):
 
         self._window.ActionName_edit.setText(os.path.basename(tempName))
         self.changeActionName()
-
 
     @QtCore.Slot()
     def load(self):
@@ -422,7 +424,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def displayInfo(self,type):
 
-        if type == 1 :
+        if type == 1 : # display Step 0 CutInfo
             out = '\tCutInfo  ( ' + str(self.currentVideoIndex + 1) + ' / ' + str(self.videoNumber) + ' )\n'
             for i in range(0,self.videoNumber) :
                 if i == self.currentVideoIndex :
@@ -436,7 +438,7 @@ class MainWindow(object):
                 out = out + '\n'
             
             self._window.cutinfo.setText(out)
-        elif type == 2 :
+        elif type == 2 : # display Step 0 Video List
             out = 'Video List :\n'
             for i in range(0,self.videoNumber) :
                 out = out + '[' + str(i+1) +'] '+ self.videolist[i] + '\n'            
@@ -460,7 +462,7 @@ class MainWindow(object):
             else:
                 pageEnd = (self.page+1)*self.pageLen
 
-            out = '\tSchedule  (' + str(self.page+1) + '/' +  str(int((len(self.ScheduleList)-1) / self.pageLen ) +1 ) + ')\n'
+            out = '\t'+ self.scheduleName +' Schedule  (' + str(self.page+1) + '/' +  str(int((len(self.ScheduleList)-1) / self.pageLen ) +1 ) + ')\n'
 
             for i in range(pageStart, pageEnd) :
                 if i == self.currentScheduleIndex :
@@ -507,7 +509,6 @@ class MainWindow(object):
         elif self.page == 0 :
             self.currentScheduleIndex = 0
         self.displayInfo(4)
-
 
     @QtCore.Slot()
     def nextPage(self):
@@ -631,6 +632,10 @@ class MainWindow(object):
     @QtCore.Slot()
     def StartSchedule(self):
 
+        cuurentTIVT = TrackIntegrityVerificationTool.TIVT()
+        ScheduTIVList = []
+        ScheduTIVList.append(cuurentTIVT.retTitle())
+
         if self.scheduleType == True:
             self.scheduleType = False
             self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
@@ -644,8 +649,7 @@ class MainWindow(object):
             
             self.actionName = self.ScheduleList[i].actionName
             self.resultPath = self.ScheduleList[i].resultPath
-            self.originDataList = self.ScheduleList[i].originDataList 
-
+            self.originDataList = self.ScheduleList[i].originDataList
             self.flashActionName()
 
             if self.ScheduleList[i].step == 0:
@@ -674,10 +678,34 @@ class MainWindow(object):
                 os.rename(tempName, self.background_img)
             elif self.ScheduleList[i].step == 6:
                 print(sch + " - [STEP 6]")
-                controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv)
+                controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv) 
+                ScheduTIVList.append(self.singleTIV())
+
             elif self.ScheduleList[i].step == 7:
                 print(sch + " - [STEP 7]")
                 controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
+            
+            elif self.ScheduleList[i].step == 8:
+                ScheduTIVList.append(self.singleTIV())
+
+        
+        if self.scheduleTIVpath == "" :
+            scheduleTIVFile = "./result/" + "/" + self.scheduleName + "_TIV.csv"
+        else :
+            scheduleTIVFile = self.scheduleTIVpath + "/" + self.scheduleName + "_TIV.csv"
+
+        base, extension = os.path.splitext(scheduleTIVFile)
+        k = 0
+        while os.path.exists(scheduleTIVFile):
+            k += 1
+            scheduleTIVFile = f"{base}_{k}{extension}"
+
+        fp = open( scheduleTIVFile, "w")
+
+        for i in range (0,len(ScheduTIVList)):
+            fp.write(ScheduTIVList[i])
+            fp.write("\n")
+        fp.close()
 
         print ("ALL Schedule Done.")
 
@@ -718,7 +746,6 @@ class MainWindow(object):
         self.ScheduleList[self.currentScheduleIndex] = tempItem
         self.displayInfo(4)
         
-
     @QtCore.Slot()
     def DeleteSchedule(self):
         if len(self.ScheduleList) > 0 :
@@ -735,6 +762,8 @@ class MainWindow(object):
             print ("[Cancel] schedule Load.")
         else:
             print ("Load Schedule File : " + self.scheduleLoadPath)
+            self.scheduleName = self.scheduleLoadPath.split("/")[-1][:-13]
+            self.scheduleTIVpath = os.path.dirname(self.scheduleLoadPath)
 
             self.readScheduleFile()
             self.scheduleType = True
@@ -765,8 +794,11 @@ class MainWindow(object):
         filetype = ("_Schedule.txt")
         temp = QFileDialog.getSaveFileName(self._window,"Save Schedule File.", "", filetype, options=QFileDialog.DontUseNativeDialog,)
         self.scheduleSavePath = temp[0] + temp[1]
+        self.scheduleName = temp[0].split("/")[-1]
         self.writeScheduleFile()
         print ("Save Schedule File : " + self.scheduleSavePath)
+        self.scheduleTIVpath = os.path.dirname(self.scheduleSavePath)
+        self.displayInfo(4)
 
     def readScheduleFile(self):
         f = open(self.scheduleLoadPath, 'r')
@@ -866,10 +898,16 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def setResultFolder(self):
-        self.resultPath = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', options=QFileDialog.DontUseNativeDialog) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
+        temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath,options=QFileDialog.DontUseNativeDialog) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
+        
+        if temp == "/" :
+            print("[setResultFolder Cancel.]")
+            
+        else :
+            self.resultPath = temp
+            self.setResultFolderBtnText()
+            self.changeActionName()
 
-        self.setResultFolderBtnText()
-        self.changeActionName()
 
     def setResultFolderBtnText(self):
         out = ""
@@ -962,6 +1000,7 @@ class MainWindow(object):
         else :
             print("[STEP 6]")
             controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv)
+            self.singleTIV()
 
     @QtCore.Slot()
     def step7(self): # Replay
@@ -973,6 +1012,18 @@ class MainWindow(object):
             print("[STEP 7]")
             controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
 
+    @QtCore.Slot()
+    def singleTIV(self):
+        if self.scheduleType :
+            print("Current Schedule Item Step >> TIV ")
+            self.currentScheduleStep = 8
+            self.AddScheudle()
+        else :
+            print("[STEP TIV]")
+            return controller.con_TIVT(self.gate_tracking_csv, self.actionName, self.resultPath)
+
+        
+        
     @QtCore.Slot()
     def runPedestrian(self):
 

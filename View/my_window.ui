@@ -291,6 +291,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="TVI_btn">
+            <property name="text">
+             <string>TVI</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -322,6 +329,22 @@
              <string>7</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Maximum</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>25</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>

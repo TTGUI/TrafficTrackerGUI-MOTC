@@ -1,5 +1,15 @@
 ## Changelog
 
+### v3.1.0
+
+#### Improvements
+
+- Add TrackIntegrityVerificationTool
+
+#### Bug Fixes
+
+- Fix main_windows.py : setResultFolder cancel inital bug.
+
 ### v3.0.5 
 
 #### Warning ignore
