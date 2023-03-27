@@ -67,11 +67,13 @@ class TIVT:
         goodcar = 0
         badcar = 0
         sameIOcar = 0
+        sameIOcarList = []
         allCar = 0
         
         goodmotor = 0
         badmotor = 0
         sameIOmotor = 0
+        sameIOmotorList = []
         allmotor = 0
 
         for i in range ( 0 , len(lines)):
@@ -83,6 +85,7 @@ class TIVT:
                     badcar += 1
                 if self.sameIO(eachLineSplit):
                     sameIOcar += 1
+                    sameIOcarList.append(lines[i])
                 if not self.failData(eachLineSplit):
                     allCar += 1
 
@@ -93,6 +96,7 @@ class TIVT:
                     badmotor += 1
                 if self.sameIO(eachLineSplit):
                     sameIOmotor += 1
+                    sameIOmotorList.append(lines[i])
                 if not self.failData(eachLineSplit):
                     allmotor += 1
              
@@ -108,17 +112,13 @@ class TIVT:
         fp.write(self.lineTitle)
         fp.write("\n")
         fp.write(ans)
+        fp.write("\nSameIOCar\n")
+        for i in range(0,len(sameIOcarList)):
+            fp.write(sameIOcarList[i])
+        fp.write("SameIOMotor\n")
+        for i in range(0,len(sameIOmotorList)):
+            fp.write(sameIOmotorList[i])
         fp.close()
-
-        # print("good car : " + str(goodcar))
-        # print("bad car : " + str(badcar) )
-        # print("same IO : " + str(sameIOcar))
-        # print("all car : " + str(allCar))
-
-        # print("good motor : " + str(goodmotor))
-        # print("bad motor : " + str(badmotor) )
-        # print("same IO : " + str(sameIOmotor))
-        # print("all motor : " + str(allmotor))
 
         lineOneSp = self.lineTitle.split(',')
         lineTwoSp = ans.split(',')
