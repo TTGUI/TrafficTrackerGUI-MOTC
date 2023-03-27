@@ -58,8 +58,8 @@ class TIVT:
     def retTitle(self):
         return self.lineTitle
 
-    def trackIntegrity(self, gateCsvPath, actionName, resultPath) :
-        resultPath = resultPath + actionName + "_TIV.csv"
+    def trackIntegrity(self, gateCsvPath, singelTIVpath) :
+        resultPath = singelTIVpath
         f = open(gateCsvPath, 'r')
         lines = f.readlines()
         f.close()
@@ -132,8 +132,9 @@ class TIVT:
 if __name__ == '__main__':
     # Code file direct opreation
     curPath = str(pathlib.Path(__file__).parent.resolve())
-    csvName = input("Enter GATE_CSV name, folder paht default codefile current folder : ")
+    print("[Folder paht default codefile current folder.]")
+    csvName = input("[Enter GATE_CSV] >> ")
     inName = curPath + '\\' + csvName
-    curPath = curPath + '\\'
+    TIVpath = curPath + '\\' + csvName[:-9]
     currentTIVT = TIVT()
-    currentTIVT.trackIntegrity(inName, csvName[:-9], curPath)
+    currentTIVT.trackIntegrity(inName, TIVpath)

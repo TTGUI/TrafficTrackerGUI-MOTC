@@ -52,6 +52,8 @@ class MainWindow(object):
         self.scheduleSavePath = ""
         self.scheduleName = "Default"
         self.scheduleTIVpath = ""
+        self.scheduleTIVFile = ""
+        self.singelTIVpath = self.resultPath + self.actionName + "_TIV.csv"
         self.page = 0
         self.pageLen = 10
 
@@ -171,7 +173,10 @@ class MainWindow(object):
         self._window.step7_btn.clicked.connect(self.step7)
 
         self._window.TVI_btn.setText("<TrackIntegrityVerification>")
-        self._window.TVI_btn.clicked.connect(self.singleTIV)
+        self._window.TVI_btn.clicked.connect(self.step8_singleTIV)
+
+        self._window.TVIPrinter_btn.setText("<TVI Printer>")
+        self._window.TVIPrinter_btn.clicked.connect(self.step9_TVIPrinter)
 
         #########################################################
         self._window.show_btn.setText('Show')
@@ -294,7 +299,7 @@ class MainWindow(object):
 
         tempName = actName[0]
 
-        backword = ["_gate.csv", ".csv", "_background.jpg", "_cutInfo.txt", "_IO.txt", "_result.avi", "_result.mp4", "_stab.avi", "_stab.mp4", "_stab_8cls.txt" ]
+        backword = ["_gate.csv", "_TIV.csv", ".csv", "_background.jpg", "_cutInfo.txt", "_IO.txt", "_result.avi", "_result.mp4", "_stab.avi", "_stab.mp4", "_stab_8cls.txt" ]
         for i in range(0,len(backword)):
             backLen = -len(backword[i])
             if tempName[backLen:] == backword[i] :
@@ -679,28 +684,32 @@ class MainWindow(object):
             elif self.ScheduleList[i].step == 6:
                 print(sch + " - [STEP 6]")
                 controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv) 
-                ScheduTIVList.append(self.singleTIV())
+                ScheduTIVList.append(self.step8_singleTIV())
 
             elif self.ScheduleList[i].step == 7:
                 print(sch + " - [STEP 7]")
                 controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
             
             elif self.ScheduleList[i].step == 8:
-                ScheduTIVList.append(self.singleTIV())
+                print(sch + " - [STEP 8 - TIV]")
+                ScheduTIVList.append(controller.con_TIVT(self.gate_tracking_csv, self.singelTIVpath))
 
+            elif self.ScheduleList[i].step == 9:
+                print(sch + " - [STEP 9 - TIVP]")
+                controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.background_img, self.resultPath)    
         
         if self.scheduleTIVpath == "" :
-            scheduleTIVFile = "./result/" + "/" + self.scheduleName + "_TIV.csv"
+            self.scheduleTIVFile = "./result/" + "/" + self.scheduleName + "_TIV.csv"
         else :
-            scheduleTIVFile = self.scheduleTIVpath + "/" + self.scheduleName + "_TIV.csv"
+            self.scheduleTIVFile = self.scheduleTIVpath + "/" + self.scheduleName + "_TIV.csv"
 
-        base, extension = os.path.splitext(scheduleTIVFile)
+        base, extension = os.path.splitext(self.scheduleTIVFile)
         k = 0
-        while os.path.exists(scheduleTIVFile):
+        while os.path.exists(self.scheduleTIVFile):
             k += 1
-            scheduleTIVFile = f"{base}_{k}{extension}"
+            self.scheduleTIVFile = f"{base}_{k}{extension}"
 
-        fp = open( scheduleTIVFile, "w")
+        fp = open( self.scheduleTIVFile, "w")
 
         for i in range (0,len(ScheduTIVList)):
             fp.write(ScheduTIVList[i])
@@ -986,10 +995,9 @@ class MainWindow(object):
             self.AddScheudle()
         else :  
             print("[STEP 5]")
-            tempName = self.resultPath + str(random.random()) +'.jpg'
-            os.rename(self.background_img, tempName)
-            controller.con_step5(self.gateLineIO_txt,tempName)
-            os.rename(tempName, self.background_img)
+
+            controller.con_step5(self.gateLineIO_txt,self.background_img)
+
 
     @QtCore.Slot()
     def step6(self): # IO added
@@ -1000,7 +1008,7 @@ class MainWindow(object):
         else :
             print("[STEP 6]")
             controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv)
-            self.singleTIV()
+            self.step8_singleTIV()
 
     @QtCore.Slot()
     def step7(self): # Replay
@@ -1013,14 +1021,24 @@ class MainWindow(object):
             controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
 
     @QtCore.Slot()
-    def singleTIV(self):
+    def step8_singleTIV(self):
         if self.scheduleType :
             print("Current Schedule Item Step >> TIV ")
             self.currentScheduleStep = 8
             self.AddScheudle()
         else :
             print("[STEP TIV]")
-            return controller.con_TIVT(self.gate_tracking_csv, self.actionName, self.resultPath)
+            return controller.con_TIVT(self.gate_tracking_csv, self.singelTIVpath)
+
+    @QtCore.Slot()  
+    def step9_TVIPrinter(self):
+        if self.scheduleType :
+            print("Current Schedule Item Step >> TIVPrinter ")
+            self.currentScheduleStep = 9
+            self.AddScheudle()
+        else :
+            print("[STEP TIV Printer]")
+            controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.background_img, self.resultPath)     
 
         
         
@@ -1088,6 +1106,7 @@ class MainWindow(object):
         self.gate_tracking_csv = self.resultPath + self.actionName + "_gate.csv"
         self.result_video = self.resultPath + self.actionName + "_result.avi"
         self.background_img = self.resultPath+ self.actionName +"_background.jpg"
+        self.singelTIVpath = self.resultPath + self.actionName + "_TIV.csv"
 
         self.setActionNameBtnText()
 
@@ -1104,7 +1123,7 @@ class MainWindow(object):
         self.gate_tracking_csv = self.resultPath + self.actionName + "_gate.csv"
         self.result_video = self.resultPath + self.actionName + "_result.avi"
         self.background_img = self.resultPath+ self.actionName +"_background.jpg"
-
+        self.singelTIVpath = self.resultPath + self.actionName + "_TIV.csv"
         
         self.setActionNameBtnText()
         self.setDroneFolderBtnText()

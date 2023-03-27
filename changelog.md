@@ -1,16 +1,28 @@
 ## Changelog
 
-### v3.1.0
+### v3.2.0 - TIV2
 
 #### Improvements
 
-- Add TrackIntegrityVerificationTool
+- Add TIVPrinter.py
 
-#### Bug Fixes
+### TIV1.1 (2023/3/27)
+
+#### Improvements
+
+- TrackIntegrityVerificationTool.py : Add add same IO car and motor data in each TIV.csv
+
+### v3.1.0 (2023/3/23)
+
+#### Improvements
+
+- Add TrackIntegrityVerificationTool.py
+
+#### Bug Fixes (2023/3/20)
 
 - Fix main_windows.py : setResultFolder cancel inital bug.
 
-### v3.0.5 
+### v3.0.5 (2023/3/20)
 
 #### Warning ignore
 

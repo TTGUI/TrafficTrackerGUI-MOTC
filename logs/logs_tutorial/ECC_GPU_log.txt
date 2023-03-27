@@ -1,3 +1,2 @@
-[STEP 1] : input path : D:/UAV_traffic_conflict_analysis_300/TrafficTrackerGUI-MOTC/demo/4K
-[STEP 1] : output video : ./result/4k_stab.avi
-[STEP 1] : cost time : 13.474
+[STEP 1] : input path : E:/Traffic/Block4_高雄/高雄市前鎮區瑞隆路_瑞福路/11009020802_60m_A架次/空拍影片/4K
+[STEP 1] : output video : E:/Traffic/Block4_高雄/高雄市前鎮區瑞隆路_瑞福路/11009020802_60m_A架次/高雄瑞隆路_瑞福路_60米_A_stab.avi

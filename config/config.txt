@@ -1,2 +1,2 @@
 GPU
-20211109172733_last_200_1920.pt
+best_1920_hcioudhxdhy_image_weights.pt
