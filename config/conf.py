@@ -1,7 +1,7 @@
 # logger setting
 # loggerLevel : degug, info, warning, error, critical 
 loggerLevel = 'debug'
-version = 'TrafficTrackerGUI - 3.2.0'
+version = 'TrafficTrackerGUI - 3.2.1'
 
 ###### Config format #####
 # [ 0 ] - Stable Mode <CPU/GPU>
@@ -24,22 +24,27 @@ def setConfigData(index, mode):
 
     f.close()
 
-def getStabMode():
+def getConfData(lineNumber):
     f = open('./config/config.txt', 'r')
-    lines = f.readlines()
+    data = f.readlines()
     f.close()
-    
-    return lines[0].split('\n')[0]
+
+    return data[lineNumber].split('\n')[0]
+
+def getStabMode():
+    return getConfData(0)
 
 def setStabMode(Mode):
     setConfigData(0, Mode)
 
 def getYoloModel():
-    f = open('./config/config.txt', 'r')
-    lines = f.readlines()
-    f.close()
-
-    return lines[1].split('\n')[0]
+    return getConfData(1)
 
 def setYoloModel(Mode):
     setConfigData(1, Mode)
+
+def getTIVP_windoSize():
+    return int(getConfData(2))
+
+def setTIVP_windoSize(Mode):
+    setConfigData(2, Mode)

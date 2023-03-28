@@ -298,15 +298,17 @@ class MainWindow(object):
         actName = QFileDialog.getOpenFileName(self._window, 'Select file to set Action Name', self.resultPath)
 
         tempName = actName[0]
+        if tempName == "" :
+            print("[CANCEL] Select Action Name Cancel.")
+        else :
+            backword = ["_gate.csv", "_TIV.csv", ".csv", "_background.jpg", "_cutInfo.txt", "_IO.txt", "_result.avi", "_result.mp4", "_stab.avi", "_stab.mp4", "_stab_8cls.txt" ]
+            for i in range(0,len(backword)):
+                backLen = -len(backword[i])
+                if tempName[backLen:] == backword[i] :
+                    tempName = tempName[0:backLen]
 
-        backword = ["_gate.csv", "_TIV.csv", ".csv", "_background.jpg", "_cutInfo.txt", "_IO.txt", "_result.avi", "_result.mp4", "_stab.avi", "_stab.mp4", "_stab_8cls.txt" ]
-        for i in range(0,len(backword)):
-            backLen = -len(backword[i])
-            if tempName[backLen:] == backword[i] :
-                tempName = tempName[0:backLen]
-
-        self._window.ActionName_edit.setText(os.path.basename(tempName))
-        self.changeActionName()
+            self._window.ActionName_edit.setText(os.path.basename(tempName))
+            self.changeActionName()
 
     @QtCore.Slot()
     def load(self):
@@ -696,7 +698,7 @@ class MainWindow(object):
 
             elif self.ScheduleList[i].step == 9:
                 print(sch + " - [STEP 9 - TIVP]")
-                controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.background_img, self.resultPath)    
+                controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName)  
         
         if self.scheduleTIVpath == "" :
             self.scheduleTIVFile = "./result/" + "/" + self.scheduleName + "_TIV.csv"
@@ -768,7 +770,7 @@ class MainWindow(object):
     def loadSchedule(self):
         self.scheduleLoadPath, filetype = QFileDialog.getOpenFileName(self._window,"Select Schedule File.", self.resultPath ,options=QFileDialog.DontUseNativeDialog)
         if not self.scheduleLoadPath :
-            print ("[Cancel] schedule Load.")
+            print ("[Cancel] Schedule Load Cancel.")
         else:
             print ("Load Schedule File : " + self.scheduleLoadPath)
             self.scheduleName = self.scheduleLoadPath.split("/")[-1][:-13]
@@ -880,18 +882,20 @@ class MainWindow(object):
     def droneFolder(self):
 
         folderpath = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Staibilization', options=QFileDialog.DontUseNativeDialog)
+        if folderpath == "" :
+            print("[CANCEL] Set Drone Folder Cancel.")
+        else :
+            flist = os.listdir(folderpath)
+            if len(flist) == 0:
+                print("<< Warinig : Your Drone Folder Has NO VIDEOS.")
+            else:
+                self.actionName = flist[0]
+                self._window.ActionName_edit.setText(self.actionName)
 
-        flist = os.listdir(folderpath)
-        if len(flist) == 0:
-            print("<< Warinig : Your Drone Folder Has NO VIDEOS.")
-        else:
-            self.actionName = flist[0]
-            self._window.ActionName_edit.setText(self.actionName)
-
-        self.originDataList = folderpath
-        self.setDroneFolderBtnText()
-        logger.info("[Set droneFolder] ->> stable originDataList change to :" + self.originDataList)
-        self.changeActionName()
+            self.originDataList = folderpath
+            self.setDroneFolderBtnText()
+            logger.info("[Set droneFolder] ->> stable originDataList change to :" + self.originDataList)
+            self.changeActionName()
 
     def setDroneFolderBtnText(self):
         out = ""
@@ -910,13 +914,12 @@ class MainWindow(object):
         temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath,options=QFileDialog.DontUseNativeDialog) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
         
         if temp == "/" :
-            print("[setResultFolder Cancel.]")
+            print("[CANCEL] Set Result Folder Cancel.")
             
         else :
             self.resultPath = temp
             self.setResultFolderBtnText()
             self.changeActionName()
-
 
     def setResultFolderBtnText(self):
         out = ""
@@ -998,7 +1001,6 @@ class MainWindow(object):
 
             controller.con_step5(self.gateLineIO_txt,self.background_img)
 
-
     @QtCore.Slot()
     def step6(self): # IO added
         if self.scheduleType :
@@ -1038,10 +1040,8 @@ class MainWindow(object):
             self.AddScheudle()
         else :
             print("[STEP TIV Printer]")
-            controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.background_img, self.resultPath)     
+            controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName)     
 
-        
-        
     @QtCore.Slot()
     def runPedestrian(self):
 
@@ -1075,9 +1075,7 @@ class MainWindow(object):
             self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
             conf.setYoloModel(self.yoloModel)
         else :
-            print("YoloModel change cancel.")
-
-
+            print("[CANCEL] YoloModel change cancel.")
 
     def setActionNameBtnText(self):
         out = ""
@@ -1129,7 +1127,6 @@ class MainWindow(object):
         self.setDroneFolderBtnText()
         self.setResultFolderBtnText()
         
-
     def cuttingWarning(self):
         err = False
         keyCount = 0 

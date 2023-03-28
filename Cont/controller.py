@@ -106,11 +106,11 @@ def con_TIVT(gateCsvPath, singelTIVpath):
     print("[TIVT Done.]")
     return ans
 
-def con_TIVP(TIV_path, IO_path, bkg_path, result_path):
+def con_TIVP(TIV_path, IO_path, stab_video, result_path, actionName):
     from Model.tool import TIVPrinter
 
     currentTIVP = TIVPrinter.TIVP()
-    currentTIVP.printer(TIV_path, IO_path, bkg_path, result_path)
+    currentTIVP.printer(TIV_path, IO_path, stab_video, result_path, actionName)
 
 
 

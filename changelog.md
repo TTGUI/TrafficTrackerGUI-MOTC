@@ -1,6 +1,12 @@
 ## Changelog
 
-### v3.2.0 - TIV2
+### v3.2.1 - TIV2.1 (2023/3/28)
+
+#### Improvements
+
+- TIVPrinter.py : Type2, output video
+
+### v3.2.0 - TIV2 (2023/3/27)
 
 #### Improvements
 

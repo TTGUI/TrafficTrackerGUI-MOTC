@@ -2,11 +2,17 @@ import os
 import pathlib
 import cv2
 import numpy as np
+from config import conf
 
 class TIVP:
     def __init__(self):
         self.fileType = '.jpg' 
         self.color = (127, 255, 0)
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        if __name__ != '__main__':
+            self.windowSize = conf.getTIVP_windoSize()
+        else:
+            self.windowSize = 200
 
     def RTcenter(self, points):
         ans = []
@@ -16,19 +22,8 @@ class TIVP:
         ans.append(int(x))
         ans.append(int(y))
         return ans
-
-    def printer(self, TIV_path = "", IO_path = "", bkg_path = "", result_path = ""):
-         
-
-        result_path = result_path + "TIV_IssuePrint/"
-        #### Make IO line base on bkg ####
-
-        baseFrame = cv2.imdecode(np.fromfile(bkg_path, dtype=np.uint8), -1)
-
-        fio = open(IO_path, 'r')
-        io = fio.readlines()
-        fio.close()
-
+    
+    def dwarIO(self, io, frame):
         V2 = io[0].split(",")
         V3 = io[1].split(",")
 
@@ -40,25 +35,31 @@ class TIVP:
 
         for j in range(-1, len(bordertype)-1):
             if bordertype[j] > 0:
-                cv2.line(baseFrame, pts[j], pts[j+1], (0, 255, 0), 3)
+                cv2.line(frame, pts[j], pts[j+1], (0, 255, 0), 3)
             elif bordertype[j] < 0:
-                cv2.line(baseFrame, pts[j], pts[j+1], (0, 0, 255), 3)    
+                cv2.line(frame, pts[j], pts[j+1], (0, 0, 255), 3)    
 
         for j in range(2, len(io)):
             V4 = io[j].split(",")
             k = 0
             for k in range(0, len(V4)-3, 2):
-                cv2.line(baseFrame, (int(V4[k]), int(V4[k+1])), (int(V4[k+2]), int(V4[k+3])), (255, 0, 0), 2)
+                cv2.line(frame, (int(V4[k]), int(V4[k+1])), (int(V4[k+2]), int(V4[k+3])), (255, 0, 0), 2)
 
-        # cv2.imshow("baseFrame", baseFrame)
-        # cv2.waitKey()
+        return frame
+
+    def printer(self, TIV_path, IO_path, stab_video , result_path , actionName ):
+        
+        result_path = result_path + actionName + "_TIV_IssuePrint/"
+        #### Read IO line ####
+
+        fio = open(IO_path, 'r')
+        io = fio.readlines()
+        fio.close()
 
         #### Add Tracking line ####
 
         if not os.path.isdir(result_path):
             os.mkdir(result_path)
-        
-        cv2.imencode(ext=self.fileType,img=baseFrame)[1].tofile( result_path + "IO" + self.fileType)
 
         f = open(TIV_path, 'r')
         TIV = f.readlines()
@@ -81,10 +82,17 @@ class TIVP:
             index += 1
 
 
+        cap = cv2.VideoCapture(stab_video)
         for i in range(0, len(sameIOList)) :
             linePoints = sameIOList[i].split(",")
+            startFrame = linePoints[1]
+            endFrame = linePoints[2]
+            fileName = linePoints[0] + "_" + linePoints[5] + "_" + linePoints[3] + linePoints[4] + "_(" + startFrame + "~" + endFrame + ")"
+            
             centers = []
             temp = []
+            print("[" + str(i+1) + "/" + str(len(sameIOList)) + "] " + fileName)
+            # get tracking points center
             for count in range (6,len(linePoints)):
                 if len(temp) < 8 :
                     temp.append(linePoints[count])
@@ -92,24 +100,55 @@ class TIVP:
                     centers.append(self.RTcenter(temp))            
                     temp = []
                     temp.append(linePoints[count])
-            # eachFrame = np.zeros((baseFrame.shape[0], baseFrame.shape[1], 3), np.uint8)
-            eachFrame = cv2.imdecode(np.fromfile(result_path + "IO" + self.fileType,dtype=np.uint8),-1)
-            for k in range(0,len(centers)):
-                # eachFrame[centers[k][1],centers[k][0]] = self.color
-                if k == len(centers) - 1 :
-                    cv2.circle(eachFrame, (centers[k][0],centers[k][1]), 7, (0, 255, 255), -1)
-                    cv2.circle(eachFrame, (centers[k][0],centers[k][1]), 11, (0, 255, 255), 2)
-                else :
-                    cv2.circle(eachFrame, (centers[k][0],centers[k][1]), 3, self.color, 2)
 
+            effectiveWindow = 0
+            if int(startFrame) > self.windowSize :
+                cap.set(cv2.CAP_PROP_POS_FRAMES, int(startFrame) - self.windowSize)
+                effectiveWindow += self.windowSize
+            else :
+                effectiveWindow += int(startFrame)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 1)
+            if int(endFrame) + self.windowSize > cap.get(cv2.CAP_PROP_FRAME_COUNT) :
+                effectiveWindow += cap.get(cv2.CAP_PROP_FRAME_COUNT) - int(endFrame)
+            else :
+                effectiveWindow += self.windowSize
+
+            k = 0
+            index = 0
+            frameID =  cap.get(cv2.CAP_PROP_POS_FRAMES)
+            out = cv2.VideoWriter(result_path + fileName+".avi", self.fourcc, 30, (1920, 1080)) 
+
+            while frameID < int(endFrame) + self.windowSize :
+                print(str(index+1) + "/" + str(int(endFrame)-int(startFrame)+ effectiveWindow) +"          ", end='\r')
+                ret, frame = cap.read()
+                if not ret :
+                    break
+                frame = self.dwarIO(io,frame)
+                if frameID + k >= int(startFrame) :
+                    if frameID < int(endFrame) : 
+                        k += 1
+                    for p in range(0,k) :
+                        if p == len(centers) - 1 :
+                            cv2.circle(frame, (centers[p][0],centers[p][1]), 7, (0, 255, 255), -1)
+                            cv2.circle(frame, (centers[p][0],centers[p][1]), 11, (0, 255, 255), 2)
+                        else :
+                            cv2.circle(frame, (centers[p][0],centers[p][1]), 3, self.color, -1)
+
+                displayStr = fileName + "  [ " +str(cap.get(cv2.CAP_PROP_POS_FRAMES)) + " ]"
+                cv2.putText(frame, displayStr, (10, 40), cv2.FONT_HERSHEY_SIMPLEX,  1, (0,0,0), 6, cv2.LINE_AA)
+                cv2.putText(frame, displayStr, (10, 40), cv2.FONT_HERSHEY_SIMPLEX,  1, (0, 255, 255), 2, cv2.LINE_AA)
+                out.write(frame)
+                frameID =  cap.get(cv2.CAP_PROP_POS_FRAMES)
+                index +=1
+
+                cv2.imshow("frame",frame)
+                cv2.waitKey(1)
             
-            fileName = linePoints[0] + "_" + linePoints[5] + "_" + linePoints[3] + linePoints[4] + "_(" + linePoints[1] + "~" + linePoints[2] + ")"
-            cv2.putText(eachFrame, fileName, (10, 40), cv2.FONT_HERSHEY_SIMPLEX,  1, (0,0,0), 6, cv2.LINE_AA)
-            cv2.putText(eachFrame, fileName, (10, 40), cv2.FONT_HERSHEY_SIMPLEX,  1, (0, 255, 255), 2, cv2.LINE_AA)
 
-            cv2.imencode(ext=self.fileType,img=eachFrame)[1].tofile( result_path + fileName + self.fileType)
-
-            
+            out.release()
+        
+        cv2.destroyAllWindows()
+        cap.release()
         print("[TIVPrinter Done.]")
 
 if __name__ == '__main__':
@@ -132,5 +171,8 @@ if __name__ == '__main__':
         bkg_path = "TEST_background.jpg"
     bkg_path = curPath + bkg_path
     
+    actionName = "default"
+    stab_video = "stab_video"
+
     currentTIVP = TIVP()
-    currentTIVP.printer(TIV_path, IO_path, bkg_path, curPath)
+    currentTIVP.printer(TIV_path, IO_path, stab_video, curPath, actionName, stab_video)
