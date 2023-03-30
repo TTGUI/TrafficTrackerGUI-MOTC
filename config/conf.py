@@ -6,6 +6,8 @@ version = 'TrafficTrackerGUI - 3.2.1'
 ###### Config format #####
 # [ 0 ] - Stable Mode <CPU/GPU>
 # [ 1 ] - Yolo Model Name <last_100.pt / 20211109172733_last_200_1920.pt / ect.>
+# [ 2 ] - TIV ignore frame <900>, ignore top and end frames to calculate TIV.
+# [ 3 ] - Extend Print Frame <100>, When generating issue track vidoe, this number will be the extra length at the beginning and end of the video.
 
 def __init__():
     getStabMode() 
@@ -34,17 +36,23 @@ def getConfData(lineNumber):
 def getStabMode():
     return getConfData(0)
 
-def setStabMode(Mode):
-    setConfigData(0, Mode)
+def setStabMode(mode):
+    setConfigData(0, mode)
 
 def getYoloModel():
     return getConfData(1)
 
-def setYoloModel(Mode):
-    setConfigData(1, Mode)
+def setYoloModel(mode):
+    setConfigData(1, mode)
 
-def getTIVP_windoSize():
+def getTIV_ignoreFrame():
     return int(getConfData(2))
 
-def setTIVP_windoSize(Mode):
-    setConfigData(2, Mode)
+def setTIV_ignoreFrame(frames):
+    setConfigData(2, frames)
+
+def getTIVP_ExtendPrintFrame():
+    return int(getConfData(3))
+
+def setTIVP_ExtendPrintFrame(frames):
+    setConfigData(3, frames)

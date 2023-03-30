@@ -10,9 +10,9 @@ class TIVP:
         self.color = (127, 255, 0)
         self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         if __name__ != '__main__':
-            self.windowSize = conf.getTIVP_windoSize()
+            self.extendFrameSize = conf.getTIVP_ExtendPrintFrame()
         else:
-            self.windowSize = 200
+            self.extendFrameSize = 200
 
     def RTcenter(self, points):
         ans = []
@@ -87,7 +87,7 @@ class TIVP:
             linePoints = sameIOList[i].split(",")
             startFrame = linePoints[1]
             endFrame = linePoints[2]
-            fileName = linePoints[0] + "_" + linePoints[5] + "_" + linePoints[3] + linePoints[4] + "_(" + startFrame + "~" + endFrame + ")"
+            fileName = linePoints[5] + "_" + linePoints[0] + "_" + linePoints[3] + linePoints[4] + "_(" + startFrame + "~" + endFrame + ")"
             
             centers = []
             temp = []
@@ -102,23 +102,23 @@ class TIVP:
                     temp.append(linePoints[count])
 
             effectiveWindow = 0
-            if int(startFrame) > self.windowSize :
-                cap.set(cv2.CAP_PROP_POS_FRAMES, int(startFrame) - self.windowSize)
-                effectiveWindow += self.windowSize
+            if int(startFrame) > self.extendFrameSize :
+                cap.set(cv2.CAP_PROP_POS_FRAMES, int(startFrame) - self.extendFrameSize)
+                effectiveWindow += self.extendFrameSize
             else :
                 effectiveWindow += int(startFrame)
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 1)
-            if int(endFrame) + self.windowSize > cap.get(cv2.CAP_PROP_FRAME_COUNT) :
+            if int(endFrame) + self.extendFrameSize > cap.get(cv2.CAP_PROP_FRAME_COUNT) :
                 effectiveWindow += cap.get(cv2.CAP_PROP_FRAME_COUNT) - int(endFrame)
             else :
-                effectiveWindow += self.windowSize
+                effectiveWindow += self.extendFrameSize
 
             k = 0
             index = 0
             frameID =  cap.get(cv2.CAP_PROP_POS_FRAMES)
             out = cv2.VideoWriter(result_path + fileName+".avi", self.fourcc, 30, (1920, 1080)) 
 
-            while frameID < int(endFrame) + self.windowSize :
+            while frameID < int(endFrame) + self.extendFrameSize :
                 print(str(index+1) + "/" + str(int(endFrame)-int(startFrame)+ effectiveWindow) +"          ", end='\r')
                 ret, frame = cap.read()
                 if not ret :

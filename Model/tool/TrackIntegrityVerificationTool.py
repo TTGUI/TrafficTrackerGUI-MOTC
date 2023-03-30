@@ -1,4 +1,4 @@
-
+import os
 import pathlib
 
 
@@ -86,8 +86,6 @@ class TIVT:
                 if self.sameIO(eachLineSplit):
                     sameIOcar += 1
                     sameIOcarList.append(lines[i])
-                if not self.failData(eachLineSplit):
-                    allCar += 1
 
             if self.vehicleTypeBool('m', eachLineSplit):
                 if self.goodData(eachLineSplit):
@@ -101,11 +99,12 @@ class TIVT:
                     allmotor += 1
              
 
-
+        allCar = goodcar + badcar + sameIOcar
+        allmotor = goodmotor + badmotor + sameIOmotor
 
         ans = gateCsvPath.split('/')[-1] + ',' + self.div( (goodcar + goodmotor) , (allCar + allmotor) ) + ',' + self.div( goodcar , allCar ) + ',' 
         ans = ans + self.div( goodmotor , allmotor ) + ',' + self.div( sameIOcar , goodcar ) + ',' + self.div( sameIOmotor , goodmotor) + ',' 
-        ans = ans + str( sameIOcar ) + ',' + str( goodmotor ) + ',' + str( allCar ) + ',' + str( sameIOmotor ) + ',' + str( goodmotor ) + ',' + str( allmotor )
+        ans = ans + str( sameIOcar ) + ',' + str( goodcar ) + ',' + str( allCar ) + ',' + str( sameIOmotor ) + ',' + str( goodmotor ) + ',' + str( allmotor )
 
 
         fp = open(resultPath, "w")
@@ -135,6 +134,13 @@ if __name__ == '__main__':
     print("[Folder paht default codefile current folder.]")
     csvName = input("[Enter GATE_CSV] >> ")
     inName = curPath + '\\' + csvName
-    TIVpath = curPath + '\\' + csvName[:-9]
+    TIVpath = curPath + '\\' + csvName[:-9] + ".csv"
+
+    base, extension = os.path.splitext(TIVpath)
+    k = 0
+    while os.path.exists(TIVpath):
+        k += 1
+        TIVpath = f"{base}_{k}{extension}"
+
     currentTIVT = TIVT()
     currentTIVT.trackIntegrity(inName, TIVpath)

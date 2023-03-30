@@ -1,3 +1,4 @@
 GPU
 best_1920_hcioudhxdhy_image_weights.pt
+900
 100
