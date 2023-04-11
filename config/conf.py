@@ -1,18 +1,27 @@
 # logger setting
 # loggerLevel : degug, info, warning, error, critical 
 loggerLevel = 'debug'
-version = 'TrafficTrackerGUI - 3.2.1'
 
 ###### Config format #####
-# [ 0 ] - Stable Mode <CPU/GPU>
-# [ 1 ] - Yolo Model Name <last_100.pt / 20211109172733_last_200_1920.pt / ect.>
-# [ 2 ] - TIV ignore frame <900>, ignore top and end frames to calculate TIV.
-# [ 3 ] - Extend Print Frame <100>, When generating issue track vidoe, this number will be the extra length at the beginning and end of the video.
+# [ 0 ] - Version Number : <3.2.1>
+# [ 1 ] - Stable Mode : <CPU> | <GPU>
+# [ 2 ] - Yolo Model Name : <last_100.pt> | <20211109172733_last_200_1920.pt> | <ect.>
+# [ 3 ] - TIV ignore frame, ignore top and end frames to calculate TIV : <900>
+# [ 4 ] - Extend Print Frame, When generating issue track vidoe, this number will be the extra length at the beginning and end of the video : <100>
+# [ 5 ] - TIVPrint mode : <1> Video output mode | <2> background output mode.
+
+ID_Version = 0
+ID_StabMode = 1
+ID_YoloModel = 2
+ID_TIVingore = 3
+ID_TIVextend = 4
+ID_TIVPmode = 5
 
 def __init__():
     getStabMode() 
 
 def setConfigData(index, mode):
+    mode = str(mode)
     f = open('./config/config.txt', 'r')
     lines = f.readlines()
     f.close()
@@ -33,26 +42,39 @@ def getConfData(lineNumber):
 
     return data[lineNumber].split('\n')[0]
 
+def getVersion():
+    return getConfData(ID_Version)
+
 def getStabMode():
-    return getConfData(0)
+    return getConfData(ID_StabMode)
 
 def setStabMode(mode):
-    setConfigData(0, mode)
+    setConfigData(ID_StabMode, mode)
 
 def getYoloModel():
-    return getConfData(1)
+    return getConfData(ID_YoloModel)
 
 def setYoloModel(mode):
-    setConfigData(1, mode)
+    setConfigData(ID_YoloModel, mode)
 
 def getTIV_ignoreFrame():
-    return int(getConfData(2))
+    return int(getConfData(ID_TIVingore))
 
 def setTIV_ignoreFrame(frames):
-    setConfigData(2, frames)
+    setConfigData(ID_TIVingore, frames)
 
 def getTIVP_ExtendPrintFrame():
-    return int(getConfData(3))
+    return int(getConfData(ID_TIVextend))
 
 def setTIVP_ExtendPrintFrame(frames):
-    setConfigData(3, frames)
+    setConfigData(ID_TIVextend, frames)
+
+def getTIVPMode():
+    return int(getConfData(ID_TIVPmode))
+
+def setTIVPMode(mode):
+    setConfigData(ID_TIVPmode, mode)
+
+def RTVersion():
+    ver = 'TrafficTrackerGUI - ' + getVersion()
+    return ver

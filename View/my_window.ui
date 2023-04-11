@@ -557,6 +557,7 @@
     <addaction name="bar_1"/>
     <addaction name="bar_2"/>
     <addaction name="bar_3"/>
+    <addaction name="bar_4"/>
    </widget>
    <addaction name="menudebugMode"/>
   </widget>
@@ -574,6 +575,11 @@
   <action name="bar_3">
    <property name="text">
     <string>Change Yolo Model</string>
+   </property>
+  </action>
+  <action name="bar_4">
+   <property name="text">
+    <string>Change TIVP Mode</string>
    </property>
   </action>
  </widget>

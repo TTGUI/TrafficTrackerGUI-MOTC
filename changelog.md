@@ -1,10 +1,20 @@
 ## Changelog
 
+### v3.2.2 - TIV2.2 (2023/4/11)
+
+#### Improvements
+
+- TIVPrinter.py : add choice function to select output video or image.
+
+#### Document
+
+- TrafficTrackerGUI_introduction_3.2.2.docx : update.
+
 ### v3.2.1 - TIV2.1 (2023/3/28)
 
 #### Improvements
 
-- TIVPrinter.py : Type2, output video
+- TIVPrinter.py : Type2, output video.
 
 ### v3.2.0 - TIV2 (2023/3/27)
 

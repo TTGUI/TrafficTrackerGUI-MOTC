@@ -59,6 +59,7 @@ class MainWindow(object):
 
         self.stabMode = conf.getStabMode() # 'CPU' 'GPU'
         self.yoloModel = conf.getYoloModel() #  20211109172733_last_200_1920.pt / ect.
+        self.TIVPmode = conf.getTIVPMode() # <1> <2>
 
         self._window = None
         self.setup_ui()
@@ -112,8 +113,8 @@ class MainWindow(object):
         
     def set_title(self):
         """Setup label"""
-        self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
-        self._window.setWindowTitle(conf.version)
+        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel)
+        self._window.setWindowTitle(conf.RTVersion())
         self._window.cutinfo.setText('')
         self._window.display.setText('')
         self._window.FPS.setText('FPS[]')
@@ -138,6 +139,12 @@ class MainWindow(object):
             self._window.bar_2.setText("Change Stabilazation Mode | [ GPU ]")
 
         self._window.bar_3.triggered.connect(self.changeYoloModel)
+
+        self._window.bar_4.triggered.connect(self.changeTIVPbMode)
+        if self.TIVPmode == 1:
+            self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
+        elif self.TIVPmode == 2:
+            self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
 
         self._window.DroneFolder_btn.setText('Set Drone Folder')
         self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
@@ -175,7 +182,10 @@ class MainWindow(object):
         self._window.TVI_btn.setText("<TrackIntegrityVerification>")
         self._window.TVI_btn.clicked.connect(self.step8_singleTIV)
 
-        self._window.TVIPrinter_btn.setText("<TVI Printer>")
+        if self.TIVPmode == 1:
+            self._window.TVIPrinter_btn.setText('<TVI Printer> (V)')
+        elif self.TIVPmode == 2:
+            self._window.TVIPrinter_btn.setText('<TVI Printer> (I)')
         self._window.TVIPrinter_btn.clicked.connect(self.step9_TVIPrinter)
 
         #########################################################
@@ -679,15 +689,10 @@ class MainWindow(object):
                 os.rename(tempName, self.background_img)
             elif self.ScheduleList[i].step == 5:
                 print(sch + " - [STEP 5]")
-                tempName = self.resultPath + str(random.random()) +'.jpg'
-                os.rename(self.background_img, tempName)
-                controller.con_step5(self.gateLineIO_txt,tempName)
-                os.rename(tempName, self.background_img)
+                controller.con_step5(self.gateLineIO_txt,self.background_img)
             elif self.ScheduleList[i].step == 6:
                 print(sch + " - [STEP 6]")
                 controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv) 
-                ScheduTIVList.append(self.step8_singleTIV())
-
             elif self.ScheduleList[i].step == 7:
                 print(sch + " - [STEP 7]")
                 controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
@@ -698,7 +703,8 @@ class MainWindow(object):
 
             elif self.ScheduleList[i].step == 9:
                 print(sch + " - [STEP 9 - TIVP]")
-                controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName)  
+                controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName, self.gate_tracking_csv, self.background_img )  
+
         
         if self.scheduleTIVpath == "" :
             self.scheduleTIVFile = "./result/" + "/" + self.scheduleName + "_TIV.csv"
@@ -1010,7 +1016,6 @@ class MainWindow(object):
         else :
             print("[STEP 6]")
             controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv)
-            self.step8_singleTIV()
 
     @QtCore.Slot()
     def step7(self): # Replay
@@ -1040,7 +1045,7 @@ class MainWindow(object):
             self.AddScheudle()
         else :
             print("[STEP TIV Printer]")
-            controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName)     
+            controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName, self.gate_tracking_csv, self.background_img )  
 
     @QtCore.Slot()
     def runPedestrian(self):
@@ -1060,7 +1065,7 @@ class MainWindow(object):
             conf.setStabMode('CPU')
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
             self._window.step1_btn.setText('[STEP 1] (C)\nStable')
-        self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
+        self._window.title.setText(str(conf.version()) + " | " + self.stabMode + " | " + self.yoloModel)
     
     @QtCore.Slot()
     def changeYoloModel(self):
@@ -1076,6 +1081,21 @@ class MainWindow(object):
             conf.setYoloModel(self.yoloModel)
         else :
             print("[CANCEL] YoloModel change cancel.")
+
+    @QtCore.Slot()
+    def changeTIVPbMode(self):
+        if self.TIVPmode == 1:
+            self.TIVPmode = 2
+            conf.setTIVPMode(2)
+            self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
+            self._window.TVIPrinter_btn.setText('<TVI Printer> (I)')
+        elif self.TIVPmode == 2:
+            self.TIVPmode = 1
+            conf.setTIVPMode(1)
+            self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
+            self._window.TVIPrinter_btn.setText('<TVI Printer> (V)')
+
+
 
     def setActionNameBtnText(self):
         out = ""
