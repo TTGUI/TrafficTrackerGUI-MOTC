@@ -18,7 +18,7 @@ if not hasattr(QtTest.QTest, 'qWait'):
         while time.time() < start + msec * 0.001:
             PySide2.QtWidgets.QApplication.processEvents()
     QtTest.QTest.qWait = qWait
-
+import numpy as np
 
 from logs import logger
 from config import conf
@@ -117,7 +117,7 @@ class MainWindow(object):
         self._window.setWindowTitle(conf.RTVersion())
         self._window.cutinfo.setText('')
         self._window.display.setText('')
-        self._window.FPS.setText('FPS[]')
+        self._window.FPS.setText('')
         self._window.ActionName_edit.setText('inital_action_name')
 
         # set font
@@ -145,6 +145,8 @@ class MainWindow(object):
             self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
         elif self.TIVPmode == 2:
             self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
+        elif self.TIVPmode == 3:
+            self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
 
         self._window.DroneFolder_btn.setText('Set Drone Folder')
         self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
@@ -186,6 +188,8 @@ class MainWindow(object):
             self._window.TVIPrinter_btn.setText('<TVI Printer> (V)')
         elif self.TIVPmode == 2:
             self._window.TVIPrinter_btn.setText('<TVI Printer> (I)')
+        elif self.TIVPmode == 3:
+            self._window.TVIPrinter_btn.setText('<TVI Printer> (R)')
         self._window.TVIPrinter_btn.clicked.connect(self.step9_TVIPrinter)
 
         #########################################################
@@ -264,40 +268,56 @@ class MainWindow(object):
         self._window.SetEndFrame_btn.setText('SetEndFrame')
         self._window.SetEndFrame_btn.clicked.connect(self.setEndFrame)
 
-    def set_video(self):
-        self.video_init = True
-        self.play_bool = False
-        self.currentVideoIndex = 0
-        self.videolist = os.listdir(self.originDataList)
-        self.videolist.sort()
-        self.videoNumber = len(self.videolist)
-        self.cutInfoLsit = []
-        for i in range( 0 ,self.videoNumber ):
-            tempCut = CutInfo()            
+    def set_video(self, type):
+        if type == 1 : # Step 0 Cut Info Player Mode
+            self.video_init = True
+            self.play_bool = False
+            self.currentVideoIndex = 0
+            self.videolist = os.listdir(self.originDataList)
+            self.videolist.sort()
+            self.videoNumber = len(self.videolist)
+            self.cutInfoLsit = []
+            for i in range( 0 ,self.videoNumber ):
+                tempCut = CutInfo()            
+                
+                currentVideo = self.videolist[i]
+                cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.originDataList), currentVideo))
+
+                tempCut.setStart(1)
+                tempCut.setEnd(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+                cap.release()
+                self.cutInfoLsit.append(tempCut)
+
+            self.displayInfo(2)
+
+            out = ''
+            for i in range(0,self.videoNumber) :
+                out = out + '[' + str(i+1) +'] '+ self.videolist[i] + '\n'
+
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Video Load")
+            msgBox.setText(out)
+            msgBox.exec()
+
+            self.load()
+        elif type == 2 : # Step 9 TVIP Real Time Display Mode
+            self.video_init = True
+            self.play_bool = False
+            self.cap = cv2.VideoCapture(self.stab_video)
+            print("LOAD : " + str(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))+ ' frames')
+            self.allFream = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
             
-            currentVideo = self.videolist[i]
-            cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.originDataList), currentVideo))
-
-            tempCut.setStart(1)
-            tempCut.setEnd(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-            cap.release()
-            self.cutInfoLsit.append(tempCut)
-
-        self.displayInfo(2)
-
-        out = ''
-        for i in range(0,self.videoNumber) :
-            out = out + '[' + str(i+1) +'] '+ self.videolist[i] + '\n'
-
-        msgBox = QMessageBox()
-        msgBox.setWindowTitle("Video Load")
-        msgBox.setText(out)
-        msgBox.exec()
-
-        self.load()
-        
+            
     @QtCore.Slot()
     def frameDisplay(self, frame) :
+        fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 6, cv2.LINE_AA)
+        cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
+        self._window.FPS.setText(fps[:-2])
+        nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
+        self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))  
+
         show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
         self._window.display.setScaledContents(True) # 自適應邊框  
@@ -349,18 +369,15 @@ class MainWindow(object):
                 break
             nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             # print(nowFream)
-            self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))            
-            cv2.putText(frame, str(nowFream), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)            
-            self._window.FPS.setText('FPS [ ' + str(nowFream) + ' ]' )      
+            if not self.scheduleType and self.TIVPmode == 3 :
+                frame = self.issueFramePrint(frame)
+            else :        
+                cv2.putText(frame, str(nowFream), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
             
             self.frameDisplay(frame)
             QtTest.QTest.qWait(video_FPS)
 
             if not self.play_bool :
-                break           
-
-            if cv2.waitKey(video_FPS) == ord('q'):                    
-                print( "Cut Frame : " + str(nowFream))
                 break           
 
     @QtCore.Slot()
@@ -372,7 +389,7 @@ class MainWindow(object):
 
         if self.scheduleType :
             self.currentScheduleIndex = self.currentScheduleIndex + 1
-            self.displayInfo(4)
+            self.displayInfo(3)
             self.StartSchedule()
         else :
 
@@ -386,14 +403,8 @@ class MainWindow(object):
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 101 )
         if self.cap.isOpened() :
             ret, frame = self.cap.read()
-
-            fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-            cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
-            self._window.FPS.setText('FPS [ ' + fps + ' ]' )
-            nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
-            print(nowFream)
-            self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))    
-            self.frameDisplay(frame)
+            if ret:                
+                self.frameDisplay(frame)
 
     @QtCore.Slot()
     def fpsnext(self) :
@@ -401,30 +412,40 @@ class MainWindow(object):
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) + 99 )
         if self.cap.isOpened() :
             ret, frame = self.cap.read()
-
-            fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-            cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
-            self._window.FPS.setText('FPS [ ' + fps + ' ]' )
-            nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
-            print(nowFream)
-            self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))    
-            self.frameDisplay(frame)
+            if ret:                
+                self.frameDisplay(frame)
 
     @QtCore.Slot()
     def jump(self) :
         self.play_bool = False
+        jumpframe = 0
+        if self.TIVPmode == 3 and self._window.FPS.text()[0] == 'i':
+            # 添加手動設定目標track id進 issue list
+            print(f"Add Tracking ID [{self._window.FPS.text()[1:]}] to TVIP Issue list.")
+            
+            temp = ""
+            for i in range(0, len(self.V)):
+                if self.V[i][0] == self._window.FPS.text()[1:]:
+                    for m in range(0,6) :
+                        temp += self.V[i][m] + ","
+                    jumpframe = int(self.V[i][1])
+            if temp == "" :
+                print(f"Error >> Tracking ID invalid : {self._window.FPS.text()[1:]}")
+            else :
+                self.TIVIsampleList.append(temp)
+                self.currentIssueIndex = len(self.TIVIsampleList) - 1
+                self.displayInfo(4)
 
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES, int(int(self._window.FPS.text())) -1 )
+        else :
+            jumpframe = int(self._window.FPS.text()) -1
+            if jumpframe > self.cap.get(cv2.CAP_PROP_FRAME_COUNT) :
+                jumpframe = self.cap.get(cv2.CAP_PROP_FRAME_COUNT) -1
+
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, jumpframe)
         if self.cap.isOpened() :
             ret, frame = self.cap.read()
-
-            fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-            cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
-            self._window.FPS.setText('FPS [ ' + fps + ' ]' )
-            nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
-            print(nowFream)
-            self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))    
-            self.frameDisplay(frame)
+            if ret:                
+                self.frameDisplay(frame)
 
     @QtCore.Slot()
     def video_position(self, video_position):
@@ -435,7 +456,7 @@ class MainWindow(object):
 
             fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
             cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
-            self._window.FPS.setText('FPS [ ' + fps + ' ]' )
+            self._window.FPS.setText(fps)
             self.frameDisplay(frame)
 
     @QtCore.Slot()
@@ -460,16 +481,7 @@ class MainWindow(object):
             for i in range(0,self.videoNumber) :
                 out = out + '[' + str(i+1) +'] '+ self.videolist[i] + '\n'            
             self._window.cutinfo.setText(out)
-        elif type == 3:
-            out = ''
-            for i in range(0,self.videoNumber) :                
-                out = out + str(self.cutInfoLsit[i].getKey()) + '\t'
-                out = out + str(self.cutInfoLsit[i].getStart()) + '\t'
-                out = out + str(self.cutInfoLsit[i].getEnd())  + '\n'
-                out = out + '<<cutint file saving>>'
-
-            self._window.cutinfo.setText(out)
-        elif type == 4:
+        elif type == 3: # display Schedule Lsit
 
             self.page = int (self.currentScheduleIndex /self.pageLen)
             pageStart = self.page * self.pageLen
@@ -489,7 +501,27 @@ class MainWindow(object):
                 out = out + str(i+1) + ' <' + str(self.ScheduleList[i].step) + '>' + '\t'
                 out = out + self.ScheduleList[i].getShortActionName() + '\n'
 
-            self._window.cutinfo.setText(out)   
+            self._window.cutinfo.setText(out)
+        elif type == 4 : # display TIVP Issue List
+            self.page = int (self.currentIssueIndex / self.pageLen)
+            pageStart = self.page * self.pageLen
+            if (self.page+1)*self.pageLen > len(self.TIVIsampleList) :
+                pageEnd = len(self.TIVIsampleList) 
+            else:
+                pageEnd = (self.page+1)*self.pageLen
+
+            out = '\t' +' TVIP Issue  (' + str(self.page+1) + '/' +  str(int((len(self.TIVIsampleList)-1) / self.pageLen ) +1 ) + ')\n'
+
+            for i in range(pageStart, pageEnd) :
+                temp = self.TIVIsampleList[i].split(',')
+                if i == self.currentIssueIndex :
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, int(int(temp[1]) ))
+                    out = out + "=>"
+                else:
+                    out = out + "    "
+
+                out += f"{i+1} [{temp[0]}] <{temp[5]}> {temp[3]}{temp[4]} {temp[1]}-{temp[2]} \n" 
+            self._window.cutinfo.setText(out)
 
     @QtCore.Slot()
     def back(self):
@@ -497,8 +529,11 @@ class MainWindow(object):
             if self.currentScheduleIndex > 0 :
                 self.currentScheduleIndex = self.currentScheduleIndex - 1
                 
-                
-                self.displayInfo(4)         
+                self.displayInfo(3)
+        elif self.TIVPmode == 3 :
+            if self.currentIssueIndex > 0 :
+                self.currentIssueIndex -= 1
+                self.displayInfo(4)  
         elif self.currentVideoIndex > 0 :
             self.currentVideoIndex = self.currentVideoIndex - 1
             self.load()
@@ -511,7 +546,10 @@ class MainWindow(object):
             if self.currentScheduleIndex < len(self.ScheduleList) - 1 :
                 self.currentScheduleIndex = self.currentScheduleIndex + 1
                 
-                
+                self.displayInfo(3)
+        elif self.TIVPmode == 3 :
+            if self.currentIssueIndex < len(self.TIVIsampleList) - 1:
+                self.currentIssueIndex += 1
                 self.displayInfo(4)
         elif self.currentVideoIndex < self.videoNumber - 1 :
             self.currentVideoIndex = self.currentVideoIndex + 1
@@ -520,19 +558,35 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def forwardPage(self):
-        if self.page > 0:
-            self.page = self.page -1
-            self.currentScheduleIndex = self.page * self.pageLen
-        elif self.page == 0 :
-            self.currentScheduleIndex = 0
-        self.displayInfo(4)
+        if self.scheduleType  :
+            if self.page > 0:
+                self.page = self.page -1
+                self.currentScheduleIndex = self.page * self.pageLen
+            elif self.page == 0 :
+                self.currentScheduleIndex = 0
+            self.displayInfo(3)
+        elif self.TIVPmode == 3 :  
+            if self.page > 0:
+                self.page = self.page -1
+                self.currentIssueIndex = self.page * self.pageLen
+            elif self.page == 0 :
+                self.currentIssueIndex = 0
+            self.displayInfo(4)
+
 
     @QtCore.Slot()
     def nextPage(self):
-        if self.page < int((len(self.ScheduleList)-1) / self.pageLen ):
-            self.page = self.page + 1
-            self.currentScheduleIndex = self.page * self.pageLen
-        self.displayInfo(4)
+        if self.scheduleType  :
+            if self.page < int((len(self.ScheduleList)-1) / self.pageLen ):
+                self.page = self.page + 1
+                self.currentScheduleIndex = self.page * self.pageLen
+            self.displayInfo(3)
+        elif self.TIVPmode == 3 :           
+
+            if self.page < int((len(self.TIVIsampleList)-1) / self.pageLen ):
+                self.page = self.page + 1
+                self.currentIssueIndex = self.page * self.pageLen
+            self.displayInfo(4)
 
     @QtCore.Slot()
     def setKey(self):
@@ -627,6 +681,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def DisplayType(self) :
+
         if self.displayType:
             self.displayType = False
             self._window.DisplayType_btn.setText('Hide ID information')
@@ -653,13 +708,11 @@ class MainWindow(object):
         ScheduTIVList = []
         ScheduTIVList.append(cuurentTIVT.retTitle())
 
-        if self.scheduleType == True:
-            self.scheduleType = False
-            self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
+
 
         for i in range(self.currentScheduleIndex ,len(self.ScheduleList)):
             self.currentScheduleIndex = i
-            self.displayInfo(4)
+            self.displayInfo(3)
             sch = '=====================================\n[Schedule ' + str(i+1) +' / ' + str(len(self.ScheduleList))+' ]'
             self.displayType = self.ScheduleList[i].DisplayID
             self.show = self.ScheduleList[i].Show
@@ -671,7 +724,7 @@ class MainWindow(object):
 
             if self.ScheduleList[i].step == 0:
                 print(sch + " - [STEP 0]")
-                self.set_video()
+                self.set_video(1)
                 self.play()
             elif self.ScheduleList[i].step == 1:
                 print(sch + " - [STEP 1]")
@@ -726,6 +779,10 @@ class MainWindow(object):
 
         print ("ALL Schedule Done.")
 
+        if self.scheduleType == True:
+            self.scheduleType = False
+            self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
+
     @QtCore.Slot()
     def AddScheudle(self):
         tempItem = ScheduleItem()
@@ -741,7 +798,7 @@ class MainWindow(object):
         else :
             self.currentScheduleIndex = self.currentScheduleIndex +1
 
-        self.displayInfo(4)
+        self.displayInfo(3)
         
         
         print("AddSchedule "+ str(self.currentScheduleIndex+1) +" : [Step "+str(tempItem.step) + "] - [" + tempItem.actionName +"]")
@@ -761,7 +818,7 @@ class MainWindow(object):
         tempItem.originDataList = self.originDataList
         tempItem.step = self.currentScheduleStep
         self.ScheduleList[self.currentScheduleIndex] = tempItem
-        self.displayInfo(4)
+        self.displayInfo(3)
         
     @QtCore.Slot()
     def DeleteSchedule(self):
@@ -770,7 +827,7 @@ class MainWindow(object):
             self.ScheduleList.pop(self.currentScheduleIndex)
             if self.currentScheduleIndex > 0:
                 self.currentScheduleIndex = self.currentScheduleIndex -1
-        self.displayInfo(4)
+        self.displayInfo(3)
 
     @QtCore.Slot()
     def loadSchedule(self):
@@ -786,7 +843,7 @@ class MainWindow(object):
             self.scheduleType = True
             self._window.ScheduleMode_btn.setText('Schedule Mode <ON>')
             self.loadCurrentScheduleItem()
-            self.displayInfo(4)
+            self.displayInfo(3)
 
     def loadCurrentScheduleItem(self):
         self.actionName = self.ScheduleList[self.currentScheduleIndex].actionName
@@ -815,7 +872,7 @@ class MainWindow(object):
         self.writeScheduleFile()
         print ("Save Schedule File : " + self.scheduleSavePath)
         self.scheduleTIVpath = os.path.dirname(self.scheduleSavePath)
-        self.displayInfo(4)
+        self.displayInfo(3)
 
     def readScheduleFile(self):
         f = open(self.scheduleLoadPath, 'r')
@@ -950,7 +1007,7 @@ class MainWindow(object):
         else :
             print("[STEP 0]")
 
-            self.set_video()
+            self.set_video(1)
             self.play()
         
     @QtCore.Slot()
@@ -1045,7 +1102,46 @@ class MainWindow(object):
             self.AddScheudle()
         else :
             print("[STEP TIV Printer]")
-            controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName, self.gate_tracking_csv, self.background_img )  
+            if self.TIVPmode == 3 :
+                self.set_video(2)
+                self.currentIssueIndex = 0
+                f = open(self.singelTIVpath, 'r')
+                TIV = f.readlines()
+                f.close()
+
+                self.TIVIsampleList = []
+                index = 0 
+                while index < len(TIV) and TIV[index] != "SameIOCar\n" :
+                    index += 1
+
+                index += 1
+                while index < len(TIV) and TIV[index] != "SameIOMotor\n" :
+                    self.TIVIsampleList.append(TIV[index])
+                    index += 1
+
+                index += 1
+                while index < len(TIV) :
+                    self.TIVIsampleList.append(TIV[index])
+                    index += 1
+
+                fio = open(self.gateLineIO_txt, 'r')
+                self.TIVioLines = fio.readlines()
+                fio.close()
+
+                fp = open(self.gate_tracking_csv, "r") 
+                
+                lines = fp.readlines()
+                fp.close()
+                self.V = []
+                for j in range(0, len(lines)):
+                    self.V.append([])
+                    T = lines[j].split(",")
+                    for k in range(0, len(T)):
+                        self.V[j].append(T[k])
+
+                self.displayInfo(4)
+            else :
+                controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName, self.gate_tracking_csv, self.background_img )  
 
     @QtCore.Slot()
     def runPedestrian(self):
@@ -1090,12 +1186,15 @@ class MainWindow(object):
             self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
             self._window.TVIPrinter_btn.setText('<TVI Printer> (I)')
         elif self.TIVPmode == 2:
+            self.TIVPmode = 3
+            conf.setTIVPMode(3)
+            self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
+            self._window.TVIPrinter_btn.setText('<TVI Printer> (R)')
+        elif self.TIVPmode == 3:
             self.TIVPmode = 1
             conf.setTIVPMode(1)
             self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
             self._window.TVIPrinter_btn.setText('<TVI Printer> (V)')
-
-
 
     def setActionNameBtnText(self):
         out = ""
@@ -1175,6 +1274,99 @@ class MainWindow(object):
             err = True
 
         return err
+
+    def issueFramePrint(self, frame):
+        def RTcenter(points):
+            ans = []
+            
+            x = (int(points[0]) + int(points[4]) ) / 2
+            y = (int(points[1]) + int(points[5]) ) / 2
+            ans.append(int(x))
+            ans.append(int(y))
+            return ans
+
+
+        ### Add IO lines ###
+        V2 = self.TIVioLines[0].split(",")
+        V3 = self.TIVioLines[1].split(",")
+
+        pts = []
+        bordertype = []
+        for i in range(0, len(V2)-1):
+            bordertype.append(int(V2[i]))
+            pts.append((int(V3[2*i]), int(V3[2*i+1])))
+
+        for j in range(-1, len(bordertype)-1):
+            if bordertype[j] > 0:
+                cv2.line(frame, pts[j], pts[j+1], (0, 255, 0), 3)
+            elif bordertype[j] < 0:
+                cv2.line(frame, pts[j], pts[j+1], (0, 0, 255), 3)    
+
+        for j in range(2, len(self.TIVioLines)):
+            V4 = self.TIVioLines[j].split(",")
+            k = 0
+            for k in range(0, len(V4)-3, 2):
+                cv2.line(frame, (int(V4[k]), int(V4[k+1])), (int(V4[k+2]), int(V4[k+3])), (255, 0, 0), 2)
+
+        ### Add Issue Tracking ###
+
+        findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        j = 0
+        while int(self.V[j][0] != self.TIVIsampleList[self.currentIssueIndex].split(',')[0])  :
+            j += 1
+
+        linePoints = self.V[j]
+        centers = []
+        temp = []
+        for count in range (6,len(linePoints)):
+            if len(temp) < 8 :
+                temp.append(linePoints[count])
+            else :
+                centers.append(RTcenter(temp))            
+                temp = []
+                temp.append(linePoints[count])
+        
+        centerIndex = int(linePoints[1])
+        k = 0
+        while centerIndex <= findex and centerIndex <= int(linePoints[2]) :
+ 
+            if k == len(centers) - 1 :
+                cv2.circle(frame, (centers[k][0],centers[k][1]), 7, (0, 255, 255), -1)
+                cv2.circle(frame, (centers[k][0],centers[k][1]), 11, (0, 255, 255), 2)
+            elif k < len(centers) - 1 :
+                cv2.circle(frame, (centers[k][0],centers[k][1]), 3, (127, 255, 0), 2)
+            k += 1
+            centerIndex += 1
+
+        ### Add Tracling lines ###
+        colors = [(0,0,255), (0,128,255), (0,255,255), (255,255,255), (0,255,0), (255,255,0), (255,0,255), (255,0,0)]        
+        pos = np.zeros(8, np.int)
+        typecode = "pumctbhg"
+
+        for j in range(0, len(self.V) ):
+            if findex >= int(self.V[j][1]) and findex <= int(self.V[j][2]):           
+                idx = 6+8*(findex-int(self.V[j][1]))   
+                k = 0
+                for k in range(0, 8):
+                    pos[k] = int(self.V[j][idx+k])
+                    
+                if pos[0] > 0:    
+
+                    cv2.line(frame, (pos[0], pos[1]), (pos[2], pos[3]), (0, 0, 255), 4)
+                    cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), colors[typecode.find(str(self.V[j][5]))], 4)
+                    cv2.line(frame, (pos[4], pos[5]), (pos[6], pos[7]), colors[typecode.find(str(self.V[j][5]))], 4)
+                    cv2.line(frame, (pos[6], pos[7]), (pos[0], pos[1]), colors[typecode.find(str(self.V[j][5]))], 4)       
+
+                    if self.displayType :
+                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
+                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
+
+                    elif int(self.V[j][0] == self.TIVIsampleList[self.currentIssueIndex].split(',')[0]) :
+                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
+                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
+
+
+        return frame
 
 
 class CutInfo() :

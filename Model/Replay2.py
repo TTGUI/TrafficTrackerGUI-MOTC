@@ -85,17 +85,19 @@ def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, dis
                 for k in range(0, 8):
                     pos[k] = int(V[j][idx+k])
                     
-                if pos[0] > 0:    
-                    
-                    if displayType :
-
-                        cv2.putText(frame, str(V[j][0])+V[j][3]+">"+V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,0), 6)
-                        cv2.putText(frame, str(V[j][0])+V[j][3]+">"+V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,0), 2)
+                if pos[0] > 0:  
 
                     cv2.line(frame, (pos[0], pos[1]), (pos[2], pos[3]), (0, 0, 255), 4)
                     cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), colors[typecode.find(str(V[j][5]))], 4)
                     cv2.line(frame, (pos[4], pos[5]), (pos[6], pos[7]), colors[typecode.find(str(V[j][5]))], 4)
                     cv2.line(frame, (pos[6], pos[7]), (pos[0], pos[1]), colors[typecode.find(str(V[j][5]))], 4)
+
+                    if displayType :
+
+                        cv2.putText(frame, str(V[j][0])+V[j][3]+">"+V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
+                        cv2.putText(frame, str(V[j][0])+V[j][3]+">"+V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,0), 2)
+
+
 
 
         # frame2_resized = cv2.resize(frame, (1024, 540), cv2.INTER_AREA)

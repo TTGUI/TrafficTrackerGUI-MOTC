@@ -8,7 +8,7 @@ loggerLevel = 'debug'
 # [ 2 ] - Yolo Model Name : <last_100.pt> | <20211109172733_last_200_1920.pt> | <ect.>
 # [ 3 ] - TIV ignore frame, ignore top and end frames to calculate TIV : <900>
 # [ 4 ] - Extend Print Frame, When generating issue track vidoe, this number will be the extra length at the beginning and end of the video : <100>
-# [ 5 ] - TIVPrint mode : <1> Video output mode | <2> background output mode.
+# [ 5 ] - TIVPrint mode : <1> Video output mode | <2> background output mode | <3> Real Time Display.
 
 ID_Version = 0
 ID_StabMode = 1

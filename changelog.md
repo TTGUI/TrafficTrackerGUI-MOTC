@@ -1,10 +1,23 @@
 ## Changelog
 
+### v3.2.3 - TIV2.3 (2023/4/12)
+
+#### Improvements
+
+- main_window.py : support real time display TIV Printer.
+- main_window.py : Support viewing the specified number track.
+- main_window.py : improvement video display logic.
+- Replay2.py : improvement ID display style.
+
+#### Document
+
+- TrafficTrackerGUI_introduction.docx : update v3.2.3.
+
 ### v3.2.2 - TIV2.2 (2023/4/11)
 
 #### Improvements
 
-- TIVPrinter.py : add choice function to select output video or image.
+- main_window.py : add choice function to select output video or image.
 
 #### Document
 
