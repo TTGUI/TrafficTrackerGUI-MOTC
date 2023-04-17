@@ -185,11 +185,11 @@ class MainWindow(object):
         self._window.TVI_btn.clicked.connect(self.step8_singleTIV)
 
         if self.TIVPmode == 1:
-            self._window.TVIPrinter_btn.setText('<TVI Printer> (V)')
+            self._window.TVIPrinter_btn.setText('<TIV Printer> (V)')
         elif self.TIVPmode == 2:
-            self._window.TVIPrinter_btn.setText('<TVI Printer> (I)')
+            self._window.TVIPrinter_btn.setText('<TIV Printer> (I)')
         elif self.TIVPmode == 3:
-            self._window.TVIPrinter_btn.setText('<TVI Printer> (R)')
+            self._window.TVIPrinter_btn.setText('<TIV Printer> (R)')
         self._window.TVIPrinter_btn.clicked.connect(self.step9_TVIPrinter)
 
         #########################################################
@@ -1184,17 +1184,17 @@ class MainWindow(object):
             self.TIVPmode = 2
             conf.setTIVPMode(2)
             self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
-            self._window.TVIPrinter_btn.setText('<TVI Printer> (I)')
+            self._window.TVIPrinter_btn.setText('<TIV Printer> (I)')
         elif self.TIVPmode == 2:
             self.TIVPmode = 3
             conf.setTIVPMode(3)
             self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
-            self._window.TVIPrinter_btn.setText('<TVI Printer> (R)')
+            self._window.TVIPrinter_btn.setText('<TIV Printer> (R)')
         elif self.TIVPmode == 3:
             self.TIVPmode = 1
             conf.setTIVPMode(1)
             self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
-            self._window.TVIPrinter_btn.setText('<TVI Printer> (V)')
+            self._window.TVIPrinter_btn.setText('<TIV Printer> (V)')
 
     def setActionNameBtnText(self):
         out = ""
