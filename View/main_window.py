@@ -399,7 +399,8 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def fpsback(self) :
-        self.play_bool = False
+        if not self.TIVPmode == 3 :
+            self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 101 )
         if self.cap.isOpened() :
             ret, frame = self.cap.read()
@@ -408,7 +409,8 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def fpsnext(self) :
-        self.play_bool = False
+        if not self.TIVPmode == 3 :
+            self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) + 99 )
         if self.cap.isOpened() :
             ret, frame = self.cap.read()
@@ -1161,7 +1163,7 @@ class MainWindow(object):
             conf.setStabMode('CPU')
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
             self._window.step1_btn.setText('[STEP 1] (C)\nStable')
-        self._window.title.setText(str(conf.version()) + " | " + self.stabMode + " | " + self.yoloModel)
+        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel)
     
     @QtCore.Slot()
     def changeYoloModel(self):
@@ -1173,7 +1175,7 @@ class MainWindow(object):
         
             print(tempName[-1])
             self.yoloModel = tempName[-1]
-            self._window.title.setText(conf.version + " | " + self.stabMode + " | " + self.yoloModel)
+            self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel)
             conf.setYoloModel(self.yoloModel)
         else :
             print("[CANCEL] YoloModel change cancel.")

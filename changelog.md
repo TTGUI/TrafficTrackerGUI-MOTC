@@ -1,5 +1,15 @@
 ## Changelog
 
+### v3.2.4 (2023/4/21)
+
+#### Improvements
+
+- main_window.py : keep playing when fpsback or fpsnext in TVI realtime display mode.
+
+#### Bug fixed
+
+- TIVPinter.py : There is a bug in the TIV CSV sorting function - it is not sorting based on integers but rather on strings.
+
 ### v3.2.3 - TIV2.3 (2023/4/12)
 
 #### Improvements

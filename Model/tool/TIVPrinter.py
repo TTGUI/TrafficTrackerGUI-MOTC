@@ -49,8 +49,7 @@ class TIVP:
         return frame
 
     def TIVgetCsv(self, TIV, gate_csv):
-        TIV.sort()
-
+        TIV.sort(key=int)
         f = open(gate_csv, 'r')
         gateCsvList = f.readlines()
         f.close()
@@ -59,7 +58,8 @@ class TIVP:
         i = 0
         pointerIndex = 0
 
-        while i < len(gateCsvList):
+        while i < len(gateCsvList) and pointerIndex < len(TIV):
+            
             if gateCsvList[i].split(",")[0] == TIV[pointerIndex] :
                 tivCsv.append(gateCsvList[i])
                 if pointerIndex < len(TIV):
@@ -67,6 +67,7 @@ class TIVP:
                 else :
                     break
             i += 1
+        
         return tivCsv
 
     def videoMode(self, sameIOList, result_path, stab_video, io):
