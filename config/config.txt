@@ -1,6 +1,6 @@
 3.2.4
 GPU
-best_1920_hcioudhxdhy_image_weights.pt
+best_20230414_7.4.2.pt
 900
 100
-3
+2

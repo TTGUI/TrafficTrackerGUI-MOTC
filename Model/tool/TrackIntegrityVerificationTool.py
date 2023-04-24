@@ -17,7 +17,7 @@ class TIVT:
         self.lineTitle = "gate.csv,Ignore Frame / Ignore Final Frame,汽機車完整度比例,汽車完整度比例,機車完整度比例,汽車同方向進出佔完整軌跡比例,機車同方向進出佔完整軌跡比例"
         self.lineTitle = self.lineTitle + ",汽車同方向進出數量,汽車完整軌跡數量,汽車總軌跡數量(濾除全X),機車同方向進出數量,機車完整軌跡數量,機車總軌跡數量(濾除全X)"
 
-        print("[TIVT Start.]")
+        
 
     def needIgnore(self, lineSp):
         
@@ -84,6 +84,7 @@ class TIVT:
         return self.lineTitle
 
     def trackIntegrity(self, gateCsvPath, singelTIVpath) :
+        print("[TIVT Start.]")
         resultPath = singelTIVpath
         f = open(gateCsvPath, 'r')
         lines = f.readlines()
