@@ -305,7 +305,7 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
 
         gpu_device = '0'
         agnostic_nms = True
-        conf_thres = 0.3
+        conf_thres = 0.3 # 0.3
         iou_thres = 0.1
 
 

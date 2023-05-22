@@ -1,5 +1,20 @@
 ## Changelog
 
+### v3.2.5 (2023/
+
+#### New Features
+
+- add /Model/tools/csvParser.py : support to operate csv file.
+
+#### Bug fixed
+
+- main_window.py : remove a bug about Replay2.py display ID.
+- main_window.py : Step0 frameplay and schedule mode frameplay bug fixed, was used to TIVissueMode.
+
+#### Document
+
+- /doc/簡易TrafficTrackerGUI操作說明.mp4
+
 ### v3.2.4 (2023/4/21)
 
 #### Improvements

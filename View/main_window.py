@@ -45,7 +45,7 @@ class MainWindow(object):
         self.resultPath = "./result/"
         
         self.scheduleType = False
-        self.currentScheduleStep = -1
+        self.currentStep = -1
         self.currentScheduleIndex = 0
         self.ScheduleList = []
         self.scheduleLoadPath = ""
@@ -275,9 +275,9 @@ class MainWindow(object):
             self.currentVideoIndex = 0
             self.videolist = os.listdir(self.originDataList)
             self.videolist.sort()
-            self.videoNumber = len(self.videolist)
+            self.videoLen = len(self.videolist)
             self.cutInfoLsit = []
-            for i in range( 0 ,self.videoNumber ):
+            for i in range( 0 ,self.videoLen ):
                 tempCut = CutInfo()            
                 
                 currentVideo = self.videolist[i]
@@ -291,7 +291,7 @@ class MainWindow(object):
             self.displayInfo(2)
 
             out = ''
-            for i in range(0,self.videoNumber) :
+            for i in range(0,self.videoLen) :
                 out = out + '[' + str(i+1) +'] '+ self.videolist[i] + '\n'
 
             msgBox = QMessageBox()
@@ -369,7 +369,7 @@ class MainWindow(object):
                 break
             nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             # print(nowFream)
-            if not self.scheduleType and self.TIVPmode == 3 :
+            if not self.scheduleType and self.TIVPmode == 3 and self.currentStep == 9 :
                 frame = self.issueFramePrint(frame)
             else :        
                 cv2.putText(frame, str(nowFream), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
@@ -465,8 +465,8 @@ class MainWindow(object):
     def displayInfo(self,type):
 
         if type == 1 : # display Step 0 CutInfo
-            out = '\tCutInfo  ( ' + str(self.currentVideoIndex + 1) + ' / ' + str(self.videoNumber) + ' )\n'
-            for i in range(0,self.videoNumber) :
+            out = '\tCutInfo  ( ' + str(self.currentVideoIndex + 1) + ' / ' + str(self.videoLen) + ' )\n'
+            for i in range(0,self.videoLen) :
                 if i == self.currentVideoIndex :
                     out = out + "=>"
                 else :
@@ -480,7 +480,7 @@ class MainWindow(object):
             self._window.cutinfo.setText(out)
         elif type == 2 : # display Step 0 Video List
             out = 'Video List :\n'
-            for i in range(0,self.videoNumber) :
+            for i in range(0,self.videoLen) :
                 out = out + '[' + str(i+1) +'] '+ self.videolist[i] + '\n'            
             self._window.cutinfo.setText(out)
         elif type == 3: # display Schedule Lsit
@@ -527,54 +527,62 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def back(self):
-        if self.scheduleType :
+        if self.scheduleType : # 在Schedule 編輯模式
             if self.currentScheduleIndex > 0 :
                 self.currentScheduleIndex = self.currentScheduleIndex - 1
                 
                 self.displayInfo(3)
-        elif self.TIVPmode == 3 :
+        elif self.TIVPmode == 3 : # 在TIVP Realtime 模式
             if self.currentIssueIndex > 0 :
                 self.currentIssueIndex -= 1
                 self.displayInfo(4)  
-        elif self.currentVideoIndex > 0 :
+        elif self.currentVideoIndex > 0 : # 在Step 0 模式
             self.currentVideoIndex = self.currentVideoIndex - 1
+            self.displayInfo(2) 
             self.load()
             self.save()
 
     @QtCore.Slot()
     def next(self):
 
-        if self.scheduleType :
+        if self.scheduleType : # 在Schedule 編輯模式
             if self.currentScheduleIndex < len(self.ScheduleList) - 1 :
                 self.currentScheduleIndex = self.currentScheduleIndex + 1
                 
                 self.displayInfo(3)
-        elif self.TIVPmode == 3 :
+        elif self.currentStep == 9 and self.TIVPmode == 3 : # 在TIVP Realtime 模式
             if self.currentIssueIndex < len(self.TIVIsampleList) - 1:
                 self.currentIssueIndex += 1
                 self.displayInfo(4)
-        elif self.currentVideoIndex < self.videoNumber - 1 :
+        elif self.currentVideoIndex < self.videoLen - 1 : # 在Step 0 模式
             self.currentVideoIndex = self.currentVideoIndex + 1
+            self.displayInfo(2) 
             self.load()
             self.save()
 
     @QtCore.Slot()
     def forwardPage(self):
-        if self.scheduleType  :
+        if self.scheduleType : # 在Schedule 編輯模式
             if self.page > 0:
                 self.page = self.page -1
                 self.currentScheduleIndex = self.page * self.pageLen
             elif self.page == 0 :
                 self.currentScheduleIndex = 0
             self.displayInfo(3)
-        elif self.TIVPmode == 3 :  
+        elif self.currentStep == 9 and self.TIVPmode == 3 : # 在TIVP Realtime 模式
             if self.page > 0:
                 self.page = self.page -1
                 self.currentIssueIndex = self.page * self.pageLen
             elif self.page == 0 :
                 self.currentIssueIndex = 0
             self.displayInfo(4)
-
+        else: # 在Step 0 模式
+            if self.page > 0:
+                self.page = self.page -1
+                self.currentVideoIndex = self.page * self.pageLen
+            elif self.page == 0 :
+                self.currentVideoIndex = 0
+            self.displayInfo(2)
 
     @QtCore.Slot()
     def nextPage(self):
@@ -589,6 +597,12 @@ class MainWindow(object):
                 self.page = self.page + 1
                 self.currentIssueIndex = self.page * self.pageLen
             self.displayInfo(4)
+        else:
+            if self.page < int((self.videoLen-1) / self.pageLen ):
+                self.page = self.page + 1
+                self.currentVideoIndex = self.page * self.pageLen
+            self.displayInfo(2)
+        
 
     @QtCore.Slot()
     def setKey(self):
@@ -658,7 +672,7 @@ class MainWindow(object):
         if self.cuttingWarning() == False :
             f = open(self.cutinfo_txt, 'w')
             
-            for i in range(0,self.videoNumber) :
+            for i in range(0,self.videoLen) :
                 out = ''
                 out = out + str(self.cutInfoLsit[i].getKey()) + '\t'
                 out = out + str(self.cutInfoLsit[i].getStart()) + '\t'
@@ -706,11 +720,10 @@ class MainWindow(object):
     @QtCore.Slot()
     def StartSchedule(self):
 
+        self.scheduleType = False 
         cuurentTIVT = TrackIntegrityVerificationTool.TIVT()
         ScheduTIVList = []
         ScheduTIVList.append(cuurentTIVT.retTitle())
-
-
 
         for i in range(self.currentScheduleIndex ,len(self.ScheduleList)):
             self.currentScheduleIndex = i
@@ -781,9 +794,8 @@ class MainWindow(object):
 
         print ("ALL Schedule Done.")
 
-        if self.scheduleType == True:
-            self.scheduleType = False
-            self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
+        self.scheduleType = False
+        self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
 
     @QtCore.Slot()
     def AddScheudle(self):
@@ -793,7 +805,7 @@ class MainWindow(object):
         tempItem.actionName = self.actionName
         tempItem.resultPath = self.resultPath
         tempItem.originDataList = self.originDataList
-        tempItem.step = self.currentScheduleStep
+        tempItem.step = self.currentStep
         self.ScheduleList.insert(self.currentScheduleIndex +1, tempItem)
         if len(self.ScheduleList) == 1 :
             self.currentScheduleIndex = 0
@@ -818,7 +830,7 @@ class MainWindow(object):
         tempItem.actionName = self.actionName
         tempItem.resultPath = self.resultPath
         tempItem.originDataList = self.originDataList
-        tempItem.step = self.currentScheduleStep
+        tempItem.step = self.currentStep
         self.ScheduleList[self.currentScheduleIndex] = tempItem
         self.displayInfo(3)
         
@@ -1000,24 +1012,20 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step0(self):
-
+        self.currentStep = 0
         if self.scheduleType :
-            print("Current Schedule Item Step >> 0 ")
-            self.currentScheduleStep = 0
+            print("Current Schedule Item Step >> 0 ")            
             self.AddScheudle()
-
         else :
             print("[STEP 0]")
-
             self.set_video(1)
             self.play()
         
     @QtCore.Slot()
     def step1(self):
-
+        self.currentStep = 1
         if self.scheduleType :
-            print("Current Schedule Item Step >> 1 ")
-            self.currentScheduleStep = 1
+            print("Current Schedule Item Step >> 1 ")            
             self.AddScheudle()
         else :
             print("[STEP 1]")
@@ -1025,9 +1033,9 @@ class MainWindow(object):
                
     @QtCore.Slot()
     def step2(self): # Yolo
+        self.currentStep = 2
         if self.scheduleType :
-            print("Current Schedule Item Step >> 2 ")
-            self.currentScheduleStep = 2
+            print("Current Schedule Item Step >> 2 ")            
             self.AddScheudle()
         else :
             print("[STEP 2]")
@@ -1035,9 +1043,9 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step3(self): # Tracking
+        self.currentStep = 3
         if self.scheduleType :
             print("Current Schedule Item Step >> 3 ")
-            self.currentScheduleStep = 3
             self.AddScheudle()
         else :
             print("[STEP 3]")
@@ -1045,9 +1053,9 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step4(self): # BackGround
+        self.currentStep = 4
         if self.scheduleType :
-            print("Current Schedule Item Step >> 4 ")
-            self.currentScheduleStep = 4
+            print("Current Schedule Item Step >> 4 ")            
             self.AddScheudle()
         else :
             print("[STEP 4]")
@@ -1057,20 +1065,19 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step5(self): # DrawIO
+        self.currentStep = 5
         if self.scheduleType :
-            print("Current Schedule Item Step >> 5 ")
-            self.currentScheduleStep = 5
+            print("Current Schedule Item Step >> 5 ")            
             self.AddScheudle()
         else :  
             print("[STEP 5]")
-
             controller.con_step5(self.gateLineIO_txt,self.background_img)
 
     @QtCore.Slot()
     def step6(self): # IO added
+        self.currentStep = 6
         if self.scheduleType :
-            print("Current Schedule Item Step >> 6 ")
-            self.currentScheduleStep = 6
+            print("Current Schedule Item Step >> 6 ")            
             self.AddScheudle()
         else :
             print("[STEP 6]")
@@ -1078,9 +1085,9 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step7(self): # Replay
+        self.currentStep = 7
         if self.scheduleType :
-            print("Current Schedule Item Step >> 7 ")
-            self.currentScheduleStep = 7
+            print("Current Schedule Item Step >> 7 ")            
             self.AddScheudle()
         else :
             print("[STEP 7]")
@@ -1088,9 +1095,9 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step8_singleTIV(self):
+        self.currentStep = 8
         if self.scheduleType :
-            print("Current Schedule Item Step >> TIV ")
-            self.currentScheduleStep = 8
+            print("Current Schedule Item Step >> TIV ")            
             self.AddScheudle()
         else :
             print("[STEP TIV]")
@@ -1098,9 +1105,9 @@ class MainWindow(object):
 
     @QtCore.Slot()  
     def step9_TVIPrinter(self):
+        self.currentStep = 9
         if self.scheduleType :
             print("Current Schedule Item Step >> TIVPrinter ")
-            self.currentScheduleStep = 9
             self.AddScheudle()
         else :
             print("[STEP TIV Printer]")
@@ -1314,8 +1321,11 @@ class MainWindow(object):
 
         findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
         j = 0
-        while int(self.V[j][0] != self.TIVIsampleList[self.currentIssueIndex].split(',')[0])  :
-            j += 1
+        if len(self.TIVIsampleList) != 0 :
+            while int(self.V[j][0] != self.TIVIsampleList[self.currentIssueIndex].split(',')[0])  :
+                j += 1
+        else :
+            print("[TIV No Issue]")
 
         linePoints = self.V[j]
         centers = []
@@ -1355,7 +1365,8 @@ class MainWindow(object):
                 if pos[0] > 0:    
 
                     cv2.line(frame, (pos[0], pos[1]), (pos[2], pos[3]), (0, 0, 255), 4)
-                    cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), colors[typecode.find(str(self.V[j][5]))], 4)
+                    cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), (255, 0, 0), 4)
+                    # cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), colors[typecode.find(str(self.V[j][5]))], 4)
                     cv2.line(frame, (pos[4], pos[5]), (pos[6], pos[7]), colors[typecode.find(str(self.V[j][5]))], 4)
                     cv2.line(frame, (pos[6], pos[7]), (pos[0], pos[1]), colors[typecode.find(str(self.V[j][5]))], 4)       
 
