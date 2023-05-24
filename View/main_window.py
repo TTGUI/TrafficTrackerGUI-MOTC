@@ -721,6 +721,7 @@ class MainWindow(object):
     def StartSchedule(self):
 
         self.scheduleType = False 
+        self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
         cuurentTIVT = TrackIntegrityVerificationTool.TIVT()
         ScheduTIVList = []
         ScheduTIVList.append(cuurentTIVT.retTitle())
@@ -763,12 +764,10 @@ class MainWindow(object):
                 controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv) 
             elif self.ScheduleList[i].step == 7:
                 print(sch + " - [STEP 7]")
-                controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
-            
+                controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)        
             elif self.ScheduleList[i].step == 8:
                 print(sch + " - [STEP 8 - TIV]")
                 ScheduTIVList.append(controller.con_TIVT(self.gate_tracking_csv, self.singelTIVpath))
-
             elif self.ScheduleList[i].step == 9:
                 print(sch + " - [STEP 9 - TIVP]")
                 controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName, self.gate_tracking_csv, self.background_img )  
