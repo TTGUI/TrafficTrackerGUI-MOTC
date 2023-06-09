@@ -1323,8 +1323,7 @@ class MainWindow(object):
         if len(self.TIVIsampleList) != 0 :
             while int(self.V[j][0] != self.TIVIsampleList[self.currentIssueIndex].split(',')[0])  :
                 j += 1
-        else :
-            print("[TIV No Issue]")
+
 
         linePoints = self.V[j]
         centers = []
