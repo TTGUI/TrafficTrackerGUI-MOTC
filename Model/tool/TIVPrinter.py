@@ -147,7 +147,7 @@ class TIVP:
 
         V2 = io[0].split(",")
         V3 = io[1].split(",")
-
+        typecode = "XABCDEFGHIJKLMNOPQRSTUVW" 
         pts = []
         bordertype = []
         for i in range(0, len(V2)-1):
@@ -157,8 +157,13 @@ class TIVP:
         for j in range(-1, len(bordertype)-1):
             if bordertype[j] > 0:
                 cv2.line(baseFrame, pts[j], pts[j+1], (0, 255, 0), 3)
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 255, 0), 1, cv2.LINE_AA)
+
             elif bordertype[j] < 0:
                 cv2.line(baseFrame, pts[j], pts[j+1], (0, 0, 255), 3)    
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 0, 255), 1, cv2.LINE_AA)
 
         for j in range(2, len(io)):
             V4 = io[j].split(",")
@@ -166,6 +171,9 @@ class TIVP:
             for k in range(0, len(V4)-3, 2):
                 cv2.line(baseFrame, (int(V4[k]), int(V4[k+1])), (int(V4[k+2]), int(V4[k+3])), (255, 0, 0), 2)
 
+        cv2.imencode(ext=self.fileType,img=baseFrame)[1].tofile( result_path + "IO" + self.fileType)
+
+    
         # cv2.imshow("baseFrame", baseFrame)
         # cv2.waitKey()
 
@@ -174,7 +182,7 @@ class TIVP:
         if not os.path.isdir(result_path):
             os.mkdir(result_path)
         
-        cv2.imencode(ext=self.fileType,img=baseFrame)[1].tofile( result_path + "IO" + self.fileType)
+        
 
         for i in range(0, len(sameIOList)) :
             linePoints = sameIOList[i].split(",")

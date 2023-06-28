@@ -277,7 +277,7 @@ class csvParse():
             f = open(args.csv, 'r')
             self.inputCsvLine = f.readlines()
             f.close()
-            print("Input Csv > " + f"{args.csv}")
+            print("Input Csv >> " + f"{args.csv}")
         else:
             print("No input csv file")
 
@@ -303,7 +303,7 @@ class csvParse():
                 temp[0] = str(int(temp[0]) + lastID)
                 appendCsvLine[i] = ','.join(temp)
             self.inputCsvLine.extend(appendCsvLine)
-            print("Append Csv > " + f"{args.appendCsv}")
+            print("Append Csv >> " + f"{args.appendCsv}")
 
         if args.printCsvImg:
             if args.printCsvImgFileType:
@@ -318,13 +318,13 @@ class csvParse():
                 for i in range(0, len(self.inputCsvLine)):
                     f.write(self.inputCsvLine[i])
                 f.close()
-                print("Output Csv Save> " + f"{outputCsvName}")
+                print("Output Csv Save >> " + f"{outputCsvName}")
             else:
                 f = open(args.csv, 'w')
                 for i in range(0, len(self.inputCsvLine)):
                     f.write(self.inputCsvLine[i])
                 f.close()
-                print("Output Csv Save> " + f"{args.csv}")
+                print("Output Csv Save >> " + f"{args.csv}")
 
 
 if __name__ == '__main__':

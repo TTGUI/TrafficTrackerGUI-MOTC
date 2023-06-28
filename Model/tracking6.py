@@ -33,7 +33,7 @@ def rotated_rect_to_5_params(points2):
     # w = math.dist(points[0], points[3]) current version is 3.6.7
     h = dist(points[0], points[1])
     w = dist(points[0], points[3])
-
+    a=a+90
     if points[0][0] == min(points[0][0],points[1][0],points[2][0],points[3][0]):
         a = 180 - a
         if points[0][0] == points[1][0]:
@@ -162,7 +162,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
         for track_id, rect, rect2, vote in tracked_objects_1:
             # boxPoints角度定義不同
             # box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
-            box90 = cv2.boxPoints(((rect[0],rect[1]),(rect[2],rect[3]),90-rect[4]))
+            box90 = cv2.boxPoints(((rect[0],rect[1]),(rect[2],rect[3]),-rect[4]))
             # box = np.intp(box2) 
             box = np.intp(box90) 
             # t0 = int(rect[0]+rect[2]/2*math.cos(rect[4] / 180.0 * np.pi))
@@ -185,7 +185,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
         for track_id, rect, rect2, vote in tracked_objects_2:
             # boxPoints角度定義不同
             # box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
-            box90 = cv2.boxPoints(((rect[0],rect[1]),(rect[2],rect[3]),90-rect[4]))
+            box90 = cv2.boxPoints(((rect[0],rect[1]),(rect[2],rect[3]),-rect[4]))
             # box = np.intp(box2) 
             box = np.intp(box90) 
             # t0 = int(rect[0]+rect[2]/2*math.cos(rect[4] / 180.0 * np.pi))

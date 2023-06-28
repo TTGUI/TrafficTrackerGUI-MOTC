@@ -1329,6 +1329,7 @@ class MainWindow(object):
         ### Add IO lines ###
         V2 = self.TIVioLines[0].split(",")
         V3 = self.TIVioLines[1].split(",")
+        typecode = "XABCDEFGHIJKLMNOPQRSTUVW" 
 
         pts = []
         bordertype = []
@@ -1339,8 +1340,13 @@ class MainWindow(object):
         for j in range(-1, len(bordertype)-1):
             if bordertype[j] > 0:
                 cv2.line(frame, pts[j], pts[j+1], (0, 255, 0), 3)
+                cv2.putText(frame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(frame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 255, 0), 1, cv2.LINE_AA)
+
             elif bordertype[j] < 0:
                 cv2.line(frame, pts[j], pts[j+1], (0, 0, 255), 3)    
+                cv2.putText(frame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(frame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 0, 255), 1, cv2.LINE_AA)
 
         for j in range(2, len(self.TIVioLines)):
             V4 = self.TIVioLines[j].split(",")
