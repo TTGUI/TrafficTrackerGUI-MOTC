@@ -4,7 +4,7 @@ from PySide2.QtCore import Qt, QUrl
 from PySide2.QtCore import QFile
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtGui import QFont, QImage, QPixmap
-from PySide2.QtWidgets import QFileDialog, QInputDialog, QLineEdit, QWidget, QMessageBox
+from PySide2.QtWidgets import QFileDialog, QInputDialog, QLineEdit, QWidget, QMessageBox, QDialog, QVBoxLayout, QLabel, QPushButton 
 from Model.tool import TrackIntegrityVerificationTool
 
 # https://github.com/vispy/vispy/blob/main/vispy/app/backends/_pyside2.py
@@ -147,6 +147,8 @@ class MainWindow(object):
             self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
         elif self.TIVPmode == 3:
             self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
+
+        self._window.Change_Tracking_Setting.triggered.connect(self.changeTrackingSet)
 
         self._window.DroneFolder_btn.setText('Set Drone Folder')
         self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
@@ -750,7 +752,7 @@ class MainWindow(object):
                 controller.con_step2(self.stab_video, self.yolo_txt, self.yoloModel)
             elif self.ScheduleList[i].step == 3:
                 print(sch + " - [STEP 3]")
-                controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv)                
+                controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv,self.show, conf.getTrk1_Set(), conf.getTrk2_Set())                
             elif self.ScheduleList[i].step == 4:
                 print(sch + " - [STEP 4]")
                 tempName = self.resultPath + str(random.random()) +'.jpg'
@@ -1048,7 +1050,7 @@ class MainWindow(object):
             self.AddScheudle()
         else :
             print("[STEP 3]")
-            controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv)
+            controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv,self.show, conf.getTrk1_Set(), conf.getTrk2_Set())
 
     @QtCore.Slot()
     def step4(self): # BackGround
@@ -1203,6 +1205,36 @@ class MainWindow(object):
             conf.setTIVPMode(1)
             self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
             self._window.TVIPrinter_btn.setText('<TIV Printer> (V)')
+
+    def changeTrackingSet(self):
+        self.CTS_dialog = QDialog()
+        ui_file_name = './View/CTS_dialog.ui'
+        file = QFile(ui_file_name)
+        loader = QUiLoader()
+        self.CTS_dialog = loader.load(file)
+        file.close()
+        self.CTS_dialog.setWindowTitle('change Tracking Setting')
+        self.CTS_dialog.CTS_trackingSetText.setText('Enter tracking setting : max_age, min_hits, iou_threshold')
+        self.CTS_dialog.CTS_label_Trk1.setText('trackers 1 Set : Default `10,2,0.01`')
+        self.CTS_dialog.CTS_label_Trk2.setText('trackers 2 Set : Default `10,2,0.1`')
+        self.CTS_dialog.CTS_trackingSetText2.setText('Ex : max_age=10, min_hits=2, iou_threshold=0.01, type `10,2,0.01`. No space.')
+        self.CTS_dialog.CTS_submitButton.setText('Submit')
+        self.CTS_dialog.CTS_submitButton.clicked.connect(self.submitTrackingSet)
+
+        self.CTS_dialog.show()
+
+    def submitTrackingSet(self):
+        if self.CTS_dialog.CTS_Edit_1.text() != '':
+            trk1 = self.CTS_dialog.CTS_Edit_1.text()
+            print("Trackers1 Set Changed : ",trk1)
+            conf.setTrk1_Set(trk1)
+
+        if self.CTS_dialog.CTS_Edit_2.text() != '':
+            trk2 = self.CTS_dialog.CTS_Edit_2.text()        
+            conf.setTrk2_Set(trk2)
+            print("Trackers2 Set Changed : ",trk2)
+
+        self.CTS_dialog.close()
 
     def setActionNameBtnText(self):
         out = ""

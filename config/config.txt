@@ -1,6 +1,8 @@
-3.2.5
-GPU
-best_20230414_7.4.2.pt
-900
-100
-3
+Version=3.3.0
+Step1_StabMode=GPU
+Trk1_Set=10,2,0.01
+Trk2_Set=10,2,0.1
+YoloModel=best_20230414_7.4.2.pt
+TIVingoreFrames=900
+TIVP_ExtendPrintFrame=100
+TIVPmode=3

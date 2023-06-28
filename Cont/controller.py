@@ -1,4 +1,3 @@
-from Model import Kstabilization_T0N
 from logs import logger
 from View import viewer
 import time
@@ -39,12 +38,13 @@ def con_step2(stab_video, yolo_txt, yolo_model) :
     logger.info( "[Step 2] ->> Cost time : " + str(end-start)  )
     print("[SEPT2 Done.]")
 
-def con_step3(stab_video,yolo_txt,tracking_csv) :
-    from Model import Mtracking_all
+def con_step3(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set) :
+    # from Model import Mtracking_all
+    from Model import tracking6
     start = time.time()
 
-    Mtracking_all.Tracking_main(stab_video,yolo_txt,tracking_csv)
-
+    # Mtracking_all.Tracking_main(stab_video,yolo_txt,tracking_csv)
+    tracking6.main(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set)
     end = time.time()
     logger.info( "[Step 3] ->> Cost time : " + str(end-start)  )
     print("[SEPT3 Done.]")

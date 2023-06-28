@@ -1,5 +1,17 @@
 ## Changelog
 
+### v3.3.0 (2023/06/28)
+
+#### New Features
+
+- new tracking method : tracking6.py
+- add tracking trackers setting GUI.
+
+#### Improvements
+
+- more readable file : config.txt
+- fix the GUI main window layout to fit the dynamic screen size.
+
 ### v3.2.5 (2023/05/22)
 
 #### New Features
