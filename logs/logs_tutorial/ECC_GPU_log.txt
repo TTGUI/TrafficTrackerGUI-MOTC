@@ -1,3 +1,0 @@
-[STEP 1] : input path : D:/UAV_traffic_conflict_analysis_300/TrafficTrackerGUI-MOTC/result/4kdemo/drone
-[STEP 1] : output video : D:/UAV_traffic_conflict_analysis_300/TrafficTrackerGUI-MOTC/result/myResult/demo_stab.avi
-[STEP 1] : cost time : 55.546

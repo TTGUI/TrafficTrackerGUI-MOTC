@@ -1,5 +1,20 @@
 ## Changelog
 
+### v3.4.0 (2023/06/30)
+
+#### Improvements
+- requirements_cuda10.2.txt : change opencv version from 4.1.0.25 to 4.7.0.72.
+- requirements_cuda10.2.txt : remove following python packages which are no more used due to tracking code change.
+    --lap==0.4.0
+    --scikit-image==0.17.2
+    --scikit-learn==0.21.0
+    --pandas==1.1.5
+    --numba==0.53.1
+- tracking6.py : fix math.dist() invalid on python3.6.7 .
+
+#### organize
+- organize abandoned Codes again.
+
 ### v3.3.1 (2023/06/28)
 
 #### Improvements

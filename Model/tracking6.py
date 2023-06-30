@@ -21,8 +21,8 @@ def parse_line(line):
         rects.append((class_id, conf, points))
     return frame_no, rects
 
-def dist(point1, point2):
-    return ((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2) ** 0.5
+def dist(p1, p2):
+    return math.sqrt(sum((p2[i] - p1[i])**2 for i in range(len(p1))))
 
 
 def rotated_rect_to_5_params(points2):
@@ -33,7 +33,7 @@ def rotated_rect_to_5_params(points2):
     # w = math.dist(points[0], points[3]) current version is 3.6.7
     h = dist(points[0], points[1])
     w = dist(points[0], points[3])
-    a=a+90
+    
     if points[0][0] == min(points[0][0],points[1][0],points[2][0],points[3][0]):
         a = 180 - a
         if points[0][0] == points[1][0]:
@@ -99,24 +99,27 @@ def interpolate_zeros(pos_list):
 
     return pos_list
 
+
+
 def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set=(10, 2, 0.1)):
     # file_name = '高雄市前鎮區二聖二路_復興三路口80米_A_stab'
-    lines = read_file(yolo_txt)   
-    
+    lines = read_file(yolo_txt) 
+
     if show:
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         cap = cv2.VideoCapture(stab_video)
-        # out = cv2.VideoWriter(tracking_csv[0:-4]+'_result.mp4', fourcc, 9.99, (1920, 1080))
+        # out = cv2.VideoWriter(file_name+'_result.mp4', fourcc, 9.99, (1920, 1080))
  
     # trackers_1 = SORT(max_age=10, min_hits=2, iou_threshold=0.01)
     # trackers_2 = SORT(max_age=10, min_hits=2, iou_threshold=0.1)
     trackers_1 = SORT(trk1_set[0], trk1_set[1], trk1_set[2])
     trackers_2 = SORT(trk2_set[0], trk2_set[1], trk2_set[2])
+
     track1 = {} 
     track2 = {}
     count = 1
     for line in lines:
-        
+
         print(f"{count} / {len(lines)}", end='\r')
         count += 1
         frame_no, rects = parse_line(line)
@@ -132,7 +135,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
             points = points.astype(np.int32)
             if show:
                 cv2.polylines(frame, [points], True, (0, 255, 255), 4)
-                cv2.line(frame, tuple(points[0]), tuple(points[1]), (0, 0, 255), 3)
+                cv2.line(frame, points[0], points[1], (0, 0, 255), 3)
             center = np.mean(points, axis=0).astype(np.int32)
             # cv2.putText(frame, f"{i}", tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
         
@@ -161,20 +164,18 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
 
         for track_id, rect, rect2, vote in tracked_objects_1:
             # boxPoints角度定義不同
-            # box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
-            box90 = cv2.boxPoints(((rect[0],rect[1]),(rect[2],rect[3]),-rect[4]))
-            # box = np.intp(box2) 
-            box = np.intp(box90) 
+            box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
+            box = np.intp(box2) 
             # t0 = int(rect[0]+rect[2]/2*math.cos(rect[4] / 180.0 * np.pi))
             # t1 = int(rect[1]-rect[2]/2*math.sin(rect[4] / 180.0 * np.pi))
             # cv2.line(frame, (int(rect[0]), int(rect[1])), (t0, t1), (255, 255, 255), 3)
             if show:
                 cv2.drawContours(frame, [box], 0, (255, 0, 0), 3)
-                cv2.line(frame, tuple(box[0]), tuple(box[1]), (255, 128, 128), 3)
-        
+                cv2.line(frame, box[0], box[1], (255, 128, 128), 3)
+       
             rect3 = rect2.astype(int).reshape(-1, 2)
             if show:
-                cv2.line(frame, tuple(rect3[0]), tuple(rect3[1]), (0, 0, 255), 2)
+                cv2.line(frame, rect3[0], rect3[1], (0, 0, 255), 2)
                 cv2.polylines(frame, [rect3], True, (128, 128, 255), 1)
                 cv2.putText(frame, str(track_id), (int(rect[0]), int(rect[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)    
             if rect2[0] == 0 and rect2[1] == 0:
@@ -184,20 +185,18 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
          
         for track_id, rect, rect2, vote in tracked_objects_2:
             # boxPoints角度定義不同
-            # box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
-            box90 = cv2.boxPoints(((rect[0],rect[1]),(rect[2],rect[3]),-rect[4]))
-            # box = np.intp(box2) 
-            box = np.intp(box90) 
+            box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
+            box = np.intp(box2) 
             # t0 = int(rect[0]+rect[2]/2*math.cos(rect[4] / 180.0 * np.pi))
             # t1 = int(rect[1]-rect[2]/2*math.sin(rect[4] / 180.0 * np.pi))
             # cv2.line(frame, (int(rect[0]), int(rect[1])), (t0, t1), (255, 255, 255), 3)
             if show:
                 cv2.drawContours(frame, [box], 0, (255, 0, 0), 3)
-                cv2.line(frame, tuple(box[0]), tuple(box[1]), (255, 128, 128), 3)
+                cv2.line(frame, box[0], box[1], (255, 128, 128), 3)
        
             rect3 = rect2.astype(int).reshape(-1, 2)
             if show:
-                cv2.line(frame, tuple(rect3[0]), tuple(rect3[1]), (0, 0, 255), 2)
+                cv2.line(frame, rect3[0], rect3[1], (0, 0, 255), 2)
                 cv2.polylines(frame, [rect3], True, (128, 128, 255), 1)
                 cv2.putText(frame, str(track_id), (int(rect[0]), int(rect[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
 
@@ -205,7 +204,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
                 track2 = add_trajectory(track2, track_id, frame_no, vote, rect3.reshape(1,8))
             else:
                 track2 = add_trajectory(track2, track_id, frame_no, vote, rect3.reshape(1,8))
-        
+
         if show:
             # out.write(frame)  
             cv2.imshow('Frame', frame)
@@ -238,4 +237,5 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
         # out.release()
         csvfile.close()
         cv2.destroyAllWindows()
+
 
