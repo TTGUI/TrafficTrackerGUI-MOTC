@@ -1,5 +1,13 @@
 ## Changelog
 
+### v3.4.1 (2023/07/06)
+
+#### Bug fixed
+- fix issue #4 #5 : In schedule run mode, Step0 can't use player function.
+
+#### Improvements
+- TIV Printer(RealTime) : Now the ID can be displayed while using the jump feature at the same time.
+
 ### v3.4.0 (2023/06/30)
 
 #### Improvements

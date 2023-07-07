@@ -44,7 +44,8 @@ class MainWindow(object):
         self.actionName = "inital_action_name"
         self.resultPath = "./result/"
         
-        self.scheduleType = False
+        self.play_bool = False
+        self.scheduleType = 'off' # 'off' 'edit' 'run'
         self.currentStep = -1
         self.currentScheduleIndex = 0
         self.ScheduleList = []
@@ -313,13 +314,18 @@ class MainWindow(object):
             
     @QtCore.Slot()
     def frameDisplay(self, frame) :
+
+        if self.TIVPmode == 3 and self.currentStep == 9 :
+            frame = self.issueFramePrint(frame)
+
         fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 6, cv2.LINE_AA)
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
         self._window.FPS.setText(fps[:-2])
         nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
         self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))  
-
+        frame = cv2.resize(frame, (1920, 1080))
+        frame = cv2.resize(frame, (1536, 864))
         show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
         self._window.display.setScaledContents(True) # 自適應邊框  
@@ -371,10 +377,8 @@ class MainWindow(object):
                 break
             nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             # print(nowFream)
-            if not self.scheduleType and self.TIVPmode == 3 and self.currentStep == 9 :
-                frame = self.issueFramePrint(frame)
-            else :        
-                cv2.putText(frame, str(nowFream), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
+
+
             
             self.frameDisplay(frame)
             QtTest.QTest.qWait(video_FPS)
@@ -388,11 +392,14 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def stop(self):
-
-        if self.scheduleType :
+        self.play_bool = False
+        if self.scheduleType == 'run':
             self.currentScheduleIndex = self.currentScheduleIndex + 1
             self.displayInfo(3)
             self.StartSchedule()
+            self.cap.release()
+            cv2.destroyAllWindows()
+                
         else :
 
             self.cap.release()
@@ -401,7 +408,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def fpsback(self) :
-        if not self.TIVPmode == 3 :
+        if self.scheduleType == 'off' :
             self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 101 )
         if self.cap.isOpened() :
@@ -411,7 +418,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def fpsnext(self) :
-        if not self.TIVPmode == 3 :
+        if self.scheduleType == 'off' :
             self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) + 99 )
         if self.cap.isOpened() :
@@ -529,12 +536,12 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def back(self):
-        if self.scheduleType : # 在Schedule 編輯模式
+        if self.scheduleType == 'edit' : # 在Schedule 編輯模式
             if self.currentScheduleIndex > 0 :
                 self.currentScheduleIndex = self.currentScheduleIndex - 1
                 
                 self.displayInfo(3)
-        elif self.TIVPmode == 3 : # 在TIVP Realtime 模式
+        elif self.currentStep == 9 and self.TIVPmode == 3 : # 在TIVP Realtime 模式
             if self.currentIssueIndex > 0 :
                 self.currentIssueIndex -= 1
                 self.displayInfo(4)  
@@ -547,7 +554,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def next(self):
 
-        if self.scheduleType : # 在Schedule 編輯模式
+        if self.scheduleType == 'edit' : # 在Schedule 編輯模式
             if self.currentScheduleIndex < len(self.ScheduleList) - 1 :
                 self.currentScheduleIndex = self.currentScheduleIndex + 1
                 
@@ -564,7 +571,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def forwardPage(self):
-        if self.scheduleType : # 在Schedule 編輯模式
+        if self.scheduleType == 'edit' : # 在Schedule 編輯模式
             if self.page > 0:
                 self.page = self.page -1
                 self.currentScheduleIndex = self.page * self.pageLen
@@ -588,18 +595,18 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def nextPage(self):
-        if self.scheduleType  :
+        if self.scheduleType  == 'edit' :
             if self.page < int((len(self.ScheduleList)-1) / self.pageLen ):
                 self.page = self.page + 1
                 self.currentScheduleIndex = self.page * self.pageLen
             self.displayInfo(3)
-        elif self.TIVPmode == 3 :           
+        elif self.currentStep == 9 and self.TIVPmode == 3 : # 在TIVP Realtime 模式          
 
             if self.page < int((len(self.TIVIsampleList)-1) / self.pageLen ):
                 self.page = self.page + 1
                 self.currentIssueIndex = self.page * self.pageLen
             self.displayInfo(4)
-        else:
+        else: # 在Step 0 模式
             if self.page < int((self.videoLen-1) / self.pageLen ):
                 self.page = self.page + 1
                 self.currentVideoIndex = self.page * self.pageLen
@@ -710,20 +717,19 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def ScheduleMode(self):
-        if self.scheduleType  :
-            self.scheduleType = False
+        if self.scheduleType == 'edit' :
+            self.scheduleType = 'off'
             self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
 
-
         else:
-            self.scheduleType = True
-            self._window.ScheduleMode_btn.setText('Schedule Mode <ON>')
+            self.scheduleType = 'edit'
+            self._window.ScheduleMode_btn.setText('Schedule Mode <EDIT>')
 
     @QtCore.Slot()
     def StartSchedule(self):
 
-        self.scheduleType = False 
-        self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
+        self.scheduleType = 'run'
+        self._window.ScheduleMode_btn.setText('Schedule Mode <RUN>')
         cuurentTIVT = TrackIntegrityVerificationTool.TIVT()
         ScheduTIVList = []
         ScheduTIVList.append(cuurentTIVT.retTitle())
@@ -742,8 +748,12 @@ class MainWindow(object):
 
             if self.ScheduleList[i].step == 0:
                 print(sch + " - [STEP 0]")
+
+                self.play_bool = True
                 self.set_video(1)
                 self.play()
+                return
+
             elif self.ScheduleList[i].step == 1:
                 print(sch + " - [STEP 1]")
                 controller.con_step1(self.stab_input, self.stab_output, self.show, self.cutinfo_txt, self.stabMode)
@@ -755,9 +765,9 @@ class MainWindow(object):
                 controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv,self.show, conf.getTrk1_Set(), conf.getTrk2_Set())                
             elif self.ScheduleList[i].step == 4:
                 print(sch + " - [STEP 4]")
-                tempName = self.resultPath + str(random.random()) +'.jpg'
-                controller.con_step4(self.stab_video,tempName)
-                os.rename(tempName, self.background_img)
+
+                controller.con_step4(self.stab_video,self.background_img)
+                
             elif self.ScheduleList[i].step == 5:
                 print(sch + " - [STEP 5]")
                 controller.con_step5(self.gateLineIO_txt,self.background_img)
@@ -795,7 +805,7 @@ class MainWindow(object):
 
         print ("ALL Schedule Done.")
 
-        self.scheduleType = False
+        self.scheduleType = 'off'
         self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
 
     @QtCore.Slot()
@@ -855,8 +865,8 @@ class MainWindow(object):
             self.scheduleTIVpath = os.path.dirname(self.scheduleLoadPath)
 
             self.readScheduleFile()
-            self.scheduleType = True
-            self._window.ScheduleMode_btn.setText('Schedule Mode <ON>')
+            self.scheduleType = 'edit'
+            self._window.ScheduleMode_btn.setText('Schedule Mode <EDIT>')
             self.loadCurrentScheduleItem()
             self.displayInfo(3)
 
@@ -1014,7 +1024,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def step0(self):
         self.currentStep = 0
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 0 ")            
             self.AddScheudle()
         else :
@@ -1025,7 +1035,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def step1(self):
         self.currentStep = 1
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 1 ")            
             self.AddScheudle()
         else :
@@ -1035,7 +1045,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def step2(self): # Yolo
         self.currentStep = 2
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 2 ")            
             self.AddScheudle()
         else :
@@ -1045,7 +1055,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def step3(self): # Tracking
         self.currentStep = 3
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 3 ")
             self.AddScheudle()
         else :
@@ -1055,19 +1065,18 @@ class MainWindow(object):
     @QtCore.Slot()
     def step4(self): # BackGround
         self.currentStep = 4
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 4 ")            
             self.AddScheudle()
         else :
             print("[STEP 4]")
-            tempName = self.resultPath + str(random.random()) +'.jpg'
-            controller.con_step4(self.stab_video,tempName)
-            os.rename(tempName, self.background_img)
+            controller.con_step4(self.stab_video,self.background_img)
+            
 
     @QtCore.Slot()
     def step5(self): # DrawIO
         self.currentStep = 5
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 5 ")            
             self.AddScheudle()
         else :  
@@ -1077,7 +1086,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def step6(self): # IO added
         self.currentStep = 6
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 6 ")            
             self.AddScheudle()
         else :
@@ -1087,7 +1096,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def step7(self): # Replay
         self.currentStep = 7
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 7 ")            
             self.AddScheudle()
         else :
@@ -1097,7 +1106,7 @@ class MainWindow(object):
     @QtCore.Slot()
     def step8_singleTIV(self):
         self.currentStep = 8
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> TIV ")            
             self.AddScheudle()
         else :
@@ -1107,7 +1116,7 @@ class MainWindow(object):
     @QtCore.Slot()  
     def step9_TVIPrinter(self):
         self.currentStep = 9
-        if self.scheduleType :
+        if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> TIVPrinter ")
             self.AddScheudle()
         else :
@@ -1215,8 +1224,8 @@ class MainWindow(object):
         file.close()
         self.CTS_dialog.setWindowTitle('change Tracking Setting')
         self.CTS_dialog.CTS_trackingSetText.setText('Enter tracking setting : max_age, min_hits, iou_threshold')
-        self.CTS_dialog.CTS_label_Trk1.setText('trackers 1 Set : Default `10,2,0.01`')
-        self.CTS_dialog.CTS_label_Trk2.setText('trackers 2 Set : Default `10,2,0.1`')
+        self.CTS_dialog.CTS_label_Trk1.setText('大車 (汽車、卡車、公車) Set : Default `10,2,0.01`')
+        self.CTS_dialog.CTS_label_Trk2.setText('小車 (人、機車、自行車) Set : Default `10,2,0.1`')
         self.CTS_dialog.CTS_trackingSetText2.setText('Ex : max_age=10, min_hits=2, iou_threshold=0.01, type `10,2,0.01`. No space.')
         self.CTS_dialog.CTS_submitButton.setText('Submit')
         self.CTS_dialog.CTS_submitButton.clicked.connect(self.submitTrackingSet)
@@ -1389,6 +1398,7 @@ class MainWindow(object):
         ### Add Tracling lines ###
         colors = [(0,0,255), (0,128,255), (0,255,255), (255,255,255), (0,255,0), (255,255,0), (255,0,255), (255,0,0)]        
         pos = np.zeros(8, np.int)
+        # 0:行人(紅) 1:自行車(橘) 2:機車(黃) 3:小客車(白) 4:貨車(綠) 5:大客車(水藍) 6:聯結車頭(粉紅) 7:聯結車身(藍)
         typecode = "pumctbhg"
 
         for j in range(0, len(self.V) ):

@@ -112,8 +112,8 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
  
     # trackers_1 = SORT(max_age=10, min_hits=2, iou_threshold=0.01)
     # trackers_2 = SORT(max_age=10, min_hits=2, iou_threshold=0.1)
-    trackers_1 = SORT(trk1_set[0], trk1_set[1], trk1_set[2])
-    trackers_2 = SORT(trk2_set[0], trk2_set[1], trk2_set[2])
+    trackers_1 = SORT(trk1_set[0], trk1_set[1], trk1_set[2]) # 大車 (汽車、卡車、公車)
+    trackers_2 = SORT(trk2_set[0], trk2_set[1], trk2_set[2]) # 小車 (人、機車、自行車)
 
     track1 = {} 
     track2 = {}
@@ -215,6 +215,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
                 break
 
     # 開啟文件，並用寫入模式 'w'
+    # 0`p`:行人(紅) 1`u`:自行車(橘) 2`m`:機車(黃) 3`c`:小客車(白) 4`t`:貨車(綠) 5`b`:大客車(水藍) 6`h`:聯結車頭(粉紅) 7`g`:聯結車身(藍) 
     V_type = "pumctbhg" 
     with open(tracking_csv, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)

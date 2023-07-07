@@ -19,7 +19,7 @@ def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, dis
     # out = cv2.VideoWriter("台北市信義區松仁路_信義路五段路口80米_A_result.avi",fourcc, 9.99, (1920,1080))
     out = cv2.VideoWriter(result_video,fourcc, video.get(cv2.CAP_PROP_FPS), (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))))
 
-    # 0:行人(紅) 1:自行車(橘) 2:機車(黃) 3:小客車(白) 4:貨車(綠) 5:大客車(水藍) 6:聯結車頭(粉紅) 7:聯結車身(藍) 
+    # 0`p`:行人(紅) 1`u`:自行車(橘) 2`m`:機車(黃) 3`c`:小客車(白) 4`t`:貨車(綠) 5`b`:大客車(水藍) 6`h`:聯結車頭(粉紅) 7`g`:聯結車身(藍) 
     typecode = "pumctbhg"
     colors = [(0,0,255), (0,128,255), (0,255,255), (255,255,255), (0,255,0), (255,255,0), (255,0,255), (255,0,0)]
     # fp = open("台北市信義區松仁路_信義路五段路口80米_A_gate.csv", "r") 

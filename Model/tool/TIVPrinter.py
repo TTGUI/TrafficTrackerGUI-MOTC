@@ -70,7 +70,39 @@ class TIVP:
         
         return tivCsv
 
-    def videoMode(self, sameIOList, result_path, stab_video, io):
+    def makeIOjpg(self, bkg_path, io, result_path, actionName):
+        baseFrame = cv2.imdecode(np.fromfile(bkg_path, dtype=np.uint8), -1)
+
+        V2 = io[0].split(",")
+        V3 = io[1].split(",")
+        typecode = "XABCDEFGHIJKLMNOPQRSTUVW" 
+        pts = []
+        bordertype = []
+        for i in range(0, len(V2)-1):
+            bordertype.append(int(V2[i]))
+            pts.append((int(V3[2*i]), int(V3[2*i+1])))
+
+        for j in range(-1, len(bordertype)-1):
+            if bordertype[j] > 0:
+                cv2.line(baseFrame, pts[j], pts[j+1], (0, 255, 0), 3)
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 255, 0), 1, cv2.LINE_AA)
+
+            elif bordertype[j] < 0:
+                cv2.line(baseFrame, pts[j], pts[j+1], (0, 0, 255), 3)    
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 0, 255), 1, cv2.LINE_AA)
+
+        for j in range(2, len(io)):
+            V4 = io[j].split(",")
+            k = 0
+            for k in range(0, len(V4)-3, 2):
+                cv2.line(baseFrame, (int(V4[k]), int(V4[k+1])), (int(V4[k+2]), int(V4[k+3])), (255, 0, 0), 2)
+
+        cv2.imencode(ext=self.fileType,img=baseFrame)[1].tofile( result_path + actionName + "_IO" + self.fileType)
+        return baseFrame
+
+    def videoMode(self, sameIOList, result_path, stab_video, io, actionName, bkg_path):
         cap = cv2.VideoCapture(stab_video)
         for i in range(0, len(sameIOList)) :
             linePoints = sameIOList[i].split(",")
@@ -138,53 +170,22 @@ class TIVP:
         
         cv2.destroyAllWindows()
         cap.release()
+        self.makeIOjpg(bkg_path, io, result_path, actionName)
+        
 
-    def bkgMode(self, bkg_path, io, result_path, sameIOList):
+    def bkgMode(self, bkg_path, io, result_path, sameIOList, actionName):
 
         #### Make IO line base on bkg ####
 
-        baseFrame = cv2.imdecode(np.fromfile(bkg_path, dtype=np.uint8), -1)
-
-        V2 = io[0].split(",")
-        V3 = io[1].split(",")
-        typecode = "XABCDEFGHIJKLMNOPQRSTUVW" 
-        pts = []
-        bordertype = []
-        for i in range(0, len(V2)-1):
-            bordertype.append(int(V2[i]))
-            pts.append((int(V3[2*i]), int(V3[2*i+1])))
-
-        for j in range(-1, len(bordertype)-1):
-            if bordertype[j] > 0:
-                cv2.line(baseFrame, pts[j], pts[j+1], (0, 255, 0), 3)
-                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
-                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}I", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 255, 0), 1, cv2.LINE_AA)
-
-            elif bordertype[j] < 0:
-                cv2.line(baseFrame, pts[j], pts[j+1], (0, 0, 255), 3)    
-                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (255, 255, 255), 2, cv2.LINE_AA)
-                cv2.putText(baseFrame, f"{typecode[abs(int(bordertype[j]))]}O", ((pts[j][0]+pts[j+1][0])//2, (pts[j][1]+pts[j+1][1])//2), cv2.FONT_HERSHEY_SIMPLEX,  0.5, (0, 0, 255), 1, cv2.LINE_AA)
-
-        for j in range(2, len(io)):
-            V4 = io[j].split(",")
-            k = 0
-            for k in range(0, len(V4)-3, 2):
-                cv2.line(baseFrame, (int(V4[k]), int(V4[k+1])), (int(V4[k+2]), int(V4[k+3])), (255, 0, 0), 2)
-
-        cv2.imencode(ext=self.fileType,img=baseFrame)[1].tofile( result_path + "IO" + self.fileType)
-
-    
-        # cv2.imshow("baseFrame", baseFrame)
-        # cv2.waitKey()
+        baseFrame = self.makeIOjpg(bkg_path, io, result_path, actionName)
 
         #### Add Tracking line ####
 
         if not os.path.isdir(result_path):
             os.mkdir(result_path)
         
-        
-
         for i in range(0, len(sameIOList)) :
+            
             linePoints = sameIOList[i].split(",")
             centers = []
             temp = []
@@ -195,8 +196,9 @@ class TIVP:
                     centers.append(self.RTcenter(temp))            
                     temp = []
                     temp.append(linePoints[count])
-            # eachFrame = np.zeros((baseFrame.shape[0], baseFrame.shape[1], 3), np.uint8)
-            eachFrame = cv2.imdecode(np.fromfile(result_path + "IO" + self.fileType,dtype=np.uint8),-1)
+
+            eachFrame = cv2.imdecode(np.fromfile(result_path + actionName + "_IO" + self.fileType, dtype=np.uint8),-1)
+            
             for k in range(0,len(centers)):
                 # eachFrame[centers[k][1],centers[k][0]] = self.color
                 if k == len(centers) - 1 :
@@ -207,6 +209,7 @@ class TIVP:
 
             
             fileName = linePoints[0] + "_" + linePoints[5] + "_" + linePoints[3] + linePoints[4] + "_(" + linePoints[1] + "~" + linePoints[2] + ")"
+            print("[" + str(i+1) + "/" + str(len(sameIOList)) + "] " + fileName)
             cv2.putText(eachFrame, fileName, (10, 40), cv2.FONT_HERSHEY_SIMPLEX,  1, (0,0,0), 6, cv2.LINE_AA)
             cv2.putText(eachFrame, fileName, (10, 40), cv2.FONT_HERSHEY_SIMPLEX,  1, (0, 255, 255), 2, cv2.LINE_AA)
 
@@ -257,10 +260,10 @@ class TIVP:
 
         if mode == 1 :
             print("[TIVP Mode : Video]")
-            self.videoMode(sameIOList, result_path, stab_video, io)
+            self.videoMode(sameIOList, result_path, stab_video, io, actionName, bkg)
         elif mode == 2 :
             print("[TIVP Mode : Image]")
-            self.bkgMode(bkg, io, result_path, sameIOList)
+            self.bkgMode(bkg, io, result_path, sameIOList, actionName)
 
         print("[TIVPrinter Done.]")
 

@@ -66,7 +66,7 @@ def Tracking_main(stab_video,yolo_txt,tracking_csv) :
     corners = np.zeros((trackNumber,120000), np.short) #96000
     # 車中心至車頭方向
     heads = np.zeros((trackNumber,30000), np.short)
-    # 0:行人(紅) 1:自行車(橘) 2:機車(黃) 3:小客車(白) 4:貨車(綠) 5:大客車(水藍) 6:聯結車頭(粉紅) 7:聯結車身(藍) 
+    # 0`p`:行人(紅) 1`u`:自行車(橘) 2`m`:機車(黃) 3`c`:小客車(白) 4`t`:貨車(綠) 5`b`:大客車(水藍) 6`h`:聯結車頭(粉紅) 7`g`:聯結車身(藍) 
     typecode = "pumctbhg"
     colors = [(0,0,255), (0,128,255), (0,255,255), (255,255,255), (0,255,0), (255,255,0), (255,0,255), (255,0,0)]
     types = np.zeros((trackNumber,8), np.short)

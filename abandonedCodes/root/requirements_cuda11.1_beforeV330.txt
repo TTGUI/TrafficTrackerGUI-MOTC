@@ -1,16 +1,16 @@
 # GUI
 numpy==1.19.5
-opencv-python==4.7.0.72
+opencv-python==4.1.0.25
 PySide2==5.15.2
 filterpy==1.4.5
+scikit-image==0.17.2
+lap==0.4.0
+scikit-learn==0.21.0
+pandas==1.1.5
+numba==0.53.1
 Cython==0.29.24
-ffmpeg
+ffmpeg==1.4
 
-#lap==0.4.0
-# scikit-image==0.17.2
-# scikit-learn==0.21.0
-# pandas==1.1.5
-# numba==0.53.1
 
 # YOLOv4
 matplotlib==3.3.4
