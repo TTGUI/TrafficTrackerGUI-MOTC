@@ -19,6 +19,8 @@
 
 ## Usage
 - 點擊[start_gui.bat](./start_gui.bat)開啟GUI程式。
+- 詳細操作流程請參考[TrafficTrackerGUI_introduction.docx](./doc/TrafficTrackerGUI_introduction.docx)。
+- 簡易操作流程請參考[操作影片](./doc/簡易TrafficTrackerGUI操作說明.mp4)。
 
 ## Contributing
 - 完成所有GUI介面與各步驟單元功能整合。
