@@ -1,7 +1,7 @@
 import PySide2
 import numpy as np
 from PySide2 import QtCore
-from PySide2.QtCore import QFile
+from PySide2.QtCore import QFile, QProcess
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtGui import QFont, QImage, QPixmap
 from PySide2.QtWidgets import QFileDialog, QMessageBox, QDialog
@@ -125,6 +125,8 @@ class MainWindow(object):
         # set font
         font = QFont("Arial", 15, QFont.Bold)
         self._window.title.setFont(font)
+        font = QFont("Arial", 12)
+        self._window.setFont(font)
         # set widget size (x, y, width, height)
         # self._window.title.setGeometry(0, 0, 300, 30)
         # set alignment
@@ -156,8 +158,14 @@ class MainWindow(object):
         self._window.DroneFolder_btn.setText('Set Drone Folder')
         self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
 
+        self._window.openFolder_btn_2.setText('O\np\ne\nn')
+        self._window.openFolder_btn_2.clicked.connect(self.openDroneFolder)
+
         self._window.setResultFolder_btn.setText('Set Result Folder\n[./result/]')
         self._window.setResultFolder_btn.clicked.connect(self.setResultFolder)
+
+        self._window.openFolder_btn.setText('O\np\ne\nn')
+        self._window.openFolder_btn.clicked.connect(self.openResultFolder)
 
         self._window.step0_btn.setText('[STEP 0]\nVideo Cut Set')
         self._window.step0_btn.clicked.connect(self.step0)
@@ -846,6 +854,12 @@ class MainWindow(object):
 
         self._window.DroneFolder_btn.setText('Set Drone Folder\n['+ out +']')
 
+    def openDroneFolder(self):
+        if os.path.isdir(self.droneFolderPath) :
+            QProcess.startDetached('explorer', [os.path.normpath(self.droneFolderPath)])
+        else :
+            print("<< Warinig : Your Result Folder is not exist.")
+
     @QtCore.Slot()
     def setResultFolder(self):
         temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath,options=QFileDialog.DontUseNativeDialog) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
@@ -869,6 +883,12 @@ class MainWindow(object):
                 counter = 0
 
         self._window.setResultFolder_btn.setText('Set Result Folder\n['+ out +']')
+
+    def openResultFolder(self):
+        if os.path.isdir(self.resultPath) :
+            QProcess.startDetached('explorer', [os.path.normpath(self.resultPath)])
+        else :
+            print("<< Warinig : Your Result Folder is not exist.")
 
     @QtCore.Slot()
     def step0(self):
