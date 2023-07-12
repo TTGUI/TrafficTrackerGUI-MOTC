@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.5.3 (2023/07/12)
+#### Improvements
+- main_window.py : open the result and drone folder for linux.
+
 ### v3.5.2 (2023/07/12)
 #### Improvements
 - main_window.py : add next 1 frame and back 1 frame button.

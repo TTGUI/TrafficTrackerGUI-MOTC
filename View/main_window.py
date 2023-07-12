@@ -879,7 +879,10 @@ class MainWindow(object):
 
     def openDroneFolder(self):
         if os.path.isdir(self.droneFolderPath) :
-            QProcess.startDetached('explorer', [os.path.normpath(self.droneFolderPath)])
+            if os.name == 'nt' :
+                QProcess.startDetached('explorer', [os.path.normpath(self.droneFolderPath)])
+            else :
+                subprocess.call(['xdg-open', os.path.normpath(self.droneFolderPath)])
         else :
             print("<< Warinig : Your Result Folder is not exist.")
 
@@ -909,7 +912,10 @@ class MainWindow(object):
 
     def openResultFolder(self):
         if os.path.isdir(self.resultPath) :
-            QProcess.startDetached('explorer', [os.path.normpath(self.resultPath)])
+            if os.name == 'nt' :
+                QProcess.startDetached('explorer', [os.path.normpath(self.resultPath)])
+            else:
+                subprocess.call(['xdg-open', os.path.normpath(self.resultPath)])
         else :
             print("<< Warinig : Your Result Folder is not exist.")
 
