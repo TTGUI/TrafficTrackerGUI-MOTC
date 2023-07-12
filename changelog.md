@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.5.2 (2023/07/12)
+#### Improvements
+- main_window.py : add next 1 frame and back 1 frame button.
+
 ### v3.5.1 (2023/07/12)
 #### Improvements
 - main_window.py : [Issue #9] add butten to open the result and drone folder.
