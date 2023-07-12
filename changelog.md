@@ -1,5 +1,10 @@
 ## Changelog
 
+### v3.5.1 (2023/07/12)
+#### Improvements
+- main_window.py : [Issue #9] add butten to open the result and drone folder.
+- main_window.py : improve the UI layout.
+
 ### v3.5.0 (2023/07/11)
 #### Improvements
 - main_window.py : In the paused frame playing, 'Hide ID' and 'Display ID' will take effect immediately.
