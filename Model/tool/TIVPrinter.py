@@ -177,7 +177,7 @@ class TIVP:
 
         #### Make IO line base on bkg ####
 
-        baseFrame = self.makeIOjpg(bkg_path, io, result_path, actionName)
+        baseFrame = self.makeIOjpg(bkg_path, io, result_path, actionName) # Don't Comment out, need to make IO.jpg saveing.
 
         #### Add Tracking line ####
 

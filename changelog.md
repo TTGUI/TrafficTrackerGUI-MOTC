@@ -1,5 +1,13 @@
 ## Changelog
 
+### v3.5.0 (2023/07/11)
+#### Improvements
+- main_window.py : In the paused frame playing, 'Hide ID' and 'Display ID' will take effect immediately.
+- main_window.py : Reorganize the code.
+
+#### New Features
+- main_window.py : Saving the user orderd TIV issue to file.
+
 ### v3.4.1 (2023/07/06)
 
 #### Bug fixed
