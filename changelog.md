@@ -3,6 +3,7 @@
 ### v3.5.3 (2023/07/12)
 #### Improvements
 - main_window.py : open the result and drone folder for linux.
+- README.md : update.
 
 ### v3.5.2 (2023/07/12)
 #### Improvements
