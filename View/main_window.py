@@ -125,7 +125,7 @@ class MainWindow(object):
         # set font
         font = QFont("Arial", 15, QFont.Bold)
         self._window.title.setFont(font)
-        font = QFont("Arial", 12)
+        font = QFont("Arial", 11)
         self._window.setFont(font)
         # set widget size (x, y, width, height)
         # self._window.title.setGeometry(0, 0, 300, 30)
