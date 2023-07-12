@@ -33,5 +33,5 @@
 
 ## Acknowledgements
 - 特別感謝`lucas`在各項步驟單元的開發與調試上的協助。
-- 特別感謝`jacklin`在OpenCV與Yolo方面上的協助。
+- 特別感謝`jacklin`在Yolo方面上的開發與OpenCV上的協助。
 
