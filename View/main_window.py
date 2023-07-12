@@ -20,14 +20,12 @@ if not hasattr(QtTest.QTest, 'qWait'):
             PySide2.QtWidgets.QApplication.processEvents()
     QtTest.QTest.qWait = qWait
 
-
 from logs import logger
 from config import conf
 from Cont import controller
 
 import cv2
 import os
-import random
 
 # WARNING : def_setResultFolder() have a potentiality error for path setting when code running on LunixOS
 
@@ -1042,6 +1040,11 @@ class MainWindow(object):
             index += 1
 
         index += 1
+        while index < len(tivLines) and tivLines[index] != "UserOrder\n" :
+            self.TIVIsampleList.append(tivLines[index])
+            index += 1
+
+        index += 1
         while index < len(tivLines) :
             self.TIVIsampleList.append(tivLines[index])
             index += 1
@@ -1069,7 +1072,6 @@ class MainWindow(object):
         print("PedestrianDataMaker")
         controller.con_DO1(self.droneFolderPath, self.resultPath, self.cutinfo_txt, self.actionName)
 
-     
     def cuttingWarning(self):
         err = False
         keyCount = 0 
@@ -1098,7 +1100,6 @@ class MainWindow(object):
             err = True
 
         return err
-
 
     #### Schedule Board ################################################################
 
@@ -1520,17 +1521,17 @@ class MainWindow(object):
 
     def loadTIVIssue(self):
         self.singelTIVpath, filetype = QFileDialog.getOpenFileName(self._window,"Select TIV.csv.", self.resultPath ,options=QFileDialog.DontUseNativeDialog)
+        tempStr = self.singelTIVpath
         if not self.singelTIVpath :
             print ("[Cancel] TIV Load Cancel.")
         else:
             print ("Load TIV File : " + self.singelTIVpath)        
             
             self.renewScheduleBoard()
-            self.actionName = self.RT_actionNameWhitoutBackword(self.singelTIVpath.split("/")[-1])
-            print(f"AC:{self.actionName}")
             self.resultPath = os.path.dirname(self.singelTIVpath) + '/'
-            self.flashActionName()
-            self.TIVfileLoad()
+            self.selectName()            # 設定AC name，抓取print資料，但會刷掉指定的TIV.csv
+            self.singelTIVpath = tempStr # 因此重新設定指定的TIV.csv
+            self.TIVfileLoad()           # 再Loda TIV
             self.displayInfo(4)
 
     def saveTIVIssue(self):
@@ -1573,7 +1574,7 @@ class MainWindow(object):
             if (self.TIVIsampleList[i].split(',')[0] in SameIOMotorID) :
                 out = self.TIVIsampleList[i]
                 f.write(out)
-        f.write("User Order\n")
+        f.write("UserOrder\n")
         for i in range(0, len(self.TIVIsampleList)):
             if (self.TIVIsampleList[i].split(',')[0] not in SameIOCarID) and (self.TIVIsampleList[i].split(',')[0] not in SameIOMotorID) :
                 out = self.TIVIsampleList[i]
