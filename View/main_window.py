@@ -256,12 +256,17 @@ class MainWindow(object):
         self._window.stop_btn.setText('Stop')
         self._window.stop_btn.clicked.connect(self.stop)
 
-        self._window.fpsback_btn.setText('<')
-        self._window.fpsback_btn.clicked.connect(self.fpsback)
+        self._window.fpsback100_btn.setText('<<<')
+        self._window.fpsback100_btn.clicked.connect(self.fpsback100)
 
-        self._window.fpsnext_btn.setText('>')
-        self._window.fpsnext_btn.clicked.connect(self.fpsnext)
+        self._window.fpsnext100_btn.setText('>>>')
+        self._window.fpsnext100_btn.clicked.connect(self.fpsnext100)
 
+        self._window.fpsback1_btn.setText('<')
+        self._window.fpsback1_btn.clicked.connect(self.fpsback1)
+
+        self._window.fpsnext1_btn.setText('>')
+        self._window.fpsnext1_btn.clicked.connect(self.fpsnext1)
         self._window.jump_btn.setText('Jump')
         self._window.jump_btn.clicked.connect(self.jump)
 
@@ -411,9 +416,8 @@ class MainWindow(object):
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
         self._window.FPS.setText(fps[:-2])
         nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
-        self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))  
-        # frame = cv2.resize(frame, (1920, 1080))
-        frame = cv2.resize(frame, (1536, 864))
+        self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))
+        frame = cv2.resize(frame, (1440, 810))
         show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
         self._window.display.setScaledContents(True) # 自適應邊框  
@@ -580,7 +584,7 @@ class MainWindow(object):
             print("stop")
 
     @QtCore.Slot()
-    def fpsback(self) :
+    def fpsback100(self) :
         if self.scheduleType == 'off' :
             self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 101 )
@@ -590,10 +594,29 @@ class MainWindow(object):
                 self.frameDisplay(frame)
 
     @QtCore.Slot()
-    def fpsnext(self) :
+    def fpsnext100(self) :
         if self.scheduleType == 'off' :
             self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) + 99 )
+        if self.cap.isOpened() :
+            ret, frame = self.cap.read()
+            if ret:                
+                self.frameDisplay(frame)
+
+    @QtCore.Slot()
+    def fpsback1(self) :
+        if self.scheduleType == 'off' :
+            self.play_bool = False
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 2 )
+        if self.cap.isOpened() :
+            ret, frame = self.cap.read()
+            if ret:                
+                self.frameDisplay(frame)
+    
+    @QtCore.Slot()
+    def fpsnext1(self) :
+        if self.scheduleType == 'off' :
+            self.play_bool = False
         if self.cap.isOpened() :
             ret, frame = self.cap.read()
             if ret:                

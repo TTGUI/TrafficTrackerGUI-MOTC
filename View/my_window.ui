@@ -428,7 +428,33 @@
               <enum>QFrame::Raised</enum>
              </property>
              <layout class="QGridLayout" name="gridLayout_8">
-              <item row="0" column="9">
+              <item row="0" column="6">
+               <widget class="QPushButton" name="fpsback1_btn">
+                <property name="maximumSize">
+                 <size>
+                  <width>50</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>&lt;</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QPushButton" name="play_btn">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Play</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="11">
                <widget class="QPushButton" name="stop_btn">
                 <property name="maximumSize">
                  <size>
@@ -454,20 +480,20 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="0">
-               <widget class="QPushButton" name="play_btn">
+              <item row="0" column="8">
+               <widget class="QPushButton" name="fpsnext100_btn">
                 <property name="maximumSize">
                  <size>
-                  <width>16777215</width>
+                  <width>50</width>
                   <height>16777215</height>
                  </size>
                 </property>
                 <property name="text">
-                 <string>Play</string>
+                 <string>&gt;&gt;&gt;</string>
                 </property>
                </widget>
               </item>
-              <item row="0" column="7">
+              <item row="0" column="9">
                <widget class="QLineEdit" name="FPS">
                 <property name="maximumSize">
                  <size>
@@ -477,33 +503,7 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="5">
-               <widget class="QPushButton" name="fpsback_btn">
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>&lt;</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="6">
-               <widget class="QPushButton" name="fpsnext_btn">
-                <property name="maximumSize">
-                 <size>
-                  <width>50</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string>&gt;</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="8">
+              <item row="0" column="10">
                <widget class="QPushButton" name="jump_btn">
                 <property name="maximumSize">
                  <size>
@@ -529,6 +529,19 @@
                 </property>
                </widget>
               </item>
+              <item row="0" column="5">
+               <widget class="QPushButton" name="fpsback100_btn">
+                <property name="maximumSize">
+                 <size>
+                  <width>50</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>&lt;&lt;&lt;</string>
+                </property>
+               </widget>
+              </item>
               <item row="0" column="4">
                <widget class="QPushButton" name="SetEndFrame_btn">
                 <property name="maximumSize">
@@ -539,6 +552,19 @@
                 </property>
                 <property name="text">
                  <string>SetEndFrame</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="7">
+               <widget class="QPushButton" name="fpsnext1_btn">
+                <property name="maximumSize">
+                 <size>
+                  <width>50</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>&gt;</string>
                 </property>
                </widget>
               </item>
