@@ -4,7 +4,6 @@
 #### Bug fixed
 - main_window.py : fix the bug that in Step9 select other TIV.csv can't read file successfully.
 
-
 ### v3.5.3 (2023/07/12)
 #### Improvements
 - main_window.py : open the result and drone folder for linux.
