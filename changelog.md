@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.6.1 (2023/07/14)
+#### Improvements
+- Model\GPU_Stab_source\ : add stab GPU source code.
+
 ### v3.6.0 (2023/07/14)
 #### New Features
 - main_window.py : Step Precursor Check.
