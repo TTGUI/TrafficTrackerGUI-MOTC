@@ -35,19 +35,25 @@ else:
 #filehandler=logging.FileHandler(logfile)
 filehandler.setFormatter(formatter)
 logger.addHandler(filehandler)
-logger.info("[LOGGER START RECORD.][PID : "+ str(os.getpid())+ "][LOGGIN LEVEL : " + str(logger.level) + "]")
+logger.info(f"[PID {os.getpid()}][LOGGER START RECORD.][LOGGIN LEVEL : {logger.level}]")
 
 def debug(msg):
+    msg = f"[PID {os.getpid()}]" +msg 
     logger.debug(msg)
 def info(msg):
+    msg = f"[PID {os.getpid()}]" +msg 
     logger.info(msg)
 def warning(msg):
+    msg = f"[PID {os.getpid()}]" +msg 
     logger.warning(msg)
 def error(msg):
+    msg = f"[PID {os.getpid()}]" +msg 
     logger.error(msg)
 def critical(msg):
+    msg = f"[PID {os.getpid()}]" +msg 
     logger.critical(msg)
 def log(level, msg):
+    msg = f"[PID {os.getpid()}]" +msg 
     logger.log(level, msg)
 def setLevel(level):
     logger.setLevel(level)

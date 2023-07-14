@@ -148,7 +148,7 @@ class Draw:
                 break
             
         cv2.destroyAllWindows()
-        logger.info("[drawIO2.py] ->> save file :" + self.io_txt) 
+        logger.info("[drawIO2.py] ->> save file : " + self.io_txt) 
 
 
 
