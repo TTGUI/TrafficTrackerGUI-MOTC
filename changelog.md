@@ -1,5 +1,15 @@
 ## Changelog
 
+### v3.6.0 (2023/07/14)
+#### New Features
+- main_window.py : Step Precursor Check.
+
+#### Improvements
+- logger.py : add PID in each log.
+- logger.py : improvement log format.
+- Model\YOLOv4\utils_pkg\datasets.py : make the log short.
+- Model\YOLOv4\detect.py : make the log in same line.
+
 ### v3.5.4 (2023/07/12)
 #### Bug fixed
 - main_window.py : fix the bug that in Step9 select other TIV.csv can't read file successfully.

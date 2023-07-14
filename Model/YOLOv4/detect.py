@@ -364,6 +364,7 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
         img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
         _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
         for path, img, im0s, vid_cap in dataset:
+            
             img = torch.from_numpy(img).to(device)
             img = img.half() if half else img.float()  # uint8 to fp16/32
             img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -421,11 +422,13 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
             # pred shape: (num_img_in_batch, 7[x,y,w,h,θ,conf,classid])
             # Process detections
             for i, det in enumerate(pred):  # detections per image
+                norPath = Path(path)              
                 if webcam:  # batch_size >= 1
+                    
                     p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
                 else:
+                    
                     p, s, im0 = path, '', im0s
-
                 save_path = str(Path(out) / Path(p).name)
                 txt_path = str(Path(out) / Path(p).stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
 
@@ -452,7 +455,6 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
                     for c in det[:, -1].unique():
                         n = (det[:, -1] == c).sum()  # detections per class
                         s += '%g %ss, ' % (n, names[int(c)])  # add to string
-
                     # Write results  
                     for *xyxy, conf, cls in det:  # xyxy: x1y1x2y2x3y3x4y4 clockwise
                         if save_txt:  # Write to file
@@ -507,7 +509,7 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
                             # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
 
                 # Print time (inference + NMS)
-                print('%sDone. (%.3fs)' % (s, t2 - t1))
+                print('%sDone. (%.3fs)                                    ' % (s, t2 - t1), end='\r')
 
                 # Stream results
                 if view_img:
@@ -562,7 +564,7 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
             if platform == 'darwin' and not opt.update:  # MacOS
                 os.system('open ' + save_path)
 
-        print('Done. (%.3fs)' % (time.time() - t0))
+        print('\nDone. (%.3fs)' % (time.time() - t0))
 
 
 

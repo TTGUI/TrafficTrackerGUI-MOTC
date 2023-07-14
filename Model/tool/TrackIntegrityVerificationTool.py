@@ -1,5 +1,6 @@
 import os
 import pathlib
+from logs import logger
 
 
 # 讀取CSV軌跡並輸出完整度
@@ -146,7 +147,7 @@ class TIVT:
         ans = ans + str( sameIOcar ) + ',' + str( goodcar ) + ',' + str( allCar ) + ',' + str( sameIOmotor ) + ',' + str( goodmotor ) + ',' + str( allmotor )
 
 
-        fp = open(resultPath, "w")
+        fp = open(resultPath, "w", encoding='utf-8')
         fp.write(self.lineTitle)
         fp.write("\n")
         fp.write(ans)
@@ -166,9 +167,9 @@ class TIVT:
         lineTwoSp = ans.split(',')
         for i in range(0 , len(lineOneSp)):
             print(lineOneSp[i] + " : " + lineTwoSp[i])
-
         print("Done.")
-
+        logger.info(f"[TIV] ->> Output file : {resultPath}")
+        
         return ans
 
 if __name__ == '__main__':

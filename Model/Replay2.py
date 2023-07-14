@@ -115,4 +115,4 @@ def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, dis
     out.release()
     video.release()  
     cv2.destroyAllWindows()
-    logger.info("[Replay2.py] ->> Output file :" + result_video)
+    logger.info("[Replay2.py] ->> Output file : " + result_video)
