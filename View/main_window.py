@@ -41,33 +41,28 @@ class MainWindow(object):
         Raises:
           None
         """
-        self.actionName = "inital_action_name"
-        self.resultPath = "./result/"
-        
-        self.play_bool = False
-        self.scheduleType = 'off' # 'off' 'edit' 'run'
-        self.currentStep = -1
-        self.currentScheduleIndex = 0
-        self.ScheduleList = []
-        self.scheduleLoadPath = ""
-        self.scheduleSavePath = ""
-        self.scheduleName = "Default"
-        self.scheduleTIVFolderPath = ""
-        self.scheduleTIVFile = ""
-        self.singelTIVpath = self.resultPath + self.actionName + "_TIV.csv"
-        self.page = 0
-        self.pageLen = 10
-
+        # Deveploer Bar
         self.stabMode = conf.getStabMode() # 'CPU' 'GPU'
         self.yoloModel = conf.getYoloModel() #  20211109172733_last_200_1920.pt / ect.
         self.TIVPmode = conf.getTIVPMode() # <1> <2>
 
+        # UI
         self._window = None
         self.setup_ui()
+        self.actionName = "inital_action_name"
+        self.resultPath = "./result/"
+
+        # player
+        self.play_bool = False
+        self.currentStep = -1
+        self.page = 0
+        self.pageLen = 10
 
         # Prepare
         self.droneFolderPath = "./data"
         self.cutinfo_txt = self.resultPath + self.actionName + "_cutInfo.txt"
+        self.currentStartID = -1
+        self.currentEndID = -1
 
         # Kstabilization
         self.stab_input = self.droneFolderPath
@@ -90,6 +85,19 @@ class MainWindow(object):
         # QReplay
         self.result_video = self.resultPath + self.actionName + "_result.avi"
         self.displayType = True
+
+        # schedule
+        self.scheduleType = 'off' # 'off' 'edit' 'run'
+        self.currentScheduleIndex = 0
+        self.ScheduleList = []
+        self.scheduleLoadPath = ""
+        self.scheduleSavePath = ""
+        self.scheduleName = "Default"
+        self.scheduleTIVFolderPath = ""
+        self.scheduleTIVFile = ""
+
+        # TIV
+        self.singelTIVpath = self.resultPath + self.actionName + "_TIV.csv"
 
         """
         YOU ALOS NEED TO MODIFY FUNCTION 'changeActionName'
@@ -547,7 +555,7 @@ class MainWindow(object):
             video_FPS = int(self.cap.get(cv2.CAP_PROP_FPS))
 
         # print(video_FPS)
-        while self.cap.isOpened() :
+        while self.cap.isOpened() and self.play_bool:
             
             ret, self.capFrame = self.cap.read()
             if not ret :
@@ -555,12 +563,11 @@ class MainWindow(object):
             nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             # print(nowFream)
             tempFrame = self.capFrame.copy()
+
             self.frameDisplay(tempFrame)
 
             QtTest.QTest.qWait(video_FPS)
-
-            if not self.play_bool :
-                break           
+         
 
     @QtCore.Slot()
     def pause(self):
@@ -570,11 +577,13 @@ class MainWindow(object):
     def stop(self):
         self.play_bool = False
         if self.scheduleType == 'run':
+            self.cap.release()
+
             self.currentScheduleIndex = self.currentScheduleIndex + 1
             self.displayInfo(3)
             self.StartSchedule()
-            self.cap.release()
-            cv2.destroyAllWindows()
+            
+            # cv2.destroyAllWindows()
                 
         else :
 
@@ -681,6 +690,8 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def setStartFrame(self):
+        self.currentStartID = self.currentVideoIndex
+        
         for i in range(0,self.currentVideoIndex) :
             # before start frame, ignore Videos.
             self.cutInfoLsit[i].setKey(-1)
@@ -700,6 +711,8 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def setEndFrame(self):
+        self.currentEndID = self.currentVideoIndex
+
         for i in range(self.currentVideoIndex+1 ,len(self.cutInfoLsit)) :
             # after end frame, ignore Videos.
             self.cutInfoLsit[i].setKey(-1)
@@ -727,6 +740,41 @@ class MainWindow(object):
         self.cutInfoLsit[self.currentVideoIndex].setStart(0)
         self.cutInfoLsit[self.currentVideoIndex].setEnd(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.displayInfo(1)
+
+    @QtCore.Slot()
+    def checkIgnoreVideo(self):
+
+        pass
+
+    def cuttingWarning(self):
+        err = False
+        keyCount = 0 
+        for i in range(0,len(self.cutInfoLsit)) :
+            if self.cutInfoLsit[i].getKey() != -1 :
+                keyCount = keyCount + 1
+            if self.cutInfoLsit[i].getStart() >= self.cutInfoLsit[i].getEnd() and self.cutInfoLsit[i].getEnd() != -1 and self.cutInfoLsit[i].getStart() != -1:
+                msgBox = QMessageBox()
+                msgBox.setWindowTitle("Warning : Video Number : [" + str(i+1) + "]")
+                msgBox.setText("Fream cutting fail.\nStart Frame must be early then End Frame.")
+                msgBox.exec()
+                err = True          
+            
+        if keyCount > 1 :
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Warning")
+            msgBox.setText("KeyFream only can set one.\n" + "You have set" + str(keyCount) + 'KeyFream.')            
+            msgBox.exec()
+            err = True
+
+        if keyCount < 1 :
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Warning")
+            msgBox.setText("No KeyFream Setting. You must set one KeyFream.")
+            msgBox.exec()
+            err = True
+
+        return err
+
 
     #### Step Board ################################################################
     @QtCore.Slot()
@@ -1094,34 +1142,6 @@ class MainWindow(object):
         print("PedestrianDataMaker")
         controller.con_DO1(self.droneFolderPath, self.resultPath, self.cutinfo_txt, self.actionName)
 
-    def cuttingWarning(self):
-        err = False
-        keyCount = 0 
-        for i in range(0,len(self.cutInfoLsit)) :
-            if self.cutInfoLsit[i].getKey() != -1 :
-                keyCount = keyCount + 1
-            if self.cutInfoLsit[i].getStart() >= self.cutInfoLsit[i].getEnd() and self.cutInfoLsit[i].getEnd() != -1 and self.cutInfoLsit[i].getStart() != -1:
-                msgBox = QMessageBox()
-                msgBox.setWindowTitle("Warning : Video Number : [" + str(i+1) + "]")
-                msgBox.setText("Fream cutting fail.\nStart Frame must be early then End Frame.")
-                msgBox.exec()
-                err = True          
-            
-        if keyCount > 1 :
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("Warning")
-            msgBox.setText("KeyFream only can set one.\n" + "You have set" + str(keyCount) + 'KeyFream.')            
-            msgBox.exec()
-            err = True
-
-        if keyCount < 1 :
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("Warning")
-            msgBox.setText("No KeyFream Setting. You must set one KeyFream.")
-            msgBox.exec()
-            err = True
-
-        return err
 
     def precursorCheck(self):
         step = -1
@@ -1286,7 +1306,6 @@ class MainWindow(object):
             self.currentVideoIndex = self.currentVideoIndex - 1
             self.displayInfo(2) 
             self.load()
-            self.save()
 
     @QtCore.Slot()
     def next(self):
@@ -1304,7 +1323,6 @@ class MainWindow(object):
             self.currentVideoIndex = self.currentVideoIndex + 1
             self.displayInfo(2) 
             self.load()
-            self.save()
 
     @QtCore.Slot()
     def forwardPage(self):
@@ -1368,6 +1386,7 @@ class MainWindow(object):
         cuurentTIVT = TrackIntegrityVerificationTool.TIVT()
         ScheduTIVList = []
         ScheduTIVList.append(cuurentTIVT.retTitle())
+        logger.info(f"[Start Schedule][{self.scheduleName}]")
 
         for i in range(self.currentScheduleIndex ,len(self.ScheduleList)):
             self.currentScheduleIndex = i
@@ -1541,8 +1560,18 @@ class MainWindow(object):
             self.displayInfo(3)
 
     def readScheduleFile(self):
-        f = open(self.scheduleLoadPath, 'r')
-        lineData = f.readlines()
+        def encodeFile():
+            encodings = ['utf-8', 'cp950']
+            for e in encodings:
+                try:
+                    with open(self.scheduleLoadPath, 'r', encoding=e) as f:
+                        return f.readlines()
+                except UnicodeDecodeError:
+                    pass
+            print(f'Could not read {self.scheduleLoadPath} with any encoding.')
+            return None
+        # f = open(self.scheduleLoadPath, 'r', encoding='utf-8')
+        lineData = encodeFile()
         self.ScheduleList = []
 
         for i in range(0, len(lineData)) :
@@ -1579,11 +1608,11 @@ class MainWindow(object):
 
             self.ScheduleList.append(tempSchedule)
 
-        f.close()
+
         
     def writeScheduleFile(self):
         for i in range(0, len(self.ScheduleList)):
-            f = open(self.scheduleSavePath, 'w')
+            f = open(self.scheduleSavePath, 'w', encoding='utf-8')
 
             for i in range(0,len(self.ScheduleList)) :
                 if self.ScheduleList[i].DisplayID:

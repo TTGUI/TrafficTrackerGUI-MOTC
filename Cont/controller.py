@@ -31,7 +31,7 @@ def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
 def con_step2(stab_video, yolo_txt, yolo_model) :
     from Model.YOLOv4 import detect
     start = time.time()
-
+    logger.info( f"[yolo_model] ->> {yolo_model}" )
     detect.obb_object_detect(stab_video,yolo_txt, yolo_model)
 
     end = time.time()

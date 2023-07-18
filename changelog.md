@@ -1,5 +1,12 @@
 ## Changelog
 
+### v3.6.2 (2023/07/17)
+#### Improvements
+- main_window.py : schedule save as UTF-8, and readable UTF-8 and Big-5.
+
+#### Bug fixed
+- main_window.py : fix the bug [issue#14] can not play in schedule run step0 second time.
+
 ### v3.6.1 (2023/07/14)
 #### Improvements
 - Model\GPU_Stab_source\ : add stab GPU source code.
