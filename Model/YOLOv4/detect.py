@@ -22,6 +22,7 @@ from .models_pkg.experimental import *
 from .utils_pkg.datasets import *
 from .utils_pkg.general import *
 
+from .utils_pkg.remove_duplicate_box import *
 merged_cls_dict = {'person':'0', 'bike':'1', 'moto':'2', 'sedan':'3', 'truck':'4', 'bus':'5', 'tractor':'6', 'trailer':'7'}
 
 def load_classes(path):
@@ -509,7 +510,7 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
                             # plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
 
                 # Print time (inference + NMS)
-                print('%sDone. (%.3fs)                                    ' % (s, t2 - t1), end='\r')
+                print('%sDone. (%.3fs)    ' % (s, t2 - t1), end='\r')
 
                 # Stream results
                 if view_img:
@@ -566,6 +567,9 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
 
         print('\nDone. (%.3fs)' % (time.time() - t0))
 
+    print("remove duplicate box")
+    remove_duplicate_box( output_detect_result_path )
+    print("remove duplicate box done")
 
 
 
