@@ -1,39 +1,26 @@
 import torch
+from torch import Tensor
 import numpy as np
 
-# print('__file__={0:<35} | __name__={1:<20} | __package__={2:<20}'.format(__file__,__name__,str(__package__)))
-
-check_use_box1 = None
-check_use_box2 = None
-check_use_corners1 = None
-check_use_corners2 = None
-check_use_inter_area = None
-check_use_area1 = None
-check_use_area2 = None
-check_use_u = None
-check_use_iou = None
+#from box_intersection_2d import oriented_box_intersection_2d
+#from min_enclosing_box import smallest_bounding_box
 
 if __package__ is None or __package__ == '':
-    # from os import sys, path
-    # sys.path.insert(0,path.dirname(path.dirname(path.abspath(__file__))))
     import box_intersection_2d
-    # from box_intersection_2d import oriented_box_intersection_2d,check_use_inters,check_use_mask_inter,check_use_c12, \
-    # check_use_c21,check_use_vertices,check_use_mask,check_use_sorted_indices
     from min_enclosing_box import smallest_bounding_box
 else:
     from . import box_intersection_2d
-    # from .box_intersection_2d import oriented_box_intersection_2d,check_use_inters,check_use_mask_inter,check_use_c12, \
-    # check_use_c21,check_use_vertices,check_use_mask,check_use_sorted_indices
     from .min_enclosing_box import smallest_bounding_box
+    
 
-def box2corners_th(box:torch.Tensor)-> torch.Tensor:
+def box2corners_th(box:Tensor)-> Tensor:
     """convert box coordinate to corners
 
     Args:
-        box (torch.Tensor): (B, N, 5) with x, y, w, h, alpha
+        box (Tensor): (B, N, 5) with x, y, w, h, alpha
 
     Returns:
-        torch.Tensor: (B, N, 4, 2) corners
+        Tensor: (B, N, 4, 2) corners
     """
     B = box.size()[0]
     x = box[..., 0:1]
@@ -41,9 +28,9 @@ def box2corners_th(box:torch.Tensor)-> torch.Tensor:
     w = box[..., 2:3]
     h = box[..., 3:4]
     alpha = box[..., 4:5] # (B, N, 1)
-    x4 = torch.FloatTensor([0.5, -0.5, -0.5, 0.5]).unsqueeze(0).unsqueeze(0).to(box.device) # (1,1,4)
+    x4 = torch.tensor([0.5, -0.5, -0.5, 0.5], dtype=box.dtype).unsqueeze(0).unsqueeze(0).to(box.device) # (1,1,4)
     x4 = x4 * w     # (B, N, 4)
-    y4 = torch.FloatTensor([0.5, 0.5, -0.5, -0.5]).unsqueeze(0).unsqueeze(0).to(box.device)
+    y4 = torch.tensor([0.5, 0.5, -0.5, -0.5], dtype=box.dtype).unsqueeze(0).unsqueeze(0).to(box.device)
     y4 = y4 * h     # (B, N, 4)
     corners = torch.stack([x4, y4], dim=-1)     # (B, N, 4, 2)
     sin = torch.sin(alpha)
@@ -51,45 +38,25 @@ def box2corners_th(box:torch.Tensor)-> torch.Tensor:
     row1 = torch.cat([cos, sin], dim=-1)
     row2 = torch.cat([-sin, cos], dim=-1)       # (B, N, 2)
     rot_T = torch.stack([row1, row2], dim=-2)   # (B, N, 2, 2)
-    # print('corners dtype', corners.dtype)
-    # print('rot_T dtype', rot_T.dtype)
-    # print('corners.view([-1,4,2]) dtype', corners.view([-1,4,2]).dtype)
-    # print('rot_T.view([-1,2,2]) dtype', rot_T.view([-1,2,2]).dtype)
-    """torch.bmm之後會莫名從float32變float16 所以在最後加上float()導致後面計算iou等發生nan"""
-    """單獨測試Rotated_IOU不會有這個問題..."""
     rotated = torch.bmm(corners.view([-1,4,2]), rot_T.view([-1,2,2]))
-    # print('rotated dtype', rotated.dtype)
-    # exit(0)
-    # print('rotated', rotated)
     rotated = rotated.view([B,-1,4,2])          # (B*N, 4, 2) -> (B, N, 4, 2)
-    # print('rotated dtype', rotated.dtype)
     rotated[..., 0] += x
-    # print('rotated dtype', rotated.dtype)
     rotated[..., 1] += y
-    # print('box dtype', box.dtype)
-    # print('x4 dtype', x4.dtype)
-    # print('y4 dtype', y4.dtype)
-    # print('corners dtype', corners.dtype)
-    # print('rot_T dtype', rot_T.dtype)
-    # print('row1 dtype', row1.dtype)
-    # print('row2 dtype', row2.dtype)
-    # print('sin dtype', sin.dtype)
-    # print('rotated dtype', rotated.dtype)
-    # exit(0)
     return rotated
 
-def cal_iou_loss(box1:torch.Tensor, box2:torch.Tensor):
+
+def cal_iou(box1:Tensor, box2:Tensor, epoch=0):
     """calculate iou
 
     Args:
-        box1 (torch.Tensor): (B, N, 5)
-        box2 (torch.Tensor): (B, N, 5)
+        box1 (Tensor): (B, N, 5)
+        box2 (Tensor): (B, N, 5)
     
     Returns:
-        iou (torch.Tensor): (B, N)
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        U (torch.Tensor): (B, N) area1 + area2 - inter_area
+        iou (Tensor): (B, N)
+        corners1 (Tensor): (B, N, 4, 2)
+        corners1 (Tensor): (B, N, 4, 2)
+        U (Tensor): (B, N) area1 + area2 - inter_area
     """
     corners1 = box2corners_th(box1)
     corners2 = box2corners_th(box2)
@@ -98,154 +65,15 @@ def cal_iou_loss(box1:torch.Tensor, box2:torch.Tensor):
     area2 = box2[:, :, 2] * box2[:, :, 3]
     u = area1 + area2 - inter_area
     iou = inter_area / u
-    iou_loss = 1. - iou
-    return iou_loss, iou, corners1, corners2, u
-
-def cal_iou(box1:torch.Tensor, box2:torch.Tensor, epoch):
-    """calculate iou
-
-    Args:
-        box1 (torch.Tensor): (B, N, 5)
-        box2 (torch.Tensor): (B, N, 5)
-    
-    Returns:
-        iou (torch.Tensor): (B, N)
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        U (torch.Tensor): (B, N) area1 + area2 - inter_area
-    """
-    corners1 = box2corners_th(box1)
-    corners2 = box2corners_th(box2)
-
-    inter_area, _ = box_intersection_2d.oriented_box_intersection_2d(corners1, corners2)        #(B, N)
-    area1 = box1[:, :, 2] * box1[:, :, 3]
-    area2 = box2[:, :, 2] * box2[:, :, 3]
-    u = area1 + area2 - inter_area
-    # zero case
-    # u_notzero_mask = (u>0)
-    # iou = torch.zeros_like(inter_area)
-    # iou[u_notzero_mask] = inter_area[u_notzero_mask] / u[u_notzero_mask]
-    iou = inter_area / u
-
-    global check_use_box1
-    global check_use_box2
-    global check_use_corners1
-    global check_use_corners2
-    global check_use_inter_area
-    global check_use_area1
-    global check_use_area2
-    global check_use_u
-    global check_use_iou
-
-    check_use_box1 = box1
-    check_use_box2 = box2
-    check_use_corners1 = corners1
-    check_use_corners2 = corners2
-    check_use_inter_area = inter_area
-    check_use_area1 = area1
-    check_use_area2 = area2
-    check_use_u = u
-    check_use_iou = iou
-
-    # if (u<=0.).any():
-    #     mask = (u<=0.)
-        
-    #     with open('check_unionlessequalthan0.txt', 'a') as outfile:
-    #         for un,a1,a2,interarea,b1,b2,c1,c2,io,inters,mask_inter,c12,c21,vertices,mask,sorted_indices,num_valid,mean,vertices_normalized in zip(u[mask], area1[mask], area2[mask], inter_area[mask],\
-    #             box1[mask], box2[mask], corners1[mask], corners2[mask], iou[mask], \
-    #                         box_intersection_2d.check_use_inters[iou>1], \
-    #                         box_intersection_2d.check_use_mask_inter[iou>1], \
-    #                         box_intersection_2d.check_use_c12[iou>1], \
-    #                         box_intersection_2d.check_use_c21[iou>1], \
-    #                         box_intersection_2d.check_use_vertices[iou>1], \
-    #                         box_intersection_2d.check_use_mask[iou>1], \
-    #                         box_intersection_2d.check_use_sorted_indices[iou>1], \
-    #                         box_intersection_2d.check_use_num_valid[iou>1], \
-    #                         box_intersection_2d.check_use_mean[iou>1], \
-    #                         box_intersection_2d.check_use_vertices_normalized[iou>1], \
-    #                             ):
-    #             outfile.write('epoch:{}\n'.format(epoch))
-    #             outfile.write('union:{} a1:{} a2:{} interarea:{} iou: {}\n'.format(un, a1, a2, interarea, io))
-    #             outfile.write('box1:{} corners1:{}\n'.format(b1, c1))
-    #             outfile.write('box2:{} corners2:{}\n'.format(b2, c2))
-    #             outfile.write('----------calc inter area---------------\n')
-    #             outfile.write('check_use_inters:{}\n'.format(inters))
-    #             outfile.write('check_use_mask_inter:{}\n'.format(mask_inter))
-    #             outfile.write('check_use_c12:{}\n'.format(c12))
-    #             outfile.write('check_use_c21:{}\n'.format(c21))
-    #             outfile.write('check_use_vertices:{}\n'.format(vertices))
-    #             outfile.write('check_use_mask:{}\n'.format(mask))
-    #             outfile.write('check_use_sorted_indices:{}\n'.format(sorted_indices))
-    #             outfile.write('check_use_num_valid:{}\n'.format(num_valid))
-    #             outfile.write('check_use_mean:{}\n'.format(mean))
-    #             outfile.write('check_use_vertices_normalized:{}\n'.format(vertices_normalized))
-    #             outfile.write('========================================\n')
-
-
-    # if (iou>1).any():
-    #     with open('check_ioulargerthan1.txt', 'a') as outfile:
-    #         box_intersection_2d.check_use_inters
-    #         box_intersection_2d.check_use_mask_inter
-    #         box_intersection_2d.check_use_c12
-    #         box_intersection_2d.check_use_c21
-    #         box_intersection_2d.check_use_vertices
-    #         box_intersection_2d.check_use_mask
-    #         box_intersection_2d.check_use_sorted_indices
-    #         for b1,b2,c1,c2,a1,a2,ite,u,io,inters,mask_inter,c12,c21,vertices,mask,sorted_indices,num_valid,mean,vertices_normalized in zip(box1[iou>1], \
-    #                         box2[iou>1], \
-    #                         corners1[iou>1], \
-    #                         corners2[iou>1], \
-    #                         area1[iou>1], \
-    #                         area2[iou>1], \
-    #                         inter_area[iou>1], \
-    #                         u[iou>1], \
-    #                         iou[iou>1], \
-    #                         box_intersection_2d.check_use_inters[iou>1], \
-    #                         box_intersection_2d.check_use_mask_inter[iou>1], \
-    #                         box_intersection_2d.check_use_c12[iou>1], \
-    #                         box_intersection_2d.check_use_c21[iou>1], \
-    #                         box_intersection_2d.check_use_vertices[iou>1], \
-    #                         box_intersection_2d.check_use_mask[iou>1], \
-    #                         box_intersection_2d.check_use_sorted_indices[iou>1], \
-    #                         box_intersection_2d.check_use_num_valid[iou>1], \
-    #                         box_intersection_2d.check_use_mean[iou>1], \
-    #                         box_intersection_2d.check_use_vertices_normalized[iou>1], \
-    #                         ):
-    #             outfile.write('epoch:{}\n'.format(epoch))
-    #             outfile.write('box1:{} corner1:{} area1:{}\n'.format(b1,c1,a1))
-    #             outfile.write('box2:{} corner2:{} area2:{}\n'.format(b2,c2,a2))
-    #             outfile.write('inter_area:{} union:{} iou:{}\n'.format(ite,u,io))
-    #             outfile.write('----------calc inter area---------------\n')
-    #             outfile.write('check_use_inters:{}\n'.format(inters))
-    #             outfile.write('check_use_mask_inter:{}\n'.format(mask_inter))
-    #             outfile.write('check_use_c12:{}\n'.format(c12))
-    #             outfile.write('check_use_c21:{}\n'.format(c21))
-    #             outfile.write('check_use_vertices:{}\n'.format(vertices))
-    #             outfile.write('check_use_mask:{}\n'.format(mask))
-    #             outfile.write('check_use_sorted_indices:{}\n'.format(sorted_indices))
-    #             outfile.write('check_use_num_valid:{}\n'.format(num_valid))
-    #             outfile.write('check_use_mean:{}\n'.format(mean))
-    #             outfile.write('check_use_vertices_normalized:{}\n'.format(vertices_normalized))
-    #             outfile.write('========================================\n')
-
-    # if torch.isnan(inter_area).any() or torch.isnan(u).any() or torch.isnan(iou).any():
-    #     print('iou', iou)
-    #     print('inter_area', inter_area)
-    #     print('u', u)
-    #     print('area1', area1)
-    #     print('area2', area2)
-
-    # inter_area[inter_area.isnan()] = 0
-    # u[inter_area.isnan()] = 0
-
     return iou, corners1, corners2, u
 
-def cal_diou(box1:torch.Tensor, box2:torch.Tensor, enclosing_type:str="smallest"):
+
+def cal_diou(box1:Tensor, box2:Tensor, enclosing_type:str="smallest"):
     """calculate diou loss
 
     Args:
-        box1 (torch.Tensor): [description]
-        box2 (torch.Tensor): [description]
+        box1 (Tensor): [description]
+        box2 (Tensor): [description]
     """
     iou, corners1, corners2, u = cal_iou(box1, box2)
     w, h = enclosing_box(corners1, corners2, enclosing_type)
@@ -257,20 +85,102 @@ def cal_diou(box1:torch.Tensor, box2:torch.Tensor, enclosing_type:str="smallest"
     diou = iou - d2/c2
     return diou, diou_loss, iou
 
-def cal_giou(box1:torch.Tensor, box2:torch.Tensor, enclosing_type:str="smallest"):
+
+# https://zhuanlan.zhihu.com/p/94799295
+def cal_ciou(box1:Tensor, box2:Tensor, enclosing_type:str="smallest"):
+    """calculate diou loss
+
+    Args:
+        box1 (Tensor): [description]
+        box2 (Tensor): [description]
+    """
+
+    # rows = bboxes1.shape[0]
+    # cols = bboxes2.shape[0]
+    # cious = torch.zeros((rows, cols))
+    # if rows * cols == 0:
+    #     return cious
+    # exchange = False
+    # if bboxes1.shape[0] > bboxes2.shape[0]:
+    #     bboxes1, bboxes2 = bboxes2, bboxes1
+    #     cious = torch.zeros((cols, rows))
+    #     exchange = True
+
+    # w1 = bboxes1[:, 2] - bboxes1[:, 0]
+    # h1 = bboxes1[:, 3] - bboxes1[:, 1]
+    # w2 = bboxes2[:, 2] - bboxes2[:, 0]
+    # h2 = bboxes2[:, 3] - bboxes2[:, 1]
+
+    # area1 = w1 * h1
+    # area2 = w2 * h2
+
+    # center_x1 = (bboxes1[:, 2] + bboxes1[:, 0]) / 2
+    # center_y1 = (bboxes1[:, 3] + bboxes1[:, 1]) / 2
+    # center_x2 = (bboxes2[:, 2] + bboxes2[:, 0]) / 2
+    # center_y2 = (bboxes2[:, 3] + bboxes2[:, 1]) / 2
+
+    # inter_max_xy = torch.min(bboxes1[:, 2:],bboxes2[:, 2:])
+    # inter_min_xy = torch.max(bboxes1[:, :2],bboxes2[:, :2])
+    # out_max_xy = torch.max(bboxes1[:, 2:],bboxes2[:, 2:])
+    # out_min_xy = torch.min(bboxes1[:, :2],bboxes2[:, :2])
+
+    # inter = torch.clamp((inter_max_xy - inter_min_xy), min=0)
+    # inter_area = inter[:, 0] * inter[:, 1]
+    # inter_diag = (center_x2 - center_x1)**2 + (center_y2 - center_y1)**2
+    # outer = torch.clamp((out_max_xy - out_min_xy), min=0)
+    # outer_diag = (outer[:, 0] ** 2) + (outer[:, 1] ** 2)
+    # union = area1+area2-inter_area
+    # u = (inter_diag) / outer_diag
+    # iou = inter_area / union
+    # with torch.no_grad():
+    #     arctan = torch.atan(w2 / h2) - torch.atan(w1 / h1)
+    #     v = (4 / (math.pi ** 2)) * torch.pow((torch.atan(w2 / h2) - torch.atan(w1 / h1)), 2)
+    #     S = 1 - iou
+    #     alpha = v / (S + v)
+    #     w_temp = 2 * w1
+    # ar = (8 / (math.pi ** 2)) * arctan * ((w1 - w_temp) * h1)
+    # cious = iou - (u + alpha * ar)
+    # cious = torch.clamp(cious,min=-1.0,max = 1.0)
+    # if exchange:
+    #     cious = cious.T
+    # return cious
+
+    w1, h1 = box1[...,2], box1[...,3] 
+    w2, h2 = box2[...,2], box2[...,3] 
+
+    iou, corners1, corners2, u = cal_iou(box1, box2)
+    w, h = enclosing_box(corners1, corners2, enclosing_type)
+    c2 = w*w + h*h      # (B, N)
+    x_offset = box1[...,0] - box2[..., 0]
+    y_offset = box1[...,1] - box2[..., 1]
+    d2 = x_offset*x_offset + y_offset*y_offset
+    u = d2/c2
+    # diou_loss = 1. - iou + d2/c2
+    # diou = iou - d2/c2
+
+    v = (4 / np.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
+    with torch.no_grad():
+        alpha = v / (1 - iou + v + 1e-16)
+
+    ciou = iou - (u + v * alpha)
+    return ciou  # CIoU
+
+
+def cal_giou(box1:Tensor, box2:Tensor, enclosing_type:str="smallest"):
     iou, corners1, corners2, u = cal_iou(box1, box2)
     w, h = enclosing_box(corners1, corners2, enclosing_type)
     area_c =  w*h
     giou_loss = 1. - iou + ( area_c - u )/area_c
     giou = iou - ( area_c - u )/area_c
     return giou, giou_loss, iou
+    
 
-def cal_iou_3d(box3d1:torch.Tensor, box3d2:torch.Tensor, verbose=False):
+def cal_iou_3d(box3d1:Tensor, box3d2:Tensor, verbose=False):
     """calculated 3d iou. assume the 3d bounding boxes are only rotated around z axis
 
     Args:
-        box3d1 (torch.Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
-        box3d2 (torch.Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
+        box3d1 (Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
+        box3d2 (Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
     """
     box1 = box3d1[..., [0,1,3,4,6]]     # 2d box
     box2 = box3d2[..., [0,1,3,4,6]]
@@ -290,17 +200,18 @@ def cal_iou_3d(box3d1:torch.Tensor, box3d2:torch.Tensor, verbose=False):
     else:
         return intersection_3d / u3d
 
-def cal_giou_3d(box3d1:torch.Tensor, box3d2:torch.Tensor, enclosing_type:str="smallest"):
+
+def cal_giou_3d(box3d1:Tensor, box3d2:Tensor, enclosing_type:str="smallest"):
     """calculated 3d GIoU loss. assume the 3d bounding boxes are only rotated around z axis
 
     Args:
-        box3d1 (torch.Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
-        box3d2 (torch.Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
+        box3d1 (Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
+        box3d2 (Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
         enclosing_type (str, optional): type of enclosing box. Defaults to "smallest".
 
     Returns:
-        (torch.Tensor): (B, N) 3d GIoU loss
-        (torch.Tensor): (B, N) 3d IoU
+        (Tensor): (B, N) 3d GIoU loss
+        (Tensor): (B, N) 3d IoU
     """
     iou3d, corners1, corners2, z_range, u3d = cal_iou_3d(box3d1, box3d2, verbose=True)
     w, h = enclosing_box(corners1, corners2, enclosing_type)
@@ -308,17 +219,18 @@ def cal_giou_3d(box3d1:torch.Tensor, box3d2:torch.Tensor, enclosing_type:str="sm
     giou_loss = 1. - iou3d + (v_c - u3d)/v_c
     return giou_loss, iou3d
 
-def cal_diou_3d(box3d1:torch.Tensor, box3d2:torch.Tensor, enclosing_type:str="smallest"):
+
+def cal_diou_3d(box3d1:Tensor, box3d2:Tensor, enclosing_type:str="smallest"):
     """calculated 3d DIoU loss. assume the 3d bounding boxes are only rotated around z axis
 
     Args:
-        box3d1 (torch.Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
-        box3d2 (torch.Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
+        box3d1 (Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
+        box3d2 (Tensor): (B, N, 3+3+1),  (x,y,z,w,h,l,alpha)
         enclosing_type (str, optional): type of enclosing box. Defaults to "smallest".
 
     Returns:
-        (torch.Tensor): (B, N) 3d DIoU loss
-        (torch.Tensor): (B, N) 3d IoU
+        (Tensor): (B, N) 3d DIoU loss
+        (Tensor): (B, N) 3d IoU
     """
     iou3d, corners1, corners2, z_range, u3d = cal_iou_3d(box3d1, box3d2, verbose=True)
     w, h = enclosing_box(corners1, corners2, enclosing_type)
@@ -330,7 +242,8 @@ def cal_diou_3d(box3d1:torch.Tensor, box3d2:torch.Tensor, enclosing_type:str="sm
     diou = 1. - iou3d + d2/c2
     return diou, iou3d
 
-def enclosing_box(corners1:torch.Tensor, corners2:torch.Tensor, enclosing_type:str="smallest"):
+
+def enclosing_box(corners1:Tensor, corners2:Tensor, enclosing_type:str="smallest"):
     if enclosing_type == "aligned":
         return enclosing_box_aligned(corners1, corners2)
     elif enclosing_type == "pca":
@@ -340,16 +253,17 @@ def enclosing_box(corners1:torch.Tensor, corners2:torch.Tensor, enclosing_type:s
     else:
         ValueError("Unknow type enclosing. Supported: aligned, pca, smallest")
 
-def enclosing_box_aligned(corners1:torch.Tensor, corners2:torch.Tensor):
+
+def enclosing_box_aligned(corners1:Tensor, corners2:Tensor):
     """calculate the smallest enclosing box (axis-aligned)
 
     Args:
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners2 (torch.Tensor): (B, N, 4, 2)
+        corners1 (Tensor): (B, N, 4, 2)
+        corners2 (Tensor): (B, N, 4, 2)
     
     Returns:
-        w (torch.Tensor): (B, N)
-        h (torch.Tensor): (B, N)
+        w (Tensor): (B, N)
+        h (Tensor): (B, N)
     """
     x1_max = torch.max(corners1[..., 0], dim=2)[0]     # (B, N)
     x1_min = torch.min(corners1[..., 0], dim=2)[0]     # (B, N)
@@ -370,16 +284,17 @@ def enclosing_box_aligned(corners1:torch.Tensor, corners2:torch.Tensor):
     h = y_max - y_min
     return w, h
 
-def enclosing_box_pca(corners1:torch.Tensor, corners2:torch.Tensor):
+
+def enclosing_box_pca(corners1:Tensor, corners2:Tensor):
     """calculate the rotated smallest enclosing box using PCA
 
     Args:
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners2 (torch.Tensor): (B, N, 4, 2)
+        corners1 (Tensor): (B, N, 4, 2)
+        corners2 (Tensor): (B, N, 4, 2)
     
     Returns:
-        w (torch.Tensor): (B, N)
-        h (torch.Tensor): (B, N)
+        w (Tensor): (B, N)
+        h (Tensor): (B, N)
     """
     B = corners1.size()[0]
     c = torch.cat([corners1, corners2], dim=2)      # (B, N, 8, 2)
@@ -400,7 +315,8 @@ def enclosing_box_pca(corners1:torch.Tensor, corners2:torch.Tensor):
     h = p2.max(dim=-1)[0] - p2.min(dim=-1)[0]       # (B*N, ),  height of rotated enclosing box
     return w.view([B, -1]), h.view([B, -1])
 
-def eigenvector_22(x:torch.Tensor):
+
+def eigenvector_22(x:Tensor):
     """return eigenvector of 2x2 symmetric matrix using closed form
     
     https://math.stackexchange.com/questions/8672/eigenvalues-and-eigenvectors-of-2-times-2-matrix
@@ -408,11 +324,11 @@ def eigenvector_22(x:torch.Tensor):
     The calculation is done by using double precision
 
     Args:
-        x (torch.Tensor): (..., 2, 2), symmetric, semi-definite
+        x (Tensor): (..., 2, 2), symmetric, semi-definite
     
     Return:
-        v1 (torch.Tensor): (..., 2)
-        v2 (torch.Tensor): (..., 2)
+        v1 (Tensor): (..., 2)
+        v2 (Tensor): (..., 2)
     """
     # NOTE: must use doule precision here! with float the back-prop is very unstable
     a = x[..., 0, 0].double()
@@ -427,14 +343,10 @@ def eigenvector_22(x:torch.Tensor):
     n2 = torch.sum(v2*v2, keepdim=True, dim=-1).sqrt()
     v1 = v1 / n1
     v2 = v2 / n2
-    return v1.float(), v2.float()
+    return v1.type(x.dtype), v2.type(x.dtype)
 
-
-def test(a):
-    a=5
 
 if __name__ == "__main__":
-    
     box3d1 = np.array([0,0,0,3,3,3,0])
     box3d2 = np.array([1,1,1,2,2,2,np.pi/3])
     tensor1 = torch.FloatTensor(box3d1).unsqueeze(0).unsqueeze(0).cuda()

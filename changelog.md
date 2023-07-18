@@ -1,5 +1,10 @@
 ## Changelog
 
+### v3.7.0 (2023/07/18)
+#### New Features
+- add Model\YOLOv4\utils_pkg\remove_duplicate_box.py : remove duplicate detect 8cls.
+- update Model\YOLOv4\utils_pkg\Rotated_IoU\ : new codes added, and move old codes to abandonedCodes.
+
 ### v3.6.2 (2023/07/17)
 #### Improvements
 - main_window.py : schedule save as UTF-8, and readable UTF-8 and Big-5.

@@ -5,42 +5,25 @@ author: lanxiao li
 2020.8
 '''
 import torch
-if __package__ is None or __package__ == '':
-    from cuda_op.cuda_ext import sort_v    
-else:
-    from .cuda_op.cuda_ext import sort_v
-EPSILON = 1e-8    # default 1e-8 1e-14
+from torch import Tensor
+EPSILON = 1e-8
 
-check_use_inters = None
-check_use_mask_inter = None
-check_use_c12 = None
-check_use_c21 = None
-check_use_vertices = None
-check_use_mask = None
-check_use_sorted_indices = None
 
-check_use_num_valid = None
-check_use_mean = None
-check_use_vertices_normalized = None
-
-def box_intersection_th(corners1:torch.Tensor, corners2:torch.Tensor):
+def box_intersection_th(corners1:Tensor, corners2:Tensor):
     """find intersection points of rectangles
     Convention: if two edges are collinear, there is no intersection point
 
     Args:
-        corners1 (torch.Tensor): B, N, 4, 2
-        corners2 (torch.Tensor): B, N, 4, 2
+        corners1 (Tensor): B, N, 4, 2
+        corners2 (Tensor): B, N, 4, 2
 
     Returns:
-        intersectons (torch.Tensor): B, N, 4, 4, 2
-        mask (torch.Tensor) : B, N, 4, 4; bool
+        intersectons (Tensor): B, N, 4, 4, 2
+        mask (Tensor) : B, N, 4, 4; bool
     """
     # build edges from corners
-    line1 = torch.cat([corners1, corners1[:, :, [1, 2, 3, 0], :]], dim=3) # B, N, 4, 4: Batch, Box, edge, point  ori code
-    line2 = torch.cat([corners2, corners2[:, :, [1, 2, 3, 0], :]], dim=3) # ori code
-    # line1 = torch.cat([corners1, corners1[:, :, [1, 2, 3, 0], :]], dim=3).double() # B, N, 4, 4: Batch, Box, edge, point
-    # line2 = torch.cat([corners2, corners2[:, :, [1, 2, 3, 0], :]], dim=3).double()
-
+    line1 = torch.cat([corners1, corners1[:, :, [1, 2, 3, 0], :]], dim=3) # B, N, 4, 4: Batch, Box, edge, point
+    line2 = torch.cat([corners2, corners2[:, :, [1, 2, 3, 0], :]], dim=3)
     # duplicate data to pair each edges from the boxes
     # (B, N, 4, 4) -> (B, N, 4, 4, 4) : Batch, Box, edge1, edge2, point
     line1_ext = line1.unsqueeze(3).repeat([1,1,1,4,1])
@@ -54,48 +37,29 @@ def box_intersection_th(corners1:torch.Tensor, corners2:torch.Tensor):
     x4 = line2_ext[..., 2]
     y4 = line2_ext[..., 3]
     # math: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
-    num = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)
+    num = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4)     
     den_t = (x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)
-    # zero case
-    # num_mask = (num != .0)
-    # t = torch.ones_like(den_t)*-1
-    # t[num_mask] = den_t[num_mask] / num[num_mask]
     t = den_t / num
-    # if ((den_t==0.) & (num==0.)).any():
-    #     print('den_t num are all zeros')
-    #     input('det ==0 pause')
     t[num == .0] = -1.
-    # mask_t = (t >= 0) * (t <= 1)
-    mask_t = (t > 0) * (t < 1)                # intersection on line segment 1  ori code
-    # if torch.isnan(num).any() or torch.isnan(den_t).any():
-    #     print('corners1', corners1)
-    #     print('corners2',corners2)
-    #     print('line1', line1)
-    #     print('line2',line2)
-    #     print('den_t', den_t)
-    #     print('num', num)
+    mask_t = (t > 0) * (t < 1)                # intersection on line segment 1
     den_u = (x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)
-    # zero case
-    # u = torch.ones_like(den_u)*-1
-    # u[num_mask] = -den_u[num_mask] / num[num_mask]
     u = -den_u / num
     u[num == .0] = -1.
-    # mask_u = (u >= 0) * (u <= 1)
-    mask_u = (u > 0) * (u < 1)                # intersection on line segment 2  ori code
-    mask = mask_t * mask_u
+    mask_u = (u > 0) * (u < 1)                # intersection on line segment 2
+    mask = mask_t * mask_u 
     t = den_t / (num + EPSILON)                 # overwrite with EPSILON. otherwise numerically unstable
     intersections = torch.stack([x1 + t*(x2-x1), y1 + t*(y2-y1)], dim=-1)
-    intersections = intersections * mask.float().unsqueeze(-1)
-
+    intersections = intersections * mask.type(corners1.dtype).unsqueeze(-1)
     return intersections, mask
 
-def box1_in_box2(corners1:torch.Tensor, corners2:torch.Tensor):
+
+def box1_in_box2(corners1:Tensor, corners2:Tensor):
     """check if corners of box1 lie in box2
     Convention: if a corner is exactly on the edge of the other box, it's also a valid point
 
     Args:
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners2 (torch.Tensor): (B, N, 4, 2)
+        corners1 (Tensor): (B, N, 4, 2)
+        corners2 (Tensor): (B, N, 4, 2)
 
     Returns:
         c1_in_2: (B, N, 4) Bool
@@ -112,16 +76,18 @@ def box1_in_box2(corners1:torch.Tensor, corners2:torch.Tensor):
     norm_ad = torch.sum(ad * ad, dim=-1)    # (B, N, 1)
     # NOTE: the expression looks ugly but is stable if the two boxes are exactly the same
     # also stable with different scale of bboxes
-    cond1 = (p_ab / norm_ab > - 1e-6) * (p_ab / norm_ab < 1 + 1e-6)   # (B, N, 4)
-    cond2 = (p_ad / norm_ad > - 1e-6) * (p_ad / norm_ad < 1 + 1e-6)   # (B, N, 4)
+    cond1 = (p_ab >= 0) & (p_ab <= norm_ab )   # (B, N, 4)
+    cond2 = (p_ad >= 0) & (p_ad <= norm_ad )   # (B, N, 4)
     return cond1*cond2
 
-def box_in_box_th(corners1:torch.Tensor, corners2:torch.Tensor):
+
+@torch.no_grad()
+def box_in_box_th(corners1:Tensor, corners2:Tensor):
     """check if corners of two boxes lie in each other
 
     Args:
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners2 (torch.Tensor): (B, N, 4, 2)
+        corners1 (Tensor): (B, N, 4, 2)
+        corners2 (Tensor): (B, N, 4, 2)
 
     Returns:
         c1_in_2: (B, N, 4) Bool. i-th corner of box1 in box2
@@ -131,22 +97,23 @@ def box_in_box_th(corners1:torch.Tensor, corners2:torch.Tensor):
     c2_in_1 = box1_in_box2(corners2, corners1)
     return c1_in_2, c2_in_1
 
-def build_vertices(corners1:torch.Tensor, corners2:torch.Tensor, 
-                c1_in_2:torch.Tensor, c2_in_1:torch.Tensor, 
-                inters:torch.Tensor, mask_inter:torch.Tensor):
+
+def build_vertices(corners1:Tensor, corners2:Tensor, 
+                c1_in_2:Tensor, c2_in_1:Tensor, 
+                inters:Tensor, mask_inter:Tensor):
     """find vertices of intersection area
 
     Args:
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners2 (torch.Tensor): (B, N, 4, 2)
-        c1_in_2 (torch.Tensor): Bool, (B, N, 4)
-        c2_in_1 (torch.Tensor): Bool, (B, N, 4)
-        inters (torch.Tensor): (B, N, 4, 4, 2)
-        mask_inter (torch.Tensor): (B, N, 4, 4)
+        corners1 (Tensor): (B, N, 4, 2)
+        corners2 (Tensor): (B, N, 4, 2)
+        c1_in_2 (Tensor): Bool, (B, N, 4)
+        c2_in_1 (Tensor): Bool, (B, N, 4)
+        inters (Tensor): (B, N, 4, 4, 2)
+        mask_inter (Tensor): (B, N, 4, 4)
     
     Returns:
-        vertices (torch.Tensor): (B, N, 24, 2) vertices of intersection area. only some elements are valid
-        mask (torch.Tensor): (B, N, 24) indicates valid elements in vertices
+        vertices (Tensor): (B, N, 24, 2) vertices of intersection area. only some elements are valid
+        mask (Tensor): (B, N, 24) indicates valid elements in vertices
     """
     # NOTE: inter has elements equals zero and has zeros gradient (masked by multiplying with 0). 
     # can be used as trick
@@ -156,15 +123,16 @@ def build_vertices(corners1:torch.Tensor, corners2:torch.Tensor,
     mask = torch.cat([c1_in_2, c2_in_1, mask_inter.view([B, N, -1])], dim=2) # Bool (B, N, 4+4+16)
     return vertices, mask
 
-def sort_indices(vertices:torch.Tensor, mask:torch.Tensor):
-    """[summary]
+
+def sort_vertices(vertices:Tensor, mask:Tensor):
+    """
 
     Args:
-        vertices (torch.Tensor): float (B, N, 24, 2)
-        mask (torch.Tensor): bool (B, N, 24)
+        vertices (Tensor): float (B, N, 24, 2)
+        mask (Tensor): bool (B, N, 24)
 
     Returns:
-        sorted_index: bool (B, N, 9)
+        sorted vertices: (B, N, 9, 2)
     
     Note:
         why 9? the polygon has maximal 8 vertices. +1 to duplicate the first element.
@@ -174,95 +142,151 @@ def sort_indices(vertices:torch.Tensor, mask:torch.Tensor):
         value 0 and mask False. (cause they have zero value and zero gradient)
     """
     num_valid = torch.sum(mask.int(), dim=2).int()      # (B, N)
-    mean = torch.sum(vertices * mask.float().unsqueeze(-1), dim=2, keepdim=True) / num_valid.unsqueeze(-1).unsqueeze(-1)
+    mean = torch.sum(vertices * mask.type(vertices.dtype).unsqueeze(-1), dim=2, keepdim=True) / num_valid.unsqueeze(-1).unsqueeze(-1)
     vertices_normalized = vertices - mean       # normalization makes sorting easier
-    global check_use_num_valid
-    global check_use_mean
-    global check_use_vertices_normalized
-    check_use_num_valid = num_valid
-    check_use_mean = mean
-    check_use_vertices_normalized = vertices_normalized
-    return sort_v(vertices_normalized, mask, num_valid).long()
+    idx_sorted = sort_vertice_th(vertices_normalized, mask, num_valid.long()).long()
+    
+    idx_ext = idx_sorted.unsqueeze(-1).repeat([1,1,1,2])
+    selected = torch.gather(vertices, 2, idx_ext)
+    
+    # zero padding for invalid vertices
+    m = _generate_mask(selected.size(-2), num_valid+1, dtype=vertices.dtype, device=vertices.device)
+    selected = selected * m.unsqueeze(-1)
+    
+    # set zero of too few vertices
+    m = num_valid >= 3
+    selected = selected * m.type(selected.dtype).unsqueeze(-1).unsqueeze(-1)
+    
+    return selected
+    
 
-def calculate_area(idx_sorted:torch.Tensor, vertices:torch.Tensor):
+def calculate_area(selected):
     """calculate area of intersection
 
     Args:
-        idx_sorted (torch.Tensor): (B, N, 9)
-        vertices (torch.Tensor): (B, N, 24, 2)
+        idx_sorted (Tensor): (B, N, 9)
+        vertices (Tensor): (B, N, 24, 2)
     
     return:
         area: (B, N), area of intersection
         selected: (B, N, 9, 2), vertices of polygon with zero padding 
     """
-    idx_ext = idx_sorted.unsqueeze(-1).repeat([1,1,1,2])
-    selected = torch.gather(vertices, 2, idx_ext)
-    # for v in vertices[0,0]:
-    #     print('v',v)
-    # for idx in idx_ext[0,0]:
-    #     print('idx',idx)
-    # print('vertices.shape',vertices.shape)
-    # print('idx_ext.shape',idx_ext.shape)
-    # print('selected[selected.isnan()]',selected[selected.isnan()])
-
     total = selected[:, :, 0:-1, 0]*selected[:, :, 1:, 1] - selected[:, :, 0:-1, 1]*selected[:, :, 1:, 0]
     total = torch.sum(total, dim=2)
     area = torch.abs(total) / 2
-    # print('total[total.isnan()]',total[total.isnan()])
-    # print('area[area.isnan()]',area[area.isnan()])
     return area, selected
 
-def oriented_box_intersection_2d(corners1:torch.Tensor, corners2:torch.Tensor):
+
+def oriented_box_intersection_2d(corners1:Tensor, corners2:Tensor):
     """calculate intersection area of 2d rectangles 
 
     Args:
-        corners1 (torch.Tensor): (B, N, 4, 2)
-        corners2 (torch.Tensor): (B, N, 4, 2)
+        corners1 (Tensor): (B, N, 4, 2)
+        corners2 (Tensor): (B, N, 4, 2)
 
     Returns:
         area: (B, N), area of intersection
         selected: (B, N, 9, 2), vertices of polygon with zero padding 
     """
-    # inters shape [1, 5021, 4, 4, 2]
-    # mask_inter shape [1, 5021, 4, 4]
     inters, mask_inter = box_intersection_th(corners1, corners2)
     c12, c21 = box_in_box_th(corners1, corners2)
+    c12, c21 = check_overlap(corners1, corners2, c12, c21)
+    
     vertices, mask = build_vertices(corners1, corners2, c12, c21, inters, mask_inter)
-    """sorted_indices 可能出現問題"""
-    sorted_indices = sort_indices(vertices, mask)
-
-    global check_use_inters
-    global check_use_mask_inter
-    global check_use_c12
-    global check_use_c21
-    global check_use_vertices
-    global check_use_mask
-    global check_use_sorted_indices
-
-    check_use_inters = inters
-    check_use_mask_inter = mask_inter
-    check_use_c12 = c12
-    check_use_c21 = c21
-    check_use_vertices = vertices
-    check_use_mask = mask
-    check_use_sorted_indices = sorted_indices
-
-    # print('inters', inters)
-    # print('mask_inter', mask_inter)
-    # print('c12', c12)
-    # print('c21', c21)
-    # print('vertices', vertices)
-    # print('mask', mask)
-    # print('sorted_indices', sorted_indices)
+    vertices_gathered = sort_vertices(vertices, mask)
+    return calculate_area(vertices_gathered)
 
 
-    # print('inters shape', inters.shape)
-    # print('mask_inter shape', mask_inter.shape)
-    # print('c12 shape', c12.shape)
-    # print('c21 shape', c21.shape)
-    # print('vertices shape', vertices.shape)
-    # print('mask.shape', mask.shape)
-    # print('sorted_indices.shape', sorted_indices.shape)
-    # exit(0)
+@torch.no_grad()
+def check_overlap(corners1:Tensor, corners2:Tensor, cond12:Tensor, cond21:Tensor):
+    """check if corners are overlapped and update the conditions. 
+    useful to avoid incorrect intersection calculation. 
+    Without this check, the intersection would have duplicated vertices, which makes the 
+    shoelace-formula broken. 
 
-    return calculate_area(sorted_indices, vertices)
+    Args:
+        corners1 (Tensor): (B, N, 4, 2)
+        corners2 (Tensor): (B, N, 4, 2)
+        cond12 (Tensor): bool, (B, N, 4)
+        cond21 (Tensor): bool, (B, N, 4)
+
+    Returns:
+        Tensor: bool, (B, N, 4)
+        Tensor: bool, (B, N, 4)
+    """
+    c_roll = corners2
+    cd_roll = cond21
+    for _ in range(4):
+        c_roll = torch.roll(c_roll, shifts=1, dims=2)
+        cd_roll = torch.roll(cd_roll, shifts=1, dims=2)
+        crit = torch.all(corners1 == c_roll, dim=-1)
+        cond12[crit] = True
+        cd_roll[crit] = False
+    return cond12, cd_roll
+
+
+@torch.no_grad()
+def sort_vertice_th(vertices_normalized:Tensor, mask:Tensor, num_valid:Tensor):
+    """_summary_
+
+    Args:
+        vertices_normalized (Tensor): (B, N, 24, 2)
+        mask (Tensor): (B, N, 24)
+        num_valid (Tensor): (B, N)
+
+    Returns:
+        Tensor: (B, N, 9)
+    """
+    
+    B, N, vn = vertices_normalized.shape[:3]
+    
+    x = vertices_normalized[..., 0]
+    y = vertices_normalized[..., 1]
+    
+    # sorting
+    x[~mask] = -1e6
+    y[~mask] = 1e-6
+    ang = torch.atan2(y, x)
+    
+    # 偷工寫法把3.1415重複最大的角度做一個shift來解決同元素隨機排序問題，
+    # TODO: 可能有其他角度會重複，
+    mask_2_add = ang == torch.atan2(torch.tensor(1e-6), torch.tensor(-1e6))
+    start = 1e-7  # 0.0000001
+    end = 1e-5  # 0.0000024
+    steps = vn
+    x = torch.linspace(start, end, steps)
+    x = x.unsqueeze(0).unsqueeze(0) # (24,1) to (1,1,24)
+    x = x.expand(B, N, -1)
+    ang[mask_2_add] = ang[mask_2_add]+x[mask_2_add].cuda()
+    
+    """
+    # create a tensor with same size of ang last dim, elemnet inside it's their indices
+    indices = torch.arange(ang.size(-1)).to(ang.device)
+    
+    # expand its shape to fit and
+    indices = indices.expand(ang.shape)
+    
+    # stack ang and its indices, and sort angle with its index 
+    # to avoid same angle value not stable sort in argsort 
+    tmp = torch.stack([ang, indices], dim=2)
+    a_unq, inv = torch.unique(tmp, dim=-1, sorted=True, return_inverse=True)
+    index = torch.argsort(inv).unsqueeze(0).unsqueeze(0).expand(B, N, -1)
+    """
+    
+    index = torch.argsort(ang, dim=-1)  # (B, N, 24)
+    
+    # duplicate the first
+    temp = index[..., :1].clone()   # (B, N, 1)
+    index.scatter_(dim=-1, index=num_valid.unsqueeze(-1), src=temp.expand(-1, -1, index.size(-1)))
+    return index[..., :9]
+
+
+@torch.no_grad()
+def _generate_mask(num: int, valid_num: Tensor, dtype, device):
+    B, N = valid_num.size()
+    ar = torch.arange(num, dtype=dtype).unsqueeze(0).unsqueeze(0).repeat(B, N, 1).to(device)
+    mask = ar < valid_num.unsqueeze(-1)
+    # NOTE: this expression doesn't work some earlier PyTorch version:
+    # arr = torch.where(mask, 1., 0.)
+    ar = torch.where(mask, torch.ones((1,)).expand_as(mask).to(device), torch.zeros(1,).expand_as(mask).to(device))
+    return ar
