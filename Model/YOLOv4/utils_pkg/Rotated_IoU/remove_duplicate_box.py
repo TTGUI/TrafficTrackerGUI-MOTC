@@ -14,7 +14,10 @@ def remove_duplicate_box(path, iou_thres=0.8):
 
     output_8cls_str = ''
     # loop frame
+    ind = 0
     for frame_token in tokens:
+        ind += 1
+        print(f"({ind}/{len(tokens)})", end='\r')
         nobj = int((len(frame_token)-1)/10)
 
         frame_id = frame_token[0]

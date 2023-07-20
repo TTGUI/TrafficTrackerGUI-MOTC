@@ -141,7 +141,7 @@ class LoadImages:  # for inference
 
             norPath = Path(path).name
             # print('video %g/%g (%g/%g) %s: ' % (self.count + 1, self.nf, self.frame, self.nframes, path), end='')
-            print('video %g/%g (%g/%g) %s: ' % (self.count + 1, self.nf, self.frame, self.nframes, norPath), end='')
+            print('video %g/%g (%g/%g) %s' % (self.count + 1, self.nf, self.frame, self.nframes, norPath), end='\r')
 
         else:
             # Read image

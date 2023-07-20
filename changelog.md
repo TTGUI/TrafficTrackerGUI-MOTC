@@ -1,5 +1,12 @@
 ## Changelog
 
+
+### v3.7.1 (2023/07/20)
+#### Improvements
+- Model\YOLOv4\utils_pkg\remove_duplicate_box.py : info output add.
+- Model\YOLOv4\utils_pkg\datasets.py : info log simplified.
+- Model\YOLOv4\detect.py : info log simplified.
+
 ### v3.7.0 (2023/07/18)
 #### New Features
 - add Model\YOLOv4\utils_pkg\remove_duplicate_box.py : remove duplicate detect 8cls.

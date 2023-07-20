@@ -3,10 +3,11 @@ import math
 import numpy as np
 import torch
 from pathlib import Path
-
+import time
 
 def remove_duplicate_box(path, iou_thres=0.8):
-
+    print("remove duplicate box...", end="\r")
+    start = time.time()
     with open(path, 'r') as infile:
         lines = infile.readlines()
 
@@ -14,10 +15,15 @@ def remove_duplicate_box(path, iou_thres=0.8):
 
     output_8cls_str_temp = ''
     # loop frame
+    ind = 0
     for frame_token in tokens:
+        ind += 1
+        print(f"({ind}/{len(tokens)})", end='\r')
+        
         nobj = int((len(frame_token)-1)/10)
 
         frame_id = frame_token[0]
+        
 
         objs_info = []
         for obj_id in range(nobj):
@@ -90,6 +96,8 @@ def remove_duplicate_box(path, iou_thres=0.8):
         
     with open(path, 'w') as outfile:
         outfile.writelines(output_8cls_str_temp)
+    end = time.time()
+    print(f"remove duplicate box done. cost time: {end-start}s")
 
 if __name__ == '__main__':
     path = "E:/PyTorch_YOLOv4/check_nms/苗栗縣至公路_文發路_民族路路口120米_B_stab_8cls.txt"
@@ -97,4 +105,4 @@ if __name__ == '__main__':
     newP = Path(TSPath)
 
     remove_duplicate_box(newP,0.8)
-
+    print("done")
