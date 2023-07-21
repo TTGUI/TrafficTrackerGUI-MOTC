@@ -213,7 +213,7 @@ int main(const int argc, const char* argv[])
 				start_time = clock();
 			}
 		
-			cap.set(CAP_PROP_POS_FRAMES, (cutinfoList[i].start)-1); // 將讀取位置設定為 start frame
+			cap.set(CAP_PROP_POS_FRAMES, (cutinfoList[i].start)); // 將讀取位置設定為 start frame
 			
 			while (cap.read(frame) && cap.get(CAP_PROP_POS_FRAMES) != cutinfoList[i].end + 1)
 			{

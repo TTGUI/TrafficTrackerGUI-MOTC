@@ -104,7 +104,7 @@ class StableVideo:
 
                 self.currentFrameIndex = self.cutInfoList[self.currentVideoIndex].getStart()
                 cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.inputVideoPath), self.videolist[self.currentVideoIndex]))
-                cap.set(cv2.CAP_PROP_POS_FRAMES, self.cutInfoList[self.currentVideoIndex].getStart()-1)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, self.cutInfoList[self.currentVideoIndex].getStart())
 
                 logger.info("[Step 1] ->> Stabilize video :" + str(self.videolist[self.currentVideoIndex]))
                 

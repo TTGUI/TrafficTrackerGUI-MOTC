@@ -7,6 +7,16 @@ logs/logs_tutorial/
 logs/logs_tutorial/ECC_GPU_log.txt
 Model/YOLOv4/weights
 traffictrackergui-env/
+Model/Stab_ECC_GPU_source/demo/
+Model/Stab_ECC_GPU_source/.vs/
+Model/Stab_ECC_GPU_source/x64/
+Model/Stab_ECC_GPU_source/Debug/
+Model/Stab_ECC_GPU_source/output.avi
+Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source.sln
+Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source.vcxproj
+Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source.vcxproj.filters
+Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source.vcxproj.user
+
 .vs/
 .vscode/
 
@@ -179,7 +189,6 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
-
 
 
 

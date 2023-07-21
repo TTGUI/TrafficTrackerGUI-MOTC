@@ -1,5 +1,8 @@
 ## Changelog
 
+### v3.7.2a (2023/07/21)
+#### Temporary storage
+- Temporary storage for [issue#15]
 
 ### v3.7.1 (2023/07/20)
 #### Improvements
