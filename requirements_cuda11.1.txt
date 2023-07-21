@@ -5,6 +5,7 @@ PySide2==5.15.2
 filterpy==1.4.5
 Cython==0.29.24
 ffmpeg
+shapely
 
 #lap==0.4.0
 # scikit-image==0.17.2

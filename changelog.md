@@ -1,6 +1,12 @@
 ## Changelog
 
 
+### v3.7.2b (2023/07/21)
+#### Improvements
+- update Tracking code : to tracking7_2.py
+- update SORT code : to sort7.py
+- update install requirements : to requirements_cuda10.2.txt, requirements_cuda11.1.txt
+
 ### v3.7.1 (2023/07/20)
 #### Improvements
 - Model\YOLOv4\utils_pkg\remove_duplicate_box.py : info output add.
