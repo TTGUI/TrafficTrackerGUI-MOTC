@@ -377,7 +377,7 @@ class MainWindow(object):
             conf.setTIVPMode(1)
             self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
             self._window.TVIPrinter_btn.setText('<TIV Printer> (V)')
-
+        self.renewScheduleBoard()
     def changeTrackingSet(self):
         self.CTS_dialog = QDialog()
         ui_file_name = './View/CTS_dialog.ui'
@@ -683,44 +683,57 @@ class MainWindow(object):
         self.displayInfo(1)
 
     @QtCore.Slot()
-    def resetSetKeyFrame(self):
-        self.cutInfoLsit[self.currentVideoIndex].setKey(-1)
-        self.displayInfo(1)
-
-    @QtCore.Slot()
     def setStartFrame(self):
         self.currentStartID = self.currentVideoIndex
-        
-        for i in range(0,self.currentVideoIndex) :
-            # before start frame, ignore Videos.
-            self.cutInfoLsit[i].setKey(-1)
-            self.cutInfoLsit[i].setStart(-1)
-            self.cutInfoLsit[i].setEnd(-1)
-        
+        # set start frame.
+        self.setKey()
         self.cutInfoLsit[self.currentVideoIndex].setStart(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+        if self.cutInfoLsit[self.currentVideoIndex].getEnd() == -1 :
+            self.resetSetEndFrame(self.currentVideoIndex)
+        # before check.
+        for i in range(0,self.currentVideoIndex) :
+            self.ignoreVideo(i)
+        # after start check.
+
+        for i in range(self.currentVideoIndex + 1 ,self.currentEndID) :
+            print(f"reset{i}")
+            self.resetSetKeyFrame(i)
+            self.resetSetStartFrame(i)
+            self.resetSetEndFrame(i)
+
+        self.displayInfo(1)
+        
+        self.save()
+
+
+    @QtCore.Slot()
+    def setEndFrame(self):
+        self.currentEndID = self.currentVideoIndex
+        # set end frame.
+        if self.cutInfoLsit[self.currentVideoIndex].getStart() == -1 :
+            self.cutInfoLsit[self.currentVideoIndex].setStart(0)
+        self.cutInfoLsit[self.currentVideoIndex].setEnd(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+        # before check.
+        for i in range(self.currentStartID + 1 , self.currentVideoIndex) :
+            self.resetSetStartFrame(i)
+            self.resetSetEndFrame(i)
+        # after end frame, ignore Videos.
+        for i in range(self.currentVideoIndex + 1 ,len(self.cutInfoLsit)) :
+            self.ignoreVideo(i)
+
         
         self.displayInfo(1)
-        self.setKey()
         self.save()
+
+    @QtCore.Slot()
+    def resetSetKeyFrame(self,index):
+        self.cutInfoLsit[index].setKey(-1)
+        self.displayInfo(1)
 
     @QtCore.Slot()
     def resetSetStartFrame(self, index):
         self.cutInfoLsit[index].setStart(0)
         self.displayInfo(1)
-
-    @QtCore.Slot()
-    def setEndFrame(self):
-        self.currentEndID = self.currentVideoIndex
-
-        for i in range(self.currentVideoIndex+1 ,len(self.cutInfoLsit)) :
-            # after end frame, ignore Videos.
-            self.cutInfoLsit[i].setKey(-1)
-            self.cutInfoLsit[i].setStart(-1)
-            self.cutInfoLsit[i].setEnd(-1)
-
-        self.cutInfoLsit[self.currentVideoIndex].setEnd(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
-        self.displayInfo(1)
-        self.save()
 
     @QtCore.Slot()
     def resetSetEndFrame(self, index):
@@ -735,23 +748,6 @@ class MainWindow(object):
         self.cutInfoLsit[index].setStart(-1)
         self.cutInfoLsit[index].setEnd(-1)
         self.displayInfo(1)
-
-    @QtCore.Slot()
-    def resetIgnoreVideo(self, index):
-        cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.droneFolderPath), self.videolist[index]))
-        self.cutInfoLsit[index].setStart(0)
-        self.cutInfoLsit[index].setEnd(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        cap.release()
-        self.displayInfo(1)
-
-    @QtCore.Slot()
-    def checkIgnoreRange(self):
-        for i in range(0,len(self.cutInfoLsit)) :
-            if i < self.currentStartID :
-                self.ignoreVideo(i)
-            elif i > self.currentEndID :            
-                self.ignoreVideo(i)
-        
 
     def cuttingWarning(self):
         err = False
@@ -901,8 +897,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def droneFolder(self):
-
-        folderpath = QFileDialog.getExistingDirectory(self._window, 'Select Folder of Drone Video', options=QFileDialog.DontUseNativeDialog)
+        folderpath = QFileDialog.getExistingDirectory(self._window, 'Select Folder of Drone Video', self.resultPath)
         if folderpath == "" :
             print("[CANCEL] Set Drone Folder Cancel.")
         else :
@@ -941,8 +936,8 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def setResultFolder(self):
-        temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath,options=QFileDialog.DontUseNativeDialog) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
-        
+        temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
+      
         if temp == "/" :
             print("[CANCEL] Set Result Folder Cancel.")
             
@@ -976,8 +971,6 @@ class MainWindow(object):
     @QtCore.Slot()
     def step0(self):
         self.currentStep = 0
-        self.currentEndID = -1
-        self.currentStartID = -1
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 0 ")            
             self.AddScheudle()
@@ -985,6 +978,10 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 0]")
             if self.precursorCheck():
+                
+                self.currentEndID = -1
+                self.currentStartID = len(os.listdir(self.droneFolderPath))
+
                 self.set_video(1)
                 self.play()
         
@@ -1521,7 +1518,8 @@ class MainWindow(object):
         if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9:     # Load TIVP Issue
             self.loadTIVIssue()
         else:                                                                               # Normal Schedule Load
-            self.scheduleLoadPath, filetype = QFileDialog.getOpenFileName(self._window,"Select Schedule File.", self.resultPath ,options=QFileDialog.DontUseNativeDialog)
+            self.scheduleLoadPath, filetype = QFileDialog.getOpenFileName(self._window,"Select Schedule File.", self.resultPath)
+            
             if not self.scheduleLoadPath :
                 print ("[Cancel] Schedule Load Cancel.")
             else:
@@ -1559,7 +1557,7 @@ class MainWindow(object):
             self.saveTIVIssue()
         else:                                                                               # Normal Schedule Save
             filetype = ("_Schedule.txt")
-            temp = QFileDialog.getSaveFileName(self._window,"Save Schedule File.", "", filetype, options=QFileDialog.DontUseNativeDialog,)
+            temp = QFileDialog.getSaveFileName(self._window,"Save Schedule File.", "", filetype)
             self.scheduleSavePath = temp[0] + temp[1]
             self.scheduleName = temp[0].split("/")[-1]
             self.writeScheduleFile()
@@ -1655,7 +1653,7 @@ class MainWindow(object):
             self._window.SaveScheduleFile_btn.setText('Save Schedule File')
 
     def loadTIVIssue(self):
-        self.singelTIVpath, filetype = QFileDialog.getOpenFileName(self._window,"Select TIV.csv.", self.resultPath ,options=QFileDialog.DontUseNativeDialog)
+        self.singelTIVpath, filetype = QFileDialog.getOpenFileName(self._window,"Select TIV.csv.", self.resultPath )
         tempStr = self.singelTIVpath
         if not self.singelTIVpath :
             print ("[Cancel] TIV Load Cancel.")
@@ -1671,7 +1669,7 @@ class MainWindow(object):
 
     def saveTIVIssue(self):
         filetype = ("_TIV.csv")
-        temp = QFileDialog.getSaveFileName(self._window,"Save TIV File.", "", filetype, options=QFileDialog.DontUseNativeDialog,)
+        temp = QFileDialog.getSaveFileName(self._window,"Save TIV File.", "", filetype)
         outputTIV = temp[0] + temp[1]
 
         r = open(self.singelTIVpath, 'r')

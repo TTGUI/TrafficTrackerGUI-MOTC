@@ -1,5 +1,11 @@
 ## Changelog
 
+### v3.7.4 (2023/07/24)
+#### Improvements
+- main_window.py : use native dialog.
+#### Bug fixed
+- main_window.py : fix the bug [issue#15] Step0 reset start ignore range. 
+
 ### v3.7.3 (2023/07/24)
 #### Improvements
 - update Tracking code : to tracking7_3.py
