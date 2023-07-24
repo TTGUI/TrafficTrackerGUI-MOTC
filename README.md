@@ -10,12 +10,15 @@
 7. 軌跡添加街道出入口資訊
 8. 軌跡繪製結果影片
 9. 軌跡完整度驗證
-10. 軌跡驗證輸出
+10. 軌跡驗證輸出(影片/圖片/實時撥放)
+11. 批次排程功能
 
 ## Installation
-### 說明文件位於[doc](./doc)資料夾中
+### 安裝與使用說明文件位於[doc](./doc)資料夾中
 - 詳細安裝流程請參考[TrafficTrackerGUI_introduction.docx](./doc/TrafficTrackerGUI_introduction.docx)
 - 穩定影像步驟預設內建CPU版本，欲安裝GPU版本請參考[GPU_ECC安裝教學](./doc/GPU_ECC_install_introduction_3.0.1.docx)。
+### YOLO模型
+- 由於模型檔案大小無法上傳至GitHub，請[下載](https://mega.nz/folder/cT9lnJID#2L2coFONYwYCCajv0wA5aA)後放置於[weights](.\Model\YOLOv4\weights)
 
 ## Usage
 - 點擊[start_gui.bat](./start_gui.bat)開啟GUI程式。

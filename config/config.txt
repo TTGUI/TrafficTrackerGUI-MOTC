@@ -1,8 +1,8 @@
-Version=v3.7.3
+Version=3.7.4
 Step1_StabMode=GPU
 Trk1_Set=10,2,0.01
 Trk2_Set=10,2,0.1
 YoloModel=best_20230414_7.4.2.pt
 TIVingoreFrames=900
 TIVP_ExtendPrintFrame=100
-TIVPmode=2
+TIVPmode=3

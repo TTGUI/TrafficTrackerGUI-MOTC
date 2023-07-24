@@ -144,6 +144,7 @@ def trace_reorder(data):
     zero_indices = []
 
     i = 1
+    ad = 0
     # 對於每一對相鄰的矩形，找出使總位移最小的旋轉方式
     for i in range(1, len(data)):
         if np.all(data[i]==0):
@@ -155,7 +156,10 @@ def trace_reorder(data):
            
         new_data.append(min_rotation)
         first_point_positions.append(position)
-           
+        if position > 0:
+            ad = ad + 1
+        
+        print(ad,end='\r')   
     # 找出出現次數最多的第一點位置
     counter = Counter(first_point_positions)
     most_common_position = counter.most_common(1)[0][0]
@@ -295,6 +299,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
     track2 = {}
     count = 1
     for line in lines:
+
         print(f"{count} / {len(lines)}", end='\r')
         count += 1
         frame_no, rects_raw = parse_line(line)
@@ -388,7 +393,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
             cv2.imshow('Frame', frame)
             # cv2.imwrite(str(frame_no)+'.jpg', frame)
       
-            print(frame_no)
+            # print(frame_no)
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):
                 break
@@ -397,6 +402,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.01), trk2_set
         #     break
 
     # 開啟文件，並用寫入模式 'w'
+    print("                  ")
     V_type = "pumctbhg" 
     with open(tracking_csv, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
