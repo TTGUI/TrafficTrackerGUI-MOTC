@@ -568,7 +568,7 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
         print('\nDone. (%.3fs)' % (time.time() - t0))
 
     
-    remove_duplicate_box( output_detect_result_path )
+    # remove_duplicate_box( output_detect_result_path )
     
 
 

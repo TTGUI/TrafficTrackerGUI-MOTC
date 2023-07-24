@@ -302,11 +302,10 @@ class MainWindow(object):
             self.cutInfoLsit = []
             for i in range( 0 ,self.videoLen ):
                 tempCut = CutInfo()            
-                
-                currentVideo = self.videolist[i]
-                cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.droneFolderPath), currentVideo))
 
-                tempCut.setStart(1)
+                cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.droneFolderPath), self.videolist[i]))
+
+                tempCut.setStart(0)
                 tempCut.setEnd(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)))
                 cap.release()
                 self.cutInfoLsit.append(tempCut)
@@ -418,11 +417,11 @@ class MainWindow(object):
         if self.TIVPmode == 3 and self.currentStep == 9 :
             frame = self.issueFramePrint(frame)
 
-        fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 6, cv2.LINE_AA)
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
         self._window.FPS.setText(fps[:-2])
-        nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
+        nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
         self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))
         frame = cv2.resize(frame, (1440, 810))
         show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -471,7 +470,7 @@ class MainWindow(object):
 
         ### Add Issue Tracking ###
 
-        findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
         j = 0
         if len(self.TIVIsampleList) != 0 :
             while int(self.V[j][0] != self.TIVIsampleList[self.currentIssueIndex].split(',')[0])  :
@@ -540,8 +539,7 @@ class MainWindow(object):
             return
 
         self.displayInfo(1)
-        currentVideo = self.videolist[self.currentVideoIndex]
-        self.cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.droneFolderPath), currentVideo))
+        self.cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.droneFolderPath), self.videolist[self.currentVideoIndex]))
         print("LOAD : " + str(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))+ ' frames')
         self.allFream = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.video_init = True
@@ -560,7 +558,7 @@ class MainWindow(object):
             ret, self.capFrame = self.cap.read()
             if not ret :
                 break
-            nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
+            nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
             # print(nowFream)
             tempFrame = self.capFrame.copy()
 
@@ -669,17 +667,18 @@ class MainWindow(object):
         if self.cap.isOpened() :
             ret, frame = self.cap.read()
 
-            fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+            fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
             cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
             self._window.FPS.setText(fps)
             self.frameDisplay(frame)
 
     @QtCore.Slot()
     def setKey(self):
-        self.cutInfoLsit[self.currentVideoIndex].setKey(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-        for i in range(self.currentVideoIndex+1,len(self.cutInfoLsit)) :
-            self.cutInfoLsit[i].setKey(-1)
-            self.cutInfoLsit[i].setStart(1)
+        self.cutInfoLsit[self.currentVideoIndex].setKey(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+        for i in range(0,len(self.cutInfoLsit)) :
+            if i != self.currentVideoIndex :
+                self.cutInfoLsit[i].setKey(-1)
+
 
         self.displayInfo(1)
 
@@ -698,15 +697,15 @@ class MainWindow(object):
             self.cutInfoLsit[i].setStart(-1)
             self.cutInfoLsit[i].setEnd(-1)
         
-        self.cutInfoLsit[self.currentVideoIndex].setStart(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        self.cutInfoLsit[self.currentVideoIndex].setStart(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
         
         self.displayInfo(1)
         self.setKey()
         self.save()
 
     @QtCore.Slot()
-    def resetSetStartFrame(self):
-        self.cutInfoLsit[self.currentVideoIndex].setStart(1)
+    def resetSetStartFrame(self, index):
+        self.cutInfoLsit[index].setStart(0)
         self.displayInfo(1)
 
     @QtCore.Slot()
@@ -719,32 +718,40 @@ class MainWindow(object):
             self.cutInfoLsit[i].setStart(-1)
             self.cutInfoLsit[i].setEnd(-1)
 
-        self.cutInfoLsit[self.currentVideoIndex].setEnd(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        self.cutInfoLsit[self.currentVideoIndex].setEnd(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
         self.displayInfo(1)
         self.save()
 
     @QtCore.Slot()
-    def resetSetEndFrame(self):
-        self.cutInfoLsit[self.currentVideoIndex].setEnd(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    def resetSetEndFrame(self, index):
+        cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.droneFolderPath), self.videolist[index]))
+        self.cutInfoLsit[index].setEnd(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
         self.displayInfo(1)
 
     @QtCore.Slot()
-    def ignoreVideo(self):
-        self.cutInfoLsit[self.currentVideoIndex].setKey(-1)
-        self.cutInfoLsit[self.currentVideoIndex].setStart(-1)
-        self.cutInfoLsit[self.currentVideoIndex].setEnd(-1)
+    def ignoreVideo(self, index):
+        self.cutInfoLsit[index].setKey(-1)
+        self.cutInfoLsit[index].setStart(-1)
+        self.cutInfoLsit[index].setEnd(-1)
         self.displayInfo(1)
 
     @QtCore.Slot()
-    def resetIgnoreVideo(self):
-        self.cutInfoLsit[self.currentVideoIndex].setStart(0)
-        self.cutInfoLsit[self.currentVideoIndex].setEnd(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    def resetIgnoreVideo(self, index):
+        cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.droneFolderPath), self.videolist[index]))
+        self.cutInfoLsit[index].setStart(0)
+        self.cutInfoLsit[index].setEnd(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
         self.displayInfo(1)
 
     @QtCore.Slot()
-    def checkIgnoreVideo(self):
-
-        pass
+    def checkIgnoreRange(self):
+        for i in range(0,len(self.cutInfoLsit)) :
+            if i < self.currentStartID :
+                self.ignoreVideo(i)
+            elif i > self.currentEndID :            
+                self.ignoreVideo(i)
+        
 
     def cuttingWarning(self):
         err = False
@@ -969,6 +976,8 @@ class MainWindow(object):
     @QtCore.Slot()
     def step0(self):
         self.currentStep = 0
+        self.currentEndID = -1
+        self.currentStartID = -1
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 0 ")            
             self.AddScheudle()
@@ -1404,7 +1413,6 @@ class MainWindow(object):
                 print(sch + " - [STEP 0]")
                 self.step0()
                 return
-
             elif self.ScheduleList[i].step == 1:
                 print(sch + " - [STEP 1]")
                 self.step1()

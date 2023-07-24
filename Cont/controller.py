@@ -31,7 +31,7 @@ def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
 def con_step2(stab_video, yolo_txt, yolo_model) :
     from Model.YOLOv4 import detect
     start = time.time()
-    logger.info( f"[yolo_model] ->> {yolo_model}" )
+    logger.info( f"[yolo_model <{yolo_model}>]" )
     detect.obb_object_detect(stab_video,yolo_txt, yolo_model)
 
     end = time.time()
@@ -40,11 +40,11 @@ def con_step2(stab_video, yolo_txt, yolo_model) :
 
 def con_step3(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set) :
     # from Model import Mtracking_all # Old version
-    from Model import tracking6        # New version
+    from Model import tracking7_3      # New version
     start = time.time()
 
     # Mtracking_all.Tracking_main(stab_video,yolo_txt,tracking_csv) # Old version
-    tracking6.main(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set)     # New version
+    tracking7_3.main(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set)     # New version
     end = time.time()
     logger.info( "[Step 3] ->> Cost time : " + str(end-start)  )
     print("[SEPT3 Done.]")

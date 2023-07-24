@@ -1,5 +1,18 @@
 ## Changelog
 
+### v3.7.3 (2023/07/24)
+#### Improvements
+- update Tracking code : to tracking7_3.py
+
+### v3.7.2a (2023/07/21)
+#### Temporary storage
+- Temporary storage for [issue#15]
+
+### v3.7.2b (2023/07/21)
+#### Improvements
+- update Tracking code : to tracking7_2.py
+- update SORT code : to sort7.py
+- update install requirements : to requirements_cuda10.2.txt, requirements_cuda11.1.txt
 
 ### v3.7.1 (2023/07/20)
 #### Improvements
