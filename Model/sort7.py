@@ -24,27 +24,31 @@ class Track(object):
             [0, 0, 0, 0, 1, 0, 0, 0]
         ])
         #R越大越相信舊測量；R越小越相信新測量好收斂
-        self.kf.R *= 0.5
+        # self.kf.R *= 0.5
+        # #P越小越相信當前預測、越快收斂
+        # self.kf.P *= 0.9
+        # #Q越大越相信測量；Q越小越相信預測
+        # self.kf.Q *= 0.001
+        #R越大越相信舊測量；R越小越相信新測量好收斂
+        self.kf.R *= 0.0001
         #P越小越相信當前預測、越快收斂
-        self.kf.P *= 0.9
-        #Q越大越相信測量；Q越小越相信預測
-        self.kf.Q *= 0.001
+        self.kf.P *= 0.0001
         
-        # # Adjust initial covariance matrix P
-        # max_velocity = 1.8
-        # max_acceleration = 0.12
-        # self.kf.P[5:7, 5:7] *= 0.001        
-        # self.kf.R[5:7, 5:7] *= 0.001        
-        # self.kf.P[2:4, 2:4] *= 0.01
-        # self.kf.R[2:4, 2:4] *= 0.01
-        # self.kf.P[4, 4] *= 0.01
-        # self.kf.R[4, 4] *= 0.001
-        # self.kf.Q[4, 4] *= 0.01
+        # Adjust initial covariance matrix P
+        max_velocity = 1.8
+        max_acceleration = 0.12
+        self.kf.P[5:7, 5:7] *= 0.001        
+        self.kf.R[5:7, 5:7] *= 0.001        
+        self.kf.P[2:4, 2:4] *= 0.01
+        self.kf.R[2:4, 2:4] *= 0.01
+        self.kf.P[4, 4] *= 0.01
+        self.kf.R[4, 4] *= 0.001
+        self.kf.Q[4, 4] *= 0.01
 
         
-        # # Q越大越相信測量；Q越小越相信預測
-        # self.kf.Q[5:7, 5:7] *= 0.1
-        # self.kf.Q[2:4, 2:4] *= 0.5 
+        # Q越大越相信測量；Q越小越相信預測
+        self.kf.Q[5:7, 5:7] *= 0.1
+        self.kf.Q[2:4, 2:4] *= 0.5 
 
         
         self.kf.x[:5] = np.reshape(detection[:5], (5, 1))

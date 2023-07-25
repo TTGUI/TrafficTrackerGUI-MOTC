@@ -144,7 +144,6 @@ def trace_reorder(data):
     zero_indices = []
 
     i = 1
-    ad = 0
     # 對於每一對相鄰的矩形，找出使總位移最小的旋轉方式
     for i in range(1, len(data)):
         if np.all(data[i]==0):
@@ -156,10 +155,7 @@ def trace_reorder(data):
            
         new_data.append(min_rotation)
         first_point_positions.append(position)
-        if position > 0:
-            ad = ad + 1
-        
-        print(ad,end='\r')   
+           
     # 找出出現次數最多的第一點位置
     counter = Counter(first_point_positions)
     most_common_position = counter.most_common(1)[0][0]
@@ -182,7 +178,7 @@ def trace_reorder(data):
 
     return final_data
 
-def del_outliers(quadrilateral_positions):
+def del_outliers(quadrilateral_positions, limited_angle):
     # 計算四邊形的中心點
     def calculate_center(points):
         x_coords = points[0::2]
@@ -218,15 +214,15 @@ def del_outliers(quadrilateral_positions):
             continue
         diff_angle_prev = abs(angles[i] - angles[i-1])
         diff_angle_prev = min(360 - diff_angle_prev, diff_angle_prev)
-        # if diff_angle_prev > 5 or np.all(quadrilateral_positions[i-1] == 0):  # 使用 numpy 的 all() 來檢查陣列中的所有元素
-        if diff_angle_prev > 5:  # 使用 numpy 的 all() 來檢查陣列中的所有元素
+        # if diff_angle_prev > limited_angle or np.all(quadrilateral_positions[i-1] == 0):  # 使用 numpy 的 all() 來檢查陣列中的所有元素
+        if diff_angle_prev > limited_angle:  # 使用 numpy 的 all() 來檢查陣列中的所有元素
             new_positions[i] = [0, 0, 0, 0, 0, 0, 0, 0]
             continue
         if i < n-1:
             diff_angle_next = abs(angles[i] - angles[i+1])
             diff_angle_next = min(360 - diff_angle_next, diff_angle_next)
-            # if diff_angle_next > 5 or np.all(quadrilateral_positions[i+1] == 0):
-            if diff_angle_next > 5:
+            # if diff_angle_next > limited_angle or np.all(quadrilateral_positions[i+1] == 0):
+            if diff_angle_next > limited_angle:
                 new_positions[i] = [0, 0, 0, 0, 0, 0, 0, 0]
 
     return new_positions
@@ -281,10 +277,9 @@ def process_trajectory(quadrilateral_positions):
 def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set=(10, 2, 0.1)):
     # file_name = '台北市信義區松仁路_信義路五段路口80米_C_stab'
     # lines = read_file(file_name+'_8cls.txt')
-    lines = read_file(yolo_txt)   
+    lines = read_file(yolo_txt)    
     
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    # cap = cv2.VideoCapture(file_name+'.avi')
+    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     if show:
         cap = cv2.VideoCapture(stab_video)
     # out = cv2.VideoWriter(file_name+'_result.mp4', fourcc, 9.99, (1920, 1080))
@@ -294,16 +289,12 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
     trackers_1 = SORT(trk1_set[0], trk1_set[1], trk1_set[2]) # 大車 (汽車、卡車、公車)
     trackers_2 = SORT(trk2_set[0], trk2_set[1], trk2_set[2]) # 小車 (人、機車、自行車)
 
-
     track1 = {} 
     track2 = {}
-    count = 1
     for line in lines:
 
-        print(f"{count} / {len(lines)}", end='\r')
-        count += 1
         frame_no, rects_raw = parse_line(line)
-
+        print(f"{frame_no} / {len(lines)}", end='\r')
         # frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
         if show:
             ret, frame = cap.read()
@@ -335,7 +326,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
             if show:
                 cv2.polylines(frame, [points], True, (0, 255, 255), 4)
                 cv2.line(frame, points[0], points[1], (0, 0, 255), 3)
-            center = np.mean(points, axis=0).astype(np.int32)
+            # center = np.mean(points, axis=0).astype(np.int32)
             # cv2.putText(frame, f"{i}", tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
          
             rect_5_params = rotated_rect_to_5_params(points)
@@ -352,7 +343,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
         for track_id, rect, rect2, vote in tracked_objects_1:
             # boxPoints角度定義不同
             box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
-            box = np.intp(box2) 
+            # box = np.intp(box2) 
             # t0 = int(rect[0]+rect[2]/2*math.cos(rect[4] / 180.0 * np.pi))
             # t1 = int(rect[1]-rect[2]/2*math.sin(rect[4] / 180.0 * np.pi))
             # cv2.line(frame, (int(rect[0]), int(rect[1])), (t0, t1), (255, 255, 255), 3)
@@ -364,7 +355,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
                 cv2.line(frame, rect3[0], rect3[1], (0, 0, 255), 2)
                 cv2.polylines(frame, [rect3], True, (128, 128, 255), 1)
                 cv2.putText(frame, str(track_id), (int(rect[0]), int(rect[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)    
-            
+                
             if rect2[0] == 0 and rect2[1] == 0:
                 track1 = add_trajectory(track1, track_id, frame_no, vote, np.zeros((1,8), dtype=np.int32))
             else:
@@ -373,7 +364,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
         for track_id, rect, rect2, vote in tracked_objects_2:
             # boxPoints角度定義不同
             box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
-            box = np.intp(box2) 
+            # box = np.intp(box2) 
             # cv2.drawContours(frame, [box], 0, (255, 0, 0), 3)
             # cv2.line(frame, box[0], box[1], (255, 128, 128), 3)
        
@@ -402,7 +393,6 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
         #     break
 
     # 開啟文件，並用寫入模式 'w'
-    print("                  ")
     V_type = "pumctbhg" 
     with open(tracking_csv, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -411,7 +401,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
         for id, data in track2.items():
             if len(data[11]) > 20:
                 traj = np.array(data[11]).reshape(-1, 8)               
-                traj = np.array(del_outliers(traj)).reshape(-1, 8)
+                traj = np.array(del_outliers(traj, 5)).reshape(-1, 8)
                 reorder_data = np.array(trace_reorder(traj)).reshape(-1, 8)
                 traj, zero_ratio = interpolate_zeros(reorder_data)
                 if zero_ratio < 0.4:
@@ -429,7 +419,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
                         i = i+1                    
                     continue
                 traj = np.array(data[11]).reshape(-1, 8)               
-                traj = np.array(del_outliers(traj)).reshape(-1, 8)
+                traj = np.array(del_outliers(traj, 15)).reshape(-1, 8)
                 reorder_data = np.array(trace_reorder(traj)).reshape(-1, 8)
                 traj, zero_ratio = interpolate_zeros(reorder_data)
                 if zero_ratio < 0.7:
@@ -438,9 +428,8 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
     if show:
         cap.release()    
         # out.release()
+        csvfile.close()
         cv2.destroyAllWindows()
-    csvfile.close()
-    
 
 if __name__ == "__main__":
     main()
