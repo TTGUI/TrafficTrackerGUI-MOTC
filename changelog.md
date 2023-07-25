@@ -1,5 +1,10 @@
 ## Changelog
 
+### v3.7.5 (2023/07/25)
+#### Improvements
+- update Tracking code : to tracking7_4.py
+- update SORT code : update sort7.py
+
 ### v3.7.4 (2023/07/24)
 #### Improvements
 - main_window.py : use native dialog.
