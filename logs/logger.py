@@ -19,7 +19,7 @@ elif conf.loggerLevel is 'error':
 elif conf.loggerLevel is 'critical':
     logger.setLevel(logging.CRITICAL)
 
-format='%(asctime)s - %(levelname)s -%(name)s : %(message)s'
+format='%(asctime)s - %(levelname)s : %(message)s'
 formatter=logging.Formatter(format)
 streamhandler=logging.StreamHandler()
 streamhandler.setFormatter(formatter)

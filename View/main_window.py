@@ -3,8 +3,8 @@ import numpy as np
 from PySide2 import QtCore
 from PySide2.QtCore import QFile, QProcess, QTimer
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtGui import QFont, QImage, QPixmap
-from PySide2.QtWidgets import QFileDialog, QMessageBox, QDialog
+from PySide2.QtGui import QFont, QImage, QPixmap, QColor, QPalette
+from PySide2.QtWidgets import QFileDialog, QMessageBox, QDialog, QToolTip
 from Model.tool import TrackIntegrityVerificationTool
 from pathlib import Path
 
@@ -46,17 +46,27 @@ class MainWindow(object):
         self.yoloModel = conf.getYoloModel() #  20211109172733_last_200_1920.pt / ect.
         self.TIVPmode = conf.getTIVPMode() # <1> <2>
 
-        # UI
-        self._window = None
-        self.setup_ui()
-        self.actionName = "inital_action_name"
-        self.resultPath = "./result/"
+        # schedule
+        self.scheduleType = 'off' # 'off' 'edit' 'run'
+        self.currentScheduleIndex = 0
+        self.ScheduleList = []
+        self.scheduleLoadPath = ""
+        self.scheduleSavePath = ""
+        self.scheduleName = "Default"
+        self.scheduleTIVFolderPath = ""
+        self.scheduleTIVFile = ""
 
         # player
         self.play_bool = False
         self.currentStep = -1
         self.page = 0
         self.pageLen = 10
+
+        # UI
+        self._window = None
+        self.setup_ui()
+        self.actionName = "inital_action_name"
+        self.resultPath = "./result/"
 
         # Prepare
         self.droneFolderPath = "./data"
@@ -86,18 +96,10 @@ class MainWindow(object):
         self.result_video = self.resultPath + self.actionName + "_result.avi"
         self.displayType = True
 
-        # schedule
-        self.scheduleType = 'off' # 'off' 'edit' 'run'
-        self.currentScheduleIndex = 0
-        self.ScheduleList = []
-        self.scheduleLoadPath = ""
-        self.scheduleSavePath = ""
-        self.scheduleName = "Default"
-        self.scheduleTIVFolderPath = ""
-        self.scheduleTIVFile = ""
 
         # TIV
         self.singelTIVpath = self.resultPath + self.actionName + "_TIV.csv"
+        self.showTrackingBool = True
 
         """
         YOU ALOS NEED TO MODIFY FUNCTION 'changeActionName'
@@ -165,6 +167,7 @@ class MainWindow(object):
         self._window.DroneFolder_btn.setText('Set Drone Folder')
         self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
 
+
         self._window.openFolder_btn_2.setText('O\np\ne\nn')
         self._window.openFolder_btn_2.clicked.connect(self.openDroneFolder)
 
@@ -201,22 +204,28 @@ class MainWindow(object):
         self._window.step7_btn.setText('[STEP 7]\nReplay')
         self._window.step7_btn.clicked.connect(self.step7)
 
-        self._window.TVI_btn.setText("<TrackIntegrityVerification>")
+        self._window.TVI_btn.setText("[STEP 8]\nTrackIntegrityVerification")
         self._window.TVI_btn.clicked.connect(self.step8_singleTIV)
 
         if self.TIVPmode == 1:
-            self._window.TVIPrinter_btn.setText('<TIV Printer> (V)')
+            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (V)')
         elif self.TIVPmode == 2:
-            self._window.TVIPrinter_btn.setText('<TIV Printer> (I)')
+            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (I)')
         elif self.TIVPmode == 3:
-            self._window.TVIPrinter_btn.setText('<TIV Printer> (R)')
+            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (R)')
         self._window.TVIPrinter_btn.clicked.connect(self.step9_TVIPrinter)
 
         self._window.show_btn.setText('Show')
         self._window.show_btn.clicked.connect(self.show)
+        self._window.show_btn.setToolTip('[S1,3,7] Show process frame or background.')
 
-        self._window.DisplayType_btn.setText('Display ID information')
+        self._window.DisplayType_btn.setText('Display ID')
         self._window.DisplayType_btn.clicked.connect(self.DisplayType)
+        self._window.DisplayType_btn.setToolTip('[S7,9] Show tracking ID or not.')
+
+        self._window.showTracking_btn.setText('Show Tracking')
+        self._window.showTracking_btn.clicked.connect(self.showTracking)
+        self._window.showTracking_btn.setToolTip('[S9] Show tracking info or not.')
 
         self._window.ActionName_btn.setText('Edit Action Name')
         self._window.ActionName_btn.clicked.connect(self.changeActionName)
@@ -233,12 +242,15 @@ class MainWindow(object):
 
         self._window.GetSchedule_btn.setText('Get Scheudle')
         self._window.GetSchedule_btn.clicked.connect(self.GetSchedule)
+        self._window.GetSchedule_btn.setToolTip('Load current schedule item\nto workspace setting.')
 
         self._window.SetSchedule_btn.setText('Set Scheudle')
         self._window.SetSchedule_btn.clicked.connect(self.SetSchedule)
+        self._window.SetSchedule_btn.setToolTip('Replace current schedule item\nwith workspace setting.')
 
         self._window.DeleteSchedule_btn.setText('Delete Schedule')
         self._window.DeleteSchedule_btn.clicked.connect(self.DeleteSchedule)
+        self._window.DeleteSchedule_btn.setToolTip('Delete current schedule item.')
 
         self._window.LoadScheduleFile_btn.setText('Load Schedule File')
         self._window.LoadScheduleFile_btn.clicked.connect(self.loadSchedule)       
@@ -276,6 +288,8 @@ class MainWindow(object):
         self._window.fpsnext1_btn.clicked.connect(self.fpsnext1)
         self._window.jump_btn.setText('Jump')
         self._window.jump_btn.clicked.connect(self.jump)
+        self._window.jump_btn.setToolTip('In TIVP-R : add `i` before issue ID\nwhich you want to add.\nex`i999`')
+        
 
         self._window.timingSlider.sliderMoved.connect(self.video_position)
 
@@ -290,6 +304,7 @@ class MainWindow(object):
 
         self._window.SetEndFrame_btn.setText('SetEndFrame')
         self._window.SetEndFrame_btn.clicked.connect(self.setEndFrame)
+
 
     def set_video(self, type):
         if type == 1 : # Step 0 Cut Info Player Mode
@@ -366,17 +381,17 @@ class MainWindow(object):
             self.TIVPmode = 2
             conf.setTIVPMode(2)
             self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
-            self._window.TVIPrinter_btn.setText('<TIV Printer> (I)')
+            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (I)')
         elif self.TIVPmode == 2:
             self.TIVPmode = 3
             conf.setTIVPMode(3)
             self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
-            self._window.TVIPrinter_btn.setText('<TIV Printer> (R)')
+            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (R)')
         elif self.TIVPmode == 3:
             self.TIVPmode = 1
             conf.setTIVPMode(1)
             self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
-            self._window.TVIPrinter_btn.setText('<TIV Printer> (V)')
+            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (V)')
         self.renewScheduleBoard()
     def changeTrackingSet(self):
         self.CTS_dialog = QDialog()
@@ -387,9 +402,9 @@ class MainWindow(object):
         file.close()
         self.CTS_dialog.setWindowTitle('change Tracking Setting')
         self.CTS_dialog.CTS_trackingSetText.setText('Enter tracking setting : max_age, min_hits, iou_threshold')
-        self.CTS_dialog.CTS_label_Trk1.setText('大車 (汽車、卡車、公車) Set : Default `10,2,0.01`')
-        self.CTS_dialog.CTS_label_Trk2.setText('小車 (人、機車、自行車) Set : Default `10,2,0.1`')
-        self.CTS_dialog.CTS_trackingSetText2.setText('Ex : max_age=10, min_hits=2, iou_threshold=0.01, type `10,2,0.01`. No space.')
+        self.CTS_dialog.CTS_label_Trk1.setText(f'大車 (汽車,卡車,公車) Set\nDefault : (10, 2, 0.05)\nCurrent : {conf.getTrk1_Set()}')
+        self.CTS_dialog.CTS_label_Trk2.setText(f'小車 (人,機車,自行車) Set\nDefault : (10, 2, 0.1)\nCurrent : {conf.getTrk2_Set()}')
+        self.CTS_dialog.CTS_trackingSetText2.setText('Ex : max_age=10, min_hits=2, iou_threshold=0.01, type `10,2,0.01`.')
         self.CTS_dialog.CTS_submitButton.setText('Submit')
         self.CTS_dialog.CTS_submitButton.clicked.connect(self.submitTrackingSet)
 
@@ -398,13 +413,13 @@ class MainWindow(object):
     def submitTrackingSet(self):
         if self.CTS_dialog.CTS_Edit_1.text() != '':
             trk1 = self.CTS_dialog.CTS_Edit_1.text()
-            print("Trackers1 Set Changed : ",trk1)
+            print("Trackers1 Set Changed : ",trk1.replace(" ", ""))
             conf.setTrk1_Set(trk1)
 
         if self.CTS_dialog.CTS_Edit_2.text() != '':
             trk2 = self.CTS_dialog.CTS_Edit_2.text()        
             conf.setTrk2_Set(trk2)
-            print("Trackers2 Set Changed : ",trk2)
+            print("Trackers2 Set Changed : ",trk2.replace(" ", ""))
 
         self.CTS_dialog.close()
 
@@ -470,7 +485,7 @@ class MainWindow(object):
 
         ### Add Issue Tracking ###
 
-        findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+        findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)) # 老師的gate_csv是以1為frame數起點，因此在此不需要-1來取得當前frame的index，與其他地方不同
         j = 0
         if len(self.TIVIsampleList) != 0 :
             while int(self.V[j][0] != self.TIVIsampleList[self.currentIssueIndex].split(',')[0])  :
@@ -500,8 +515,9 @@ class MainWindow(object):
             k += 1
             centerIndex += 1
 
-        ### Add Tracling lines ###
-        colors = [(0,0,255), (0,128,255), (0,255,255), (255,255,255), (0,255,0), (255,255,0), (255,0,255), (255,0,0)]        
+        ### Add Tracking lines ###
+        colors = [(50,0,255), (50,138,255), (50,255,255), (255,255,235), (50,255,50), (255,235,50), (255,50,235), (255,50,50)]
+               
         pos = np.zeros(8, np.int)
         # 0:行人(紅) 1:自行車(橘) 2:機車(黃) 3:小客車(白) 4:貨車(綠) 5:大客車(水藍) 6:聯結車頭(粉紅) 7:聯結車身(藍)
         typecode = "pumctbhg"
@@ -515,11 +531,13 @@ class MainWindow(object):
                     
                 if pos[0] > 0:    
 
-                    cv2.line(frame, (pos[0], pos[1]), (pos[2], pos[3]), (0, 0, 255), 4)
-                    cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), (255, 0, 0), 4)
-                    # cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), colors[typecode.find(str(self.V[j][5]))], 4)
-                    cv2.line(frame, (pos[4], pos[5]), (pos[6], pos[7]), colors[typecode.find(str(self.V[j][5]))], 4)
-                    cv2.line(frame, (pos[6], pos[7]), (pos[0], pos[1]), colors[typecode.find(str(self.V[j][5]))], 4)       
+                    thickness = 2
+                    if self.showTrackingBool:
+                        cv2.line(frame, (pos[0], pos[1]), (pos[2], pos[3]), (0, 0, 255), thickness)
+                        cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), (255, 0, 0), thickness)
+                        # cv2.line(frame, (pos[2], pos[3]), (pos[4], pos[5]), colors[typecode.find(str(self.V[j][5]))], 4)
+                        cv2.line(frame, (pos[4], pos[5]), (pos[6], pos[7]), colors[typecode.find(str(self.V[j][5]))], thickness)
+                        cv2.line(frame, (pos[6], pos[7]), (pos[0], pos[1]), colors[typecode.find(str(self.V[j][5]))], thickness)       
 
                     if self.displayType :
                         cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
@@ -529,6 +547,23 @@ class MainWindow(object):
                         cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
                         cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
 
+        if self.show : # display yolo detect.
+            new_colors = [(0,0,255), (0,128,255), (0,255,255), (255,40,255), (0,255,0), (255,100,0), (255,0,100), (100,0,0)] 
+            line = self.currentTIVP8cls[int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1]
+            det_list = line.split(" ")
+            det_list = det_list[1:] # 移除第一個frame
+            while len(det_list) >= 9:  # 當還有足夠的數據進行處理
+                cls = int(det_list.pop(0)) # 取得分類
+                conf = det_list.pop(0) # 取得信心
+                pts = [int(x) for x in det_list[0:8]] # 取得點座標
+                det_list = det_list[8:] # 移除已處理數據
+                thickness = 2
+                # 畫出方框
+                cv2.polylines(frame, [np.array([(pts[i], pts[i+1]) for i in range(0,8,2)])], isClosed=True, color=new_colors[cls], thickness=thickness)
+                # 將首個框線顏色固定為紅色
+                cv2.line(frame, (pts[0], pts[1]), (pts[2], pts[3]), (0, 0, 255), thickness=thickness)
+                # 繪製文字
+                cv2.putText(frame, typecode[cls], (pts[0], pts[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, new_colors[cls], 2)
 
         return frame
 
@@ -561,7 +596,6 @@ class MainWindow(object):
             nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
             # print(nowFream)
             tempFrame = self.capFrame.copy()
-
             self.frameDisplay(tempFrame)
 
             QtTest.QTest.qWait(video_FPS)
@@ -595,9 +629,10 @@ class MainWindow(object):
             self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 101 )
         if self.cap.isOpened() :
-            ret, frame = self.cap.read()
+            ret, self.capFrame = self.cap.read()
             if ret:                
-                self.frameDisplay(frame)
+                tempFrame = self.capFrame.copy()
+                self.frameDisplay(tempFrame)
 
     @QtCore.Slot()
     def fpsnext100(self) :
@@ -605,9 +640,10 @@ class MainWindow(object):
             self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) + 99 )
         if self.cap.isOpened() :
-            ret, frame = self.cap.read()
+            ret, self.capFrame = self.cap.read()
             if ret:                
-                self.frameDisplay(frame)
+                tempFrame = self.capFrame.copy()
+                self.frameDisplay(tempFrame)
 
     @QtCore.Slot()
     def fpsback1(self) :
@@ -615,18 +651,20 @@ class MainWindow(object):
             self.play_bool = False
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 2 )
         if self.cap.isOpened() :
-            ret, frame = self.cap.read()
+            ret, self.capFrame = self.cap.read()
             if ret:                
-                self.frameDisplay(frame)
+                tempFrame = self.capFrame.copy()
+                self.frameDisplay(tempFrame)
     
     @QtCore.Slot()
     def fpsnext1(self) :
         if self.scheduleType == 'off' :
             self.play_bool = False
         if self.cap.isOpened() :
-            ret, frame = self.cap.read()
+            ret, self.capFrame = self.cap.read()
             if ret:                
-                self.frameDisplay(frame)
+                tempFrame = self.capFrame.copy()
+                self.frameDisplay(tempFrame)
 
     @QtCore.Slot()
     def jump(self) :
@@ -650,15 +688,16 @@ class MainWindow(object):
                 self.displayInfo(4)
 
         else :
-            jumpframe = int(self._window.FPS.text()) -1
+            jumpframe = int(self._window.FPS.text())
             if jumpframe > self.cap.get(cv2.CAP_PROP_FRAME_COUNT) :
                 jumpframe = self.cap.get(cv2.CAP_PROP_FRAME_COUNT) -1
 
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, jumpframe)
         if self.cap.isOpened() :
-            ret, frame = self.cap.read()
+            ret, self.capFrame = self.cap.read()
             if ret:                
-                self.frameDisplay(frame)
+                tempFrame = self.capFrame.copy()
+                self.frameDisplay(tempFrame)
 
     @QtCore.Slot()
     def video_position(self, video_position):
@@ -870,28 +909,52 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def show(self):
+        if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 : # TIVP real time mode edit by user.
+            self._window.show_btn.setToolTip('[S9] Show yolo detect.')
+        else:
+            self._window.show_btn.setToolTip('[S1,3,7] Show process frame or background.')
 
 
         if self.show:
             self.show = False
-            self._window.show_btn.setText('BackGround')
+            if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 : # TIVP real time mode edit by user.
+                self._window.show_btn.setText('Hide Yolo detact.')
+            else:
+                self._window.show_btn.setText('BackGround')
 
         else :
             self.show = True
-            self._window.show_btn.setText('Show')
-
+            if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 : # TIVP real time mode edit by user.
+                self._window.show_btn.setText('Display Yolo detact.')
+            else:
+                self._window.show_btn.setText('Show')
+        if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 and self.cap.isOpened() :
+            tempFrame = self.capFrame.copy()
+            self.frameDisplay(tempFrame)
     @QtCore.Slot()
     def DisplayType(self) :
 
         if self.displayType:
             self.displayType = False
-            self._window.DisplayType_btn.setText('Hide ID information')
-            tempFrame = self.capFrame.copy()
-            self.frameDisplay(tempFrame)
+            self._window.DisplayType_btn.setText('Hide ID')
 
         else :
             self.displayType = True
-            self._window.DisplayType_btn.setText('Display ID information')
+            self._window.DisplayType_btn.setText('Display ID')
+        if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 and self.cap.isOpened() :
+            tempFrame = self.capFrame.copy()
+            self.frameDisplay(tempFrame)
+
+    @QtCore.Slot()
+    def showTracking(self):
+        if self.showTrackingBool :
+            self.showTrackingBool = False
+            self._window.showTracking_btn.setText('Hide Tracking')
+
+        else :
+            self.showTrackingBool = True
+            self._window.showTracking_btn.setText('Show Tracking')
+        if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 and self.cap.isOpened() :
             tempFrame = self.capFrame.copy()
             self.frameDisplay(tempFrame)
 
@@ -968,9 +1031,13 @@ class MainWindow(object):
         else :
             print("<< Warinig : Your Result Folder is not exist.")
 
+    def changeStep(self, sp):
+        self.currentStep = sp
+        self.renewScheduleBoard()
+
     @QtCore.Slot()
     def step0(self):
-        self.currentStep = 0
+        self.changeStep(0)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 0 ")            
             self.AddScheudle()
@@ -987,7 +1054,7 @@ class MainWindow(object):
         
     @QtCore.Slot()
     def step1(self):
-        self.currentStep = 1
+        self.changeStep(1)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 1 ")            
             self.AddScheudle()
@@ -999,7 +1066,7 @@ class MainWindow(object):
                
     @QtCore.Slot()
     def step2(self): # Yolo
-        self.currentStep = 2
+        self.changeStep(2)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 2 ")            
             self.AddScheudle()
@@ -1011,7 +1078,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step3(self): # Tracking
-        self.currentStep = 3
+        self.changeStep(3)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 3 ")
             self.AddScheudle()
@@ -1023,7 +1090,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step4(self): # BackGround
-        self.currentStep = 4
+        self.changeStep(4)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 4 ")            
             self.AddScheudle()
@@ -1035,7 +1102,7 @@ class MainWindow(object):
             
     @QtCore.Slot()
     def step5(self): # DrawIO
-        self.currentStep = 5
+        self.changeStep(5)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 5 ")            
             self.AddScheudle()
@@ -1047,7 +1114,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step6(self): # IO added
-        self.currentStep = 6
+        self.changeStep(6)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 6 ")            
             self.AddScheudle()
@@ -1059,7 +1126,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step7(self): # Replay
-        self.currentStep = 7
+        self.changeStep(7)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> 7 ")            
             self.AddScheudle()
@@ -1071,7 +1138,7 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def step8_singleTIV(self):
-        self.currentStep = 8
+        self.changeStep(8)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> TIV ")            
             self.AddScheudle()
@@ -1083,8 +1150,7 @@ class MainWindow(object):
 
     @QtCore.Slot()  
     def step9_TVIPrinter(self):
-        self.currentStep = 9
-        self.renewScheduleBoard()
+        self.changeStep(9)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> TIVPrinter ")
             self.AddScheudle()
@@ -1093,12 +1159,24 @@ class MainWindow(object):
                 print("[STEP 9 - TIVP]")
             if self.TIVPmode == 3 :
                 if self.precursorCheck():
+                    def read_file(file_name):
+                        with open(file_name, 'r') as f:
+                            lines = f.readlines()
+                        return lines
+                    
+                    self.currentTIVP8cls = read_file(self.yolo_txt)
                     self.TIVfileLoad()
             else :
                 if self.precursorCheck():
                     controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName, self.gate_tracking_csv, self.background_img )  
     
     def TIVfileLoad(self):
+        self.show = False
+        if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 : # TIVP real time mode edit by user.
+            self._window.show_btn.setToolTip('[S9] Show yolo detect.')
+        else:
+            self._window.show_btn.setToolTip('[S1,3,7] Show process frame or background.')
+        self._window.show_btn.setText('Hide Yolo detact.')
         self.set_video(2) # Step 9 TVIP Real Time Mode
         self.currentIssueIndex = 0
         f = open(self.singelTIVpath, 'r', encoding='utf-8')
@@ -1212,7 +1290,7 @@ class MainWindow(object):
             [4, 9, 8],              #7 Step 7
             [9],                    #8 Step 8
             [12, 8, 4, 9, 7],       #9 Step 9   (Video or Image mode)
-            [12, 9, 8, 4],          #10 Step 9  (RealTime mode)
+            [12, 9, 8, 4, 5],          #10 Step 9  (RealTime mode)
             [5],                    #11 Step 3  (No show mode)
         ]
 
@@ -1378,10 +1456,12 @@ class MainWindow(object):
         if self.scheduleType == 'edit' :
             self.scheduleType = 'off'
             self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
+            self.set_button_text_color(self._window.ScheduleMode_btn, "block")
 
         else:
             self.scheduleType = 'edit'
             self._window.ScheduleMode_btn.setText('Schedule Mode <EDIT>')
+            self.set_button_text_color(self._window.ScheduleMode_btn, "blue")
         self.renewScheduleBoard()
 
     @QtCore.Slot()
@@ -1407,35 +1487,35 @@ class MainWindow(object):
             self.flashActionName()
 
             if self.ScheduleList[i].step == 0:
-                print(sch + " - [STEP 0]")
+                logger.info(sch + " - [STEP 0]")
                 self.step0()
                 return
             elif self.ScheduleList[i].step == 1:
-                print(sch + " - [STEP 1]")
+                logger.info(sch + " - [STEP 1]")
                 self.step1()
             elif self.ScheduleList[i].step == 2:
-                print(sch + " - [STEP 2]")
+                logger.info(sch + " - [STEP 2]")
                 self.step2()
             elif self.ScheduleList[i].step == 3:
-                print(sch + " - [STEP 3]")
+                logger.info(sch + " - [STEP 3]")
                 self.step3()                
             elif self.ScheduleList[i].step == 4:
-                print(sch + " - [STEP 4]")
+                logger.info(sch + " - [STEP 4]")
                 self.step4()                
             elif self.ScheduleList[i].step == 5:
-                print(sch + " - [STEP 5]")
+                logger.info(sch + " - [STEP 5]")
                 self.step5()
             elif self.ScheduleList[i].step == 6:
-                print(sch + " - [STEP 6]")
+                logger.info(sch + " - [STEP 6]")
                 self.step6()
             elif self.ScheduleList[i].step == 7:
-                print(sch + " - [STEP 7]")
+                logger.info(sch + " - [STEP 7]")
                 self.step7()
             elif self.ScheduleList[i].step == 8:
-                print(sch + " - [STEP 8 - TIV]")
+                logger.info(sch + " - [STEP 8 - TIV]")
                 self.step8_singleTIV()
             elif self.ScheduleList[i].step == 9:
-                print(sch + " - [STEP 9 - TIVP]")
+                logger.info(sch + " - [STEP 9 - TIVP]")
                 self.step9_TVIPrinter()
         
         if self.scheduleTIVFolderPath == "" :
@@ -1529,9 +1609,11 @@ class MainWindow(object):
 
                 self.readScheduleFile()
                 self.scheduleType = 'edit'
+                self.set_button_text_color(self._window.ScheduleMode_btn, "blue")
                 self._window.ScheduleMode_btn.setText('Schedule Mode <EDIT>')
                 self.loadCurrentScheduleItem()
                 self.displayInfo(3)
+                self.renewScheduleBoard()
 
     def loadCurrentScheduleItem(self):
         self.actionName = self.ScheduleList[self.currentScheduleIndex].actionName
@@ -1545,9 +1627,9 @@ class MainWindow(object):
         else :
             self._window.show_btn.setText('BackGround')
         if self.displayType:
-            self._window.DisplayType_btn.setText('Display ID information')
+            self._window.DisplayType_btn.setText('Display ID')
         else :
-            self._window.DisplayType_btn.setText('Hide ID information')
+            self._window.DisplayType_btn.setText('Hide ID')
 
         self.flashActionName()
 
@@ -1558,12 +1640,15 @@ class MainWindow(object):
         else:                                                                               # Normal Schedule Save
             filetype = ("_Schedule.txt")
             temp = QFileDialog.getSaveFileName(self._window,"Save Schedule File.", "", filetype)
-            self.scheduleSavePath = temp[0] + temp[1]
-            self.scheduleName = temp[0].split("/")[-1]
-            self.writeScheduleFile()
-            print ("Save Schedule File : " + self.scheduleSavePath)
-            self.scheduleTIVFolderPath = os.path.dirname(self.scheduleSavePath)
-            self.displayInfo(3)
+            if temp[0] != "":
+                self.scheduleSavePath = temp[0] + temp[1]
+                self.scheduleName = temp[0].split("/")[-1]
+                self.writeScheduleFile()
+                print ("Save Schedule File : " + self.scheduleSavePath)
+                self.scheduleTIVFolderPath = os.path.dirname(self.scheduleSavePath)
+                self.displayInfo(3)
+            else :
+                print ("[Cancel] Schedule Save Cancel.")
 
     def readScheduleFile(self):
         def encodeFile():
@@ -1614,6 +1699,10 @@ class MainWindow(object):
 
             self.ScheduleList.append(tempSchedule)
 
+    def set_button_text_color(self, button, color):
+        palette = button.palette()
+        palette.setColor(QPalette.ButtonText, QColor(color))
+        button.setPalette(palette)
 
         
     def writeScheduleFile(self):
@@ -1647,10 +1736,35 @@ class MainWindow(object):
             self._window.DeleteSchedule_btn.setText('Delete TIV Issue')
             self._window.LoadScheduleFile_btn.setText('Load TIV File')
             self._window.SaveScheduleFile_btn.setText('Save TIV File')
+            chColor2 = "blue"
+
         else :
             self._window.DeleteSchedule_btn.setText('Delete Schedule')
             self._window.LoadScheduleFile_btn.setText('Load Schedule File')
             self._window.SaveScheduleFile_btn.setText('Save Schedule File')
+            chColor2 = "black"
+
+        self.set_button_text_color(self._window.SaveScheduleFile_btn, chColor2)
+        self.set_button_text_color(self._window.LoadScheduleFile_btn, chColor2)
+        self.set_button_text_color(self._window.DeleteSchedule_btn, chColor2)
+        self.set_button_text_color(self._window.show_btn, chColor2)
+        self.set_button_text_color(self._window.DisplayType_btn, chColor2)
+        self.set_button_text_color(self._window.showTracking_btn, chColor2)
+
+        if self.scheduleType == 'edit':
+            chColor = "blue"
+        else:
+            chColor = "black"
+        self.set_button_text_color(self._window.step0_btn, chColor)
+        self.set_button_text_color(self._window.step1_btn , chColor)
+        self.set_button_text_color(self._window.step2_btn , chColor)
+        self.set_button_text_color(self._window.step3_btn , chColor)
+        self.set_button_text_color(self._window.step4_btn , chColor)
+        self.set_button_text_color(self._window.step5_btn , chColor)
+        self.set_button_text_color(self._window.step6_btn , chColor)
+        self.set_button_text_color(self._window.step7_btn , chColor)
+        self.set_button_text_color(self._window.TVI_btn , chColor)
+        self.set_button_text_color(self._window.TVIPrinter_btn , chColor)
 
     def loadTIVIssue(self):
         self.singelTIVpath, filetype = QFileDialog.getOpenFileName(self._window,"Select TIV.csv.", self.resultPath )
@@ -1670,53 +1784,56 @@ class MainWindow(object):
     def saveTIVIssue(self):
         filetype = ("_TIV.csv")
         temp = QFileDialog.getSaveFileName(self._window,"Save TIV File.", "", filetype)
-        outputTIV = temp[0] + temp[1]
+        if temp[0] != "":
+            outputTIV = temp[0] + temp[1]
 
-        r = open(self.singelTIVpath, 'r')
-        ORtiv = r.readlines()
-        r.close()
-        f = open(outputTIV, 'w')
-        f.write(ORtiv[0])
-        f.write(ORtiv[1])
-        
+            r = open(self.singelTIVpath, 'r')
+            ORtiv = r.readlines()
+            r.close()
+            f = open(outputTIV, 'w')
+            f.write(ORtiv[0])
+            f.write(ORtiv[1])
+            
 
-        index = 0
-        SameIOCarID = []
-        SameIOMotorID = []
-        while index < len(ORtiv) and ORtiv[index] != "SameIOCar\n" :
+            index = 0
+            SameIOCarID = []
+            SameIOMotorID = []
+            while index < len(ORtiv) and ORtiv[index] != "SameIOCar\n" :
+                index += 1
+
             index += 1
+            while index < len(ORtiv) and ORtiv[index] != "SameIOMotor\n" :
+                SameIOCarID.append(ORtiv[index].split(',')[0])
+                index += 1
 
-        index += 1
-        while index < len(ORtiv) and ORtiv[index] != "SameIOMotor\n" :
-            SameIOCarID.append(ORtiv[index].split(',')[0])
             index += 1
-
-        index += 1
-        while index < len(ORtiv) :
-            SameIOMotorID.append(ORtiv[index].split(',')[0])
-            index += 1
+            while index < len(ORtiv) :
+                SameIOMotorID.append(ORtiv[index].split(',')[0])
+                index += 1
 
 
-        f.write("SameIOCar\n")
-        for i in range(0, len(self.TIVIsampleList)):
-            if (self.TIVIsampleList[i].split(',')[0] in SameIOCarID) :
-                out = self.TIVIsampleList[i]
-                f.write(out)
-        f.write("SameIOMotor\n")
-        for i in range(0, len(self.TIVIsampleList)):
-            if (self.TIVIsampleList[i].split(',')[0] in SameIOMotorID) :
-                out = self.TIVIsampleList[i]
-                f.write(out)
-        f.write("UserOrder\n")
-        for i in range(0, len(self.TIVIsampleList)):
-            if (self.TIVIsampleList[i].split(',')[0] not in SameIOCarID) and (self.TIVIsampleList[i].split(',')[0] not in SameIOMotorID) :
-                out = self.TIVIsampleList[i]
-                f.write(out)
-                f.write("\n")
+            f.write("SameIOCar\n")
+            for i in range(0, len(self.TIVIsampleList)):
+                if (self.TIVIsampleList[i].split(',')[0] in SameIOCarID) :
+                    out = self.TIVIsampleList[i]
+                    f.write(out)
+            f.write("SameIOMotor\n")
+            for i in range(0, len(self.TIVIsampleList)):
+                if (self.TIVIsampleList[i].split(',')[0] in SameIOMotorID) :
+                    out = self.TIVIsampleList[i]
+                    f.write(out)
+            f.write("UserOrder\n")
+            for i in range(0, len(self.TIVIsampleList)):
+                if (self.TIVIsampleList[i].split(',')[0] not in SameIOCarID) and (self.TIVIsampleList[i].split(',')[0] not in SameIOMotorID) :
+                    out = self.TIVIsampleList[i]
+                    f.write(out)
+                    f.write("\n")
 
-        f.close()
-        print ("Save TIV File : " + outputTIV)
-        self.displayInfo(4)
+            f.close()
+            print ("Save TIV File : " + outputTIV)
+            self.displayInfo(4)
+        else :
+            print ("[Cancel] TIV Save Cancel.")
 
 
 

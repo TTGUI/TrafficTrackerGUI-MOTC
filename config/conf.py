@@ -76,6 +76,7 @@ def getTrk1_Set():
     return (int(tupleing[0]), int(tupleing[1]), float(tupleing[2]))
  
 def setTrk1_Set(mode):
+    mode = mode.replace(' ', '')
     sp = mode.split(',')
     ans = ""
     for i in range(0, len(sp)):
@@ -90,6 +91,7 @@ def getTrk2_Set():
     return (int(tupleing[0]), int(tupleing[1]), float(tupleing[2]))
 
 def setTrk2_Set(mode):
+    mode = mode.replace(' ', '')
     sp = mode.split(',')
     ans = ""
     for i in range(0, len(sp)):

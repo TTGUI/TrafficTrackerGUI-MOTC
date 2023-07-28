@@ -83,7 +83,7 @@ def con_step6(gateLineIO_txt, tracking_csv, gate_tracking_csv) :
 
 def con_step7(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show) :
     # from Model import QReplay
-    from Model import Replay2
+    from . import Replay2
     start = time.time()
 
     Replay2.Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show)

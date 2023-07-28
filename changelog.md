@@ -1,5 +1,14 @@
 ## Changelog
 
+### v3.8.0 (2023/07/28)
+#### New Features
+- main_window.py : add display yolo detect result in TVIP-RealTime mode.
+- main_window.py : add butten extra status prompt.
+- main_window.py : add ToolTip in some multifunctional butten.
+
+#### Improvements
+- main_window.py : add log when step start in schedule.
+
 ### v3.7.5 (2023/07/25)
 #### Improvements
 - update Tracking code : to tracking7_4.py
