@@ -204,16 +204,16 @@ class MainWindow(object):
         self._window.step7_btn.setText('[STEP 7]\nReplay')
         self._window.step7_btn.clicked.connect(self.step7)
 
-        self._window.TVI_btn.setText("[STEP 8]\nTrackIntegrityVerification")
-        self._window.TVI_btn.clicked.connect(self.step8_singleTIV)
+        self._window.TIV_btn.setText("[STEP 8]\nTrackIntegrityVerification")
+        self._window.TIV_btn.clicked.connect(self.step8_singleTIV)
 
         if self.TIVPmode == 1:
-            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (V)')
+            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (V)')
         elif self.TIVPmode == 2:
-            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (I)')
+            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (I)')
         elif self.TIVPmode == 3:
-            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (R)')
-        self._window.TVIPrinter_btn.clicked.connect(self.step9_TVIPrinter)
+            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (R)')
+        self._window.TIVPrinter_btn.clicked.connect(self.step9_TIVPrinter)
 
         self._window.show_btn.setText('Show')
         self._window.show_btn.clicked.connect(self.show)
@@ -337,7 +337,7 @@ class MainWindow(object):
             msgBox.exec()
 
             self.load()
-        elif type == 2 : # Step 9 TVIP Real Time Mode
+        elif type == 2 : # Step 9 TIVP Real Time Mode
             self.video_init = True
             self.play_bool = False
             self.cap = cv2.VideoCapture(self.stab_video)
@@ -381,17 +381,17 @@ class MainWindow(object):
             self.TIVPmode = 2
             conf.setTIVPMode(2)
             self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
-            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (I)')
+            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (I)')
         elif self.TIVPmode == 2:
             self.TIVPmode = 3
             conf.setTIVPMode(3)
             self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
-            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (R)')
+            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (R)')
         elif self.TIVPmode == 3:
             self.TIVPmode = 1
             conf.setTIVPMode(1)
             self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
-            self._window.TVIPrinter_btn.setText('[STEP 9]\nTIV Printer (V)')
+            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (V)')
         self.renewScheduleBoard()
     def changeTrackingSet(self):
         self.CTS_dialog = QDialog()
@@ -672,7 +672,7 @@ class MainWindow(object):
         jumpframe = 0
         if self.TIVPmode == 3 and self._window.FPS.text()[0] == 'i':
             # 添加手動設定目標track id進 issue list
-            print(f"Add Tracking ID [{self._window.FPS.text()[1:]}] to TVIP Issue list.")
+            print(f"Add Tracking ID [{self._window.FPS.text()[1:]}] to TIVP Issue list.")
             
             temp = ""
             for i in range(0, len(self.V)):
@@ -1149,7 +1149,7 @@ class MainWindow(object):
                 return controller.con_TIVT(self.gate_tracking_csv, self.singelTIVpath)
 
     @QtCore.Slot()  
-    def step9_TVIPrinter(self):
+    def step9_TIVPrinter(self):
         self.changeStep(9)
         if self.scheduleType == 'edit' :
             print("Current Schedule Item Step >> TIVPrinter ")
@@ -1177,7 +1177,7 @@ class MainWindow(object):
         else:
             self._window.show_btn.setToolTip('[S1,3,7] Show process frame or background.')
         self._window.show_btn.setText('Hide Yolo detact.')
-        self.set_video(2) # Step 9 TVIP Real Time Mode
+        self.set_video(2) # Step 9 TIVP Real Time Mode
         self.currentIssueIndex = 0
         f = open(self.singelTIVpath, 'r', encoding='utf-8')
         tivLines = f.readlines()
@@ -1362,7 +1362,7 @@ class MainWindow(object):
             else:
                 pageEnd = (self.page+1)*self.pageLen
 
-            out = '\t' +' TVIP Issue  (' + str(self.page+1) + '/' +  str(int((len(self.TIVIsampleList)-1) / self.pageLen ) +1 ) + ')\n'
+            out = '\t' +' TIVP Issue  (' + str(self.page+1) + '/' +  str(int((len(self.TIVIsampleList)-1) / self.pageLen ) +1 ) + ')\n'
 
             for i in range(pageStart, pageEnd) :
                 temp = self.TIVIsampleList[i].split(',')
@@ -1516,7 +1516,7 @@ class MainWindow(object):
                 self.step8_singleTIV()
             elif self.ScheduleList[i].step == 9:
                 logger.info(sch + " - [STEP 9 - TIVP]")
-                self.step9_TVIPrinter()
+                self.step9_TIVPrinter()
         
         if self.scheduleTIVFolderPath == "" :
             self.scheduleTIVFile = "./result/" + "/" + self.scheduleName + "_TIV.csv"
@@ -1763,8 +1763,8 @@ class MainWindow(object):
         self.set_button_text_color(self._window.step5_btn , chColor)
         self.set_button_text_color(self._window.step6_btn , chColor)
         self.set_button_text_color(self._window.step7_btn , chColor)
-        self.set_button_text_color(self._window.TVI_btn , chColor)
-        self.set_button_text_color(self._window.TVIPrinter_btn , chColor)
+        self.set_button_text_color(self._window.TIV_btn , chColor)
+        self.set_button_text_color(self._window.TIVPrinter_btn , chColor)
 
     def loadTIVIssue(self):
         self.singelTIVpath, filetype = QFileDialog.getOpenFileName(self._window,"Select TIV.csv.", self.resultPath )

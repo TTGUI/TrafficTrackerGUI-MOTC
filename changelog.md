@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.8.1 (2023/07/28)
+#### Organize
+- main_window.py : fix some 'TIV' typed wrongly to 'TVI'.
+
 ### v3.8.0 (2023/07/28)
 #### New Features
 - main_window.py : add display yolo detect result in TVIP-RealTime mode.

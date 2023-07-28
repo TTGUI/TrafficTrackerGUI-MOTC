@@ -157,7 +157,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="TVI_btn">
+               <widget class="QPushButton" name="TIV_btn">
                 <property name="text">
                  <string>TVI</string>
                 </property>
@@ -196,7 +196,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="TVIPrinter_btn">
+               <widget class="QPushButton" name="TIVPrinter_btn">
                 <property name="text">
                  <string>TVI Printer</string>
                 </property>
