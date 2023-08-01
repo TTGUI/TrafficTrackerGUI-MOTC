@@ -3,8 +3,8 @@ import numpy as np
 from PySide2 import QtCore
 from PySide2.QtCore import QFile, QProcess, QTimer
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtGui import QFont, QImage, QPixmap, QColor, QPalette
-from PySide2.QtWidgets import QFileDialog, QMessageBox, QDialog, QToolTip
+from PySide2.QtGui import QFont, QImage, QPixmap, QColor, QPalette, QIcon
+from PySide2.QtWidgets import QFileDialog, QMessageBox, QDialog
 from Model.tool import TrackIntegrityVerificationTool
 from pathlib import Path
 
@@ -123,6 +123,13 @@ class MainWindow(object):
         self.video_init = False
         
     def set_title(self):
+        """Setup icon"""
+        self.iconPath = './View/icon.png'
+        if Path(self.iconPath).is_file():
+            self._window.setWindowIcon(QIcon(self.iconPath))
+        else:
+            logger.warning(f" Icon file not found : [{self.iconPath}]")
+
         """Setup label"""
         self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel)
         self._window.setWindowTitle(conf.RTVersion())

@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.8.2 (2023/08/01)
+#### New Features
+- main_window.py : add Icon.
+
 ### v3.8.1 (2023/07/28)
 #### Organize
 - main_window.py : fix some 'TIV' typed wrongly to 'TVI'.
