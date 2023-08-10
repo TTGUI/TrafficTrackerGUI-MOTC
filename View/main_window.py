@@ -550,7 +550,7 @@ class MainWindow(object):
                         cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
                         cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
 
-                    elif int(self.V[j][0] == self.TIVIsampleList[self.currentIssueIndex].split(',')[0]) :
+                    elif len(self.TIVIsampleList)!=0 and int(self.V[j][0] == self.TIVIsampleList[self.currentIssueIndex].split(',')[0]) :
                         cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
                         cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
 

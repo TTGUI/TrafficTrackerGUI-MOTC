@@ -25,7 +25,44 @@ class csvParse():
     -h [store_true] 詳細說明
     """
     def __init__(self) -> None:
-        
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument("-c", "--csv",
+                            help="[csv file path] input csv file name.",
+                            type=str)
+        self.parser.add_argument("-s", "--save",
+                            help="[store_true] save csv file. default output will be overwrite save to input csv file.",
+                            action="store_true")
+        self.parser.add_argument("-o","--outputCsv",
+                            help="[csv file name] output file save as new name, ex `output.csv`",
+                            type=str)
+        self.parser.add_argument("-rcl", "--removeClass",
+                            help="[class type] Remove class type from csv. ex: `-r c` will remove all class type `car` from csv.\
+                            `-r cpm` will remove all class type `car`,`pedestran` and `motor` from csv.\
+                            All class type : 'p'行人 'u'自行車 'm'機車 'c'小客車 't'貨車 'b'大客車 'h'聯結車(頭) 'g'聯結車(尾).",
+                            type=str)
+        self.parser.add_argument("-a", "--appendCsv",
+                            help="[csv file path] append csv file will be append to input csv file.\
+                            tracking id will be follow input csv.\
+                            You CAN NOT operate on append csv file.If you want to operate on append csv file, please operate this file first before marge.",
+                            type=str)
+        self.parser.add_argument("-rid", "--removeId",
+                            help="[id] remove tracking id from csv",
+                            type=int)
+        self.parser.add_argument("-rin", "--removeInFrameTime",
+                            help="[frame] remove tracking id starts earlier then this frame number.",
+                            type=int)
+        self.parser.add_argument("-rout", "--removeOutFrameTime",    
+                            help="[frame] remove tracking id ends later then this frame number.",
+                            type=int)
+        self.parser.add_argument("-p", "--printCsvImg",
+                            help="print csv display image, result folder will be same as input csv file.",
+                            action="store_true")
+        self.parser.add_argument("-pt", "--printCsvImgFileType",
+                            help="print csv display image file type(jpa. png. bmp.). default is jpg.",
+                            type=str)
+
+
+
         self.inputCsvLine =[]
     
     def printCsvImg(self, lines, csv,fileType = '.jpg' ):
@@ -225,46 +262,17 @@ class csvParse():
     def getClass(self, line):
         return self.getLineData(line, 5)
     
-    def main(self) :
-
-        parser = argparse.ArgumentParser()
-        parser.add_argument("-c", "--csv",
-                            help="[csv file path] input csv file name.",
-                            type=str)
-        parser.add_argument("-s", "--save",
-                            help="[store_true] save csv file. default output will be overwrite save to input csv file.",
-                            action="store_true")
-        parser.add_argument("-o","--outputCsv",
-                            help="[csv file name] output file save as new name, ex `output.csv`",
-                            type=str)
-        parser.add_argument("-rcl", "--removeClass",
-                            help="[class type] Remove class type from csv. ex: `-r c` will remove all class type `car` from csv.\
-                            `-r cpm` will remove all class type `car`,`pedestran` and `motor` from csv.\
-                            All class type : 'p'行人 'u'自行車 'm'機車 'c'小客車 't'貨車 'b'大客車 'h'聯結車(頭) 'g'聯結車(尾).",
-                            type=str)
-        parser.add_argument("-a", "--appendCsv",
-                            help="[csv file path] append csv file will be append to input csv file.\
-                            tracking id will be follow input csv.\
-                            You CAN NOT operate on append csv file.If you want to operate on append csv file, please operate this file first before marge.",
-                            type=str)
-        parser.add_argument("-rid", "--removeId",
-                            help="[id] remove tracking id from csv",
-                            type=int)
-        parser.add_argument("-rin", "--removeInFrameTime",
-                            help="[frame] remove tracking id starts earlier then this frame number.",
-                            type=int)
-        parser.add_argument("-rout", "--removeOutFrameTime",    
-                            help="[frame] remove tracking id ends later then this frame number.",
-                            type=int)
-        parser.add_argument("-p", "--printCsvImg",
-                            help="print csv display image, result folder will be same as input csv file.",
-                            action="store_true")
-        parser.add_argument("-pt", "--printCsvImgFileType",
-                            help="print csv display image file type(jpa. png. bmp.). default is jpg.",
-                            type=str)
-         
+    def parser_args(self, command = []):
         
-        args = parser.parse_args()
+         
+        if command == []:
+            args = self.parser.parse_args()
+        else :
+            args = self.parser.parse_args(command)
+
+        return args
+
+    def main(self, args) :
 
         if not args.csv:
 
@@ -314,19 +322,31 @@ class csvParse():
         if args.save:
             if args.outputCsv:
                 outputCsvName =  Path(self.curPath) / args.outputCsv
-                f = open(outputCsvName, 'w')
-                for i in range(0, len(self.inputCsvLine)):
-                    f.write(self.inputCsvLine[i])
-                f.close()
-                print("Output Csv Save >> " + f"{outputCsvName}")
             else:
-                f = open(args.csv, 'w')
-                for i in range(0, len(self.inputCsvLine)):
-                    f.write(self.inputCsvLine[i])
-                f.close()
-                print("Output Csv Save >> " + f"{args.csv}")
+                outputCsvName = args.csv
+
+            f = open(outputCsvName, 'w')
+            for i in range(0, len(self.inputCsvLine)):
+                f.write(self.inputCsvLine[i])
+            f.close()
+            print("Output Csv Save >> " + f"{outputCsvName}")
 
 
 if __name__ == '__main__':
     currentClass = csvParse()
-    currentClass.main()
+    args = currentClass.parser.parse_args()
+    currentClass.main(args)
+
+"""
+currentClass = csvParser.csvParse()
+argss = currentClass.parser.parse_args([
+    '-c', r'e:\Traffic\Block14_桃園_台南\桃園市高鐵北路一段、青心路\1120704_60m_C架次\行人分支\0803\桃園市高鐵北路一段青心路_C_gate(A).csv', 
+    '-rcl', 'p',
+    '-a', r'e:\Traffic\Block14_桃園_台南\桃園市高鐵北路一段、青心路\1120704_60m_C架次\行人分支\0803\桃園市高鐵北路一段青心路_C_gate(P).csv',
+    '-s', 
+    '-o', 
+    r'e:\Traffic\Block14_桃園_台南\桃園市高鐵北路一段、青心路\1120704_60m_C架次\行人分支\0803\桃園市高鐵北路一段青心路_C_gate.csv'
+    ])
+currentClass.main(argss)
+
+"""
