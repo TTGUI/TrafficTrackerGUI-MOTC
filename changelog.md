@@ -1,10 +1,13 @@
 ## Changelog
 
-### v3.8.3 (2023/08)
+### v3.8.4 (2023/08/16)
+#### Organize
+- add label tool `label_it_v1.13_jpgver` in Model/tool.
+
+### v3.8.3 (2023/08/10)
 #### Improvements
 - main_windows.py : keep running in TIVP-R when there is no TIV issue.
 - csvParser.py : more modulable for another python file calling.
-
 #### Bug fixed
 - controller.py : [issue#22] fix Step7 wrong import path.
 

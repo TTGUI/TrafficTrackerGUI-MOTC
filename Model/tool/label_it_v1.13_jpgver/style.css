@@ -1,0 +1,62 @@
+QMainWindow{
+    /*background-color: blue;*/
+}
+
+QLabel{
+    /*color:#ffffff;*/
+}
+
+#_check_box_of_pedestrian QWidget{
+    color: blue;
+}
+
+#_check_box_of_bike QWidget{
+    color: green;
+}
+
+#_check_box_of_moto QWidget{
+    color: red;
+}
+
+#_size_box_of_pedestrian QWidget{
+    margin-left: 0px;
+    margin-right: 0px;
+    max-width: 30px;
+    /*position: absolute;
+    right: 0;*/
+}
+#_size_box_of_bike QWidget{
+    margin-left: 0px;
+    margin-right: 0px;
+    max-width: 30px;
+}
+#_size_box_of_moto QWidget{
+    margin-left: 0px;
+    margin-right: 0px;
+    max-width: 30px;
+}
+
+#_get_img_dir QWidget{
+    max-width: 100px;
+}
+
+#_next_img_button QWidget{
+    max-width: 50px;
+}
+
+#_prev_img_button QWidget{
+    max-width: 50px;
+}
+
+#_remove_last_square_button QWidget{
+    max-width: 50px;
+}
+
+#_label_window QWidget{
+    /*
+    min-width: 1200px;
+    min-height: 675px;
+    */
+    min-width: 1200px;
+    min-height: 675px;
+}
