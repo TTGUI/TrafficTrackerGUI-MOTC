@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.8.5 (2023/08/17)
+#### Improvements
+- add padding program for filename bugly request(no chinese, no dot.).
+
 ### v3.8.4 (2023/08/16)
 #### Organize
 - add label tool `label_it_v1.13_jpgver` in Model/tool.

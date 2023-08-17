@@ -1,5 +1,8 @@
 import os
 
+preName = "TZS" + "_"
+# preName = ""
+
 current_path = os.path.dirname(__file__)
 print("DIR : " + current_path)
 
@@ -11,7 +14,7 @@ print ("=====  =======  =====")
 
 
 for fname in fileList :
-    if fname != "changeFileName.py" :
+    if fname != "ASCIIKeeper_windows_ver.py" :
         newName = ""
         for i in range(0,len(fname)):
             if ord(fname[i]) >= 20 and ord(fname[i]) <= 126 :
@@ -19,7 +22,7 @@ for fname in fileList :
                     newName = newName + fname[i]
 
         fname = current_path+"\\"+fname
-        newName = current_path+"\\"+newName
+        newName = current_path+"\\" + preName + newName
         print(str(fname) + " ==>> " + str(newName))
        
         os.rename(fname,newName)
