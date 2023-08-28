@@ -18,11 +18,12 @@ class StableVideo:
 
         self.videolist.sort()
 
-        ''' cv2 read video  setting ''' 
+        ''' cv2 read video  setting '''
         cap = cv2.VideoCapture(os.path.join( os.path.abspath(inputVideoPath), self.videolist[0]))
         self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         self.targrt_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))   # get width from origin video
         self.target_hight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # get hight from origin video
+        self.target_fps = cap.get(cv2.CAP_PROP_FPS)                  # get FPS from origin video
         cap.release()
 
         # if self.target_hight > 1080 :
@@ -34,13 +35,13 @@ class StableVideo:
 
         self.output_width = 1920
         self.output_hight = 1080
-        
+
         ''' stablize setting '''
 
         self.warp_mode = cv2.MOTION_HOMOGRAPHY
         self.warp_matrix = np.eye(3, 3, dtype=np.float32)
 
-        # self.roi = [ [0, 0], [self.targrt_width, self.target_hight] ]        
+        # self.roi = [ [0, 0], [self.targrt_width, self.target_hight] ]
         # self.roi_x = self.roi[0][0]
         # self.roi_y = self.roi[0][1]
         # self.roi_width = self.roi[1][0] - self.roi[0][0]
@@ -50,9 +51,9 @@ class StableVideo:
         # self.termination_eps = 1e-5
         self.criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, self.number_of_iterations,  self.termination_eps)
 
-    
+
     def stableVideoWithOutputpath(self, outputpath, is_Show=False):
-        
+
         # get target frame
         index = 0
         while index < len(self.videolist) :
@@ -60,31 +61,35 @@ class StableVideo:
                 cap = cv2.VideoCapture(os.path.join( os.path.abspath(self.inputVideoPath), self.videolist[index]))
                 cap.set(cv2.CAP_PROP_POS_FRAMES, self.cutInfoList[index].getKey()-1)
                 ret, frame = cap.read()
-                
+
                 frameT = cv2.resize(frame, (self.output_width, self.output_hight), interpolation=cv2.INTER_CUBIC)
                 self.target_frame = cv2.cvtColor(frameT, cv2.COLOR_BGR2GRAY)
                 self.stabilization_sz = frameT.shape
                 cap.release()
-                
-                break              
+
+                break
             index = index +1
-        
-        
+
+
         # prepare
-        startTime = time.time() 
-        out = cv2.VideoWriter(outputpath, self.fourcc, 9.99, (1920, 1080)) 
+        startTime = time.time()
+        self.output_fps = 9.99
+        out = cv2.VideoWriter(outputpath, self.fourcc, self.output_fps, (1920, 1080))
         self.currentVideoIndex = 0 # video list index
         self.currentFrameIndex = 0 # video frame index
 
         self.pa = 0 # Counting ever paNumber Frame for ECC
-        self.paNumber = 3 # % 3
+        # self.paNumber = 3 # % 3
+        self.paNumber = round(self.target_fps / self.output_fps)  # % 3
 
         self.ECC_costTime = 0
-        self.Read_costTime = 0 
+        self.Read_costTime = 0
         self.Write_costTime = 0
 
+        logger.info(f"[Step 1] ->> INFO: target_fps = {self.target_fps}")
+        logger.info(f"[Step 1] ->> INFO: paNumber = {self.paNumber}")
+        logger.info(f"[Step 1] ->> INFO: output_fps = {self.output_fps}")
 
-        
 
 
         # start stabilization
@@ -107,16 +112,16 @@ class StableVideo:
                 cap.set(cv2.CAP_PROP_POS_FRAMES, self.cutInfoList[self.currentVideoIndex].getStart())
 
                 logger.info("[Step 1] ->> Stabilize video :" + str(self.videolist[self.currentVideoIndex]))
-                
-                
-                
+
+
+
                 while cap.get(cv2.CAP_PROP_POS_FRAMES) < self.cutInfoList[self.currentVideoIndex].getEnd():
                     # print ("get Frame:" + str(  cap.get(cv2.CAP_PROP_POS_FRAMES )) + "\t" + str( self.currentFrameIndex))
                     self.IO_S = time.time()
                     ret, frame = cap.read()
                     self.IO_E = time.time()
                     self.Read_costTime = self.Read_costTime + (self.IO_E - self.IO_S)
-                    
+
                     if self.pa % self.paNumber == 0 :
                         frame = cv2.resize(frame, (1920, 1080), interpolation=cv2.INTER_CUBIC)
                         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -133,9 +138,9 @@ class StableVideo:
                         self.ECC_costTime = self.ECC_costTime + ( self.ECC_E - self.ECC_S)
                         frame_aligned = cv2.warpPerspective (frame, self.warp_matrix, (self.stabilization_sz[1], self.stabilization_sz[0]), flags=cv2.INTER_CUBIC + cv2.WARP_INVERSE_MAP)
                         self.write_S = time.time()
-                        out.write(frame_aligned) 
+                        out.write(frame_aligned)
                         self.write_E = time.time()
-                        
+
                         self.Write_costTime =self.Write_costTime + (self.write_E - self.write_S)
 
                         print(str(int(cap.get(cv2.CAP_PROP_POS_FRAMES))) ,end='\r')
@@ -144,7 +149,7 @@ class StableVideo:
                             if cv2.waitKey(1) == ord('q'):
                                 print("Step1 break for keyboard >q< .")
                                 break
-                        
+
                     self.pa = self.pa + 1
                     self.currentFrameIndex = self.currentFrameIndex + 1
 
@@ -170,11 +175,11 @@ class StableVideo:
             string = ''
             count = 0
             tempCut = CutInfo()
-            for j in range(0, len(self.cutInfo[i])) :                
+            for j in range(0, len(self.cutInfo[i])) :
 
                 if self.cutInfo[i][j] == '\t' or self.cutInfo[i][j] == '\n':
                     count = count + 1
-                    
+
                     tempInt = int(string)
                     string = ''
 
@@ -201,18 +206,18 @@ class CutInfo() :
         self.start = -1
         self.end = -1
 
-    def setKey(self, key) :        
+    def setKey(self, key) :
         self.key = int(key)
-    
+
     def setStart(self, start) :
         self.start = int(start)
-    
+
     def setEnd(self,end):
         self.end = int(end)
 
     def getKey(self):
         return self.key
-    
+
     def getStart(self):
         return self.start
 
@@ -232,7 +237,7 @@ if __name__ == '__main__':
 
 
 def stab_main(stab_input,stab_output,show,cut_txt):
-    
+
     current_STAB = StableVideo(stab_input, cut_txt)
     current_STAB.stableVideoWithOutputpath(stab_output,show)
 

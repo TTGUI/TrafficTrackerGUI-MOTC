@@ -1,28 +1,22 @@
 import os
 
+def rename_files_in_directory(directory):
+    for root, dirs, files in os.walk(directory):
+        for fname in files:
+            if fname != "removepoint.py":
+                newName = ""
+                filename_without_extension, file_extension = os.path.splitext(fname)
+                for char in filename_without_extension:
+                    if char != '.':
+                        newName += char
+                old_filepath = os.path.join(root, fname)
+                new_filepath = os.path.join(root, newName + file_extension)
+                print(str(old_filepath) + " ==>> " + str(new_filepath))
+                os.rename(old_filepath, new_filepath)
 
 current_path = os.path.dirname(__file__)
 print("DIR : " + current_path)
 
-fileList =  os.listdir(current_path) 
-
-print ("=====  OR file  =====")
-print (fileList)
-print ("=====  =======  =====")
-
-
-for fname in fileList :
-    if fname != "removepoint.py" :
-        newName = ""
-        for i in range(0,len(fname)-4):
-            
-            if fname[i] != '.':
-                newName += fname[i]
-            else: 
-                newName += '_'
-        fname = current_path+"\\"+fname
-        newName = current_path+"\\"  + newName + ".jpg"
-        print(str(fname) + " ==>> " + str(newName))
-       
-        os.rename(fname,newName)
-        
+print("=====  OR file  =====")
+rename_files_in_directory(current_path)
+print("=====  =======  =====")

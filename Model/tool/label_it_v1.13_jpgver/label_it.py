@@ -189,11 +189,12 @@ class LabelUI(BaseWidget):
             print("Select cancel.")
     
     def __saveCurrentBoxEvent(self):
-        img_width, img_height = self._label_window.value.shape[:2]
+        img_height, img_width = self._label_window.value.shape[:2]
         print('X, Y:', img_height, img_width)
         with open(self._annotation_file_path, 'w') as output_f:
             for sqr in self._labeled_list:
                 print('SaveBox:', (str(sqr.type) + ' ' + str(sqr.x/img_width) + ' ' + str(sqr.y/img_height) + ' ' + str((sqr.half_len*2)/img_width) + ' ' + str((sqr.half_len*2)/img_height)))
+
                 # (class_index) (box_center_point_x/img_width) (box_center_point_y/img_height) (box_width/img_width) (box_height/img_height)
                 output_f.write(str(sqr.type) + ' ' + str(sqr.x/img_width) + ' ' + str(sqr.y/img_height) + ' ' + str((sqr.half_len*2)/img_width) + ' ' + str((sqr.half_len*2)/img_height) + '\n')
     

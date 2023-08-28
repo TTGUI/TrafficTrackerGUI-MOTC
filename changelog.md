@@ -1,5 +1,12 @@
 ## Changelog
 
+### v3.9.0 (2023/08/28)
+#### Improvements
+- modify Kstabilization_T0N.py by `YCkao5888` : Avoid different FPS of the input video causing the output video to be different from the real speed.
+- add csvParserScript.py : csvParser's batch script.
+#### Bug Fixed
+- Model/tool/label_it_v1.13_jpgver : fix the output coordinate typo.
+
 ### v3.8.5 (2023/08/17)
 #### Improvements
 - add padding program for filename bugly request(no chinese, no dot.).
