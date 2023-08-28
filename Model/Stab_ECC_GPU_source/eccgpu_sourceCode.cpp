@@ -132,6 +132,9 @@ int main(const int argc, const char* argv[])
 	glob(videoDirLOWER, videoListLOWER, false); // 小寫
 	double start_time = 0; // 開始ECC時間
 	double ecd_time = 0; // 結束ECC時間
+
+
+
 	if (log == 1)
 	{
 		if (outFile.is_open())
@@ -162,6 +165,19 @@ int main(const int argc, const char* argv[])
 	int allFrameCounter = 0;
 
 	// ofstream outPrint("GPU_PRINT.txt");
+
+	VideoCapture cap;
+	double inputFPS = 0.0; // 輸入影片FPS
+	cap.open(videoListCAP[0]);
+	if (!cap.isOpened())
+	{
+		cout << "cv2 videoCapture can not open this file : " << videoListCAP[0] << endl;
+		return 0;
+	}
+	else
+	{
+		inputFPS = cap.get(CAP_PROP_FPS);
+	}
 
 	if (videoListCAP.size() != 0)
 	{
@@ -218,7 +234,7 @@ int main(const int argc, const char* argv[])
 			while (cap.read(frame) && cap.get(CAP_PROP_POS_FRAMES) != cutinfoList[i].end + 1)
 			{
 				
-				if (allFrameCounter % 3 == 0)
+				if (allFrameCounter % int( inputFPS / outputFPS ) == 0)
 				{
 					resize(frame, frame, Size(1920, 1080), 0, 0, INTER_CUBIC);
 

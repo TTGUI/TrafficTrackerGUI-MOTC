@@ -1,5 +1,12 @@
 ## Changelog
 
+### v3.9.1 (2023/08/28)
+#### Improvements
+- Model/Stab_ECC_GPU_source/eccgpu_sourceCode.cpp : Avoid different FPS of the input video causing the output video to be different from the real speed.
+- Model/Kstabilization_GPU.py : make the GPU_ECC.exe directly link to Model\Stab_ECC_GPU_source where the exe file compiled.
+#### Document
+- update [GPU_ECC_install_introduction.docx](./doc/GPU_ECC_install_introduction.docx)/[Google線上文件](https://docs.google.com/document/d/1x2xtYWFi6JJ_wzsxm2_RiXn20cEqbD33gZbXYUxyU5Q/edit?usp=sharing)
+
 ### v3.9.0 (2023/08/28)
 #### Improvements
 - modify Kstabilization_T0N.py by `YCkao5888` : Avoid different FPS of the input video causing the output video to be different from the real speed.

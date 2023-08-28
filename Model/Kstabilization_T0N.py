@@ -20,18 +20,15 @@ class StableVideo:
 
         ''' cv2 read video  setting '''
         cap = cv2.VideoCapture(os.path.join( os.path.abspath(inputVideoPath), self.videolist[0]))
-        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        self.targrt_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))   # get width from origin video
-        self.target_hight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # get hight from origin video
-        self.target_fps = cap.get(cv2.CAP_PROP_FPS)                  # get FPS from origin video
+        if cap.isOpened():
+            self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            self.targrt_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))   # get width from origin video
+            self.target_hight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))  # get hight from origin video
+            self.target_fps = cap.get(cv2.CAP_PROP_FPS)                  # get FPS from origin video
+        else :
+            logger.warning(f"[Step 1(C)] Video read failed : {os.path.join( os.path.abspath(inputVideoPath), self.videolist[0])}")
+            return
         cap.release()
-
-        # if self.target_hight > 1080 :
-        #     self.output_width = int(self.targrt_width / 2)
-        #     self.output_hight = int(self.target_hight / 2)
-        # else:
-        #     self.output_width = self.targrt_width
-        #     self.output_hight = self.target_hight
 
         self.output_width = 1920
         self.output_hight = 1080
@@ -86,12 +83,6 @@ class StableVideo:
         self.Read_costTime = 0
         self.Write_costTime = 0
 
-        logger.info(f"[Step 1] ->> INFO: target_fps = {self.target_fps}")
-        logger.info(f"[Step 1] ->> INFO: paNumber = {self.paNumber}")
-        logger.info(f"[Step 1] ->> INFO: output_fps = {self.output_fps}")
-
-
-
         # start stabilization
         while self.currentVideoIndex < len(self.videolist) :
                 while self.cutInfoList[self.currentVideoIndex].getKey() == -1 and self.cutInfoList[self.currentVideoIndex].getStart() == -1 and self.cutInfoList[self.currentVideoIndex].getEnd() == -1 :
@@ -101,6 +92,10 @@ class StableVideo:
                         out.release()
                         workingTime = time.time() - startTime
                         logger.info("[Step 1] ->> Complete stable video : " +  self.videolist[self.currentVideoIndex-1])
+                        logger.info(f"[Step 1] ->> [In % Out] FPS = paNumber : [ {self.target_fps} % {self.output_fps} ] = {self.paNumber}.")
+                        logger.info("[Step 1] ->> ECC_costTime :" + str(self.ECC_costTime))
+                        logger.info("[Step 1] ->> Read_costTime :" + str(self.Read_costTime))
+                        logger.info("[Step 1] ->> Write_costTime :" + str(self.Write_costTime))
                         logger.info("[Step 1] ->> cost time :" + str(workingTime))
                         logger.info("[Step 1] ->> Output file :" + outputpath)
                         return
@@ -130,8 +125,8 @@ class StableVideo:
                         self.ECC_S = time.time()
                         try:
                             (cc, self.warp_matrix) = cv2.findTransformECC(self.target_frame, frame_gray, self.warp_matrix, self.warp_mode, self.criteria)
-                            print("cc : " + str(round(cc,5)))
-                            print(self.warp_matrix)
+                            # print("cc : " + str(round(cc,5)))
+                            # print(self.warp_matrix)
                         except:
                             (cc, self.warp_matrix) = cv2.findTransformECC(self.target_frame, frame_gray, self.warp_matrix, self.warp_mode, self.criteria, inputMask=None, gaussFiltSize=1)
                         self.ECC_E = time.time()
@@ -159,6 +154,7 @@ class StableVideo:
         out.release()
         workingTime = time.time() - startTime
         logger.info("[Step 1] ->> Type 0 NEW.")
+        logger.info(f"[Step 1] ->> [In % Out] FPS = paNumber : [ {self.target_fps} % {self.output_fps} ] = {self.paNumber}.")
         logger.info("[Step 1] ->> ECC_costTime :" + str(self.ECC_costTime))
         logger.info("[Step 1] ->> Read_costTime :" + str(self.Read_costTime))
         logger.info("[Step 1] ->> Write_costTime :" + str(self.Write_costTime))
@@ -194,10 +190,11 @@ class StableVideo:
             self.cutInfoList.append(tempCut)
 
         f.close()
-
+        print("=======================================================")
         for i in range(0,len(self.cutInfoList)):
             print ("Key :" + str(self.cutInfoList[i].getKey()) + "\t Start :"+ str(self.cutInfoList[i].getStart())
                     + "\t End :" + str(self.cutInfoList[i].getEnd()) )
+        print("=======================================================")
 
 
 class CutInfo() :

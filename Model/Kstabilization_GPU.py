@@ -14,7 +14,7 @@ def stab_main(stab_input,stab_output,show,cut_txt):
 
     # cmd = '.\Model\ECC_GPU.exe ' + './Model/fuck' + ' ' + './Model/out.avi' + ' ' +  './Model/cut.txt' + ' -e=1e-6 -N=300 -v=1 -l=1'
     if show:
-        cmd = '.\Model\ECC_GPU.exe ' + stab_input + ' ' + stab_output + ' ' +  cut_txt + ' -e=0.0005 -N=300 -v=1 -l=1'
+        cmd = r'.\Model\Stab_ECC_GPU_source\x64\Release\Stab_ECC_GPU_source.exe ' + stab_input + ' ' + stab_output + ' ' +  cut_txt + ' -e=0.0005 -N=300 -v=1 -l=1'
     else:
-        cmd = '.\Model\ECC_GPU.exe ' + stab_input + ' ' + stab_output + ' ' +  cut_txt + ' -e=0.0005 -N=300 -v=0 -l=1'
+        cmd = r'.\Model\Stab_ECC_GPU_source\x64\Release\Stab_ECC_GPU_source.exe ' + stab_input + ' ' + stab_output + ' ' +  cut_txt + ' -e=0.0005 -N=300 -v=0 -l=1'
     os.system(cmd)
