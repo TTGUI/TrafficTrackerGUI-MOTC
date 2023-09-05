@@ -3,11 +3,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import argparse
-import os
-from pathlib import Path
 
-import cv2
-import numpy as np
 
 class csvParse():
     """
@@ -262,15 +258,15 @@ class csvParse():
     def getClass(self, line):
         return self.getLineData(line, 5)
     
-    def parser_args(self, command = []):
+    # def parser_args(self, command = []):
         
          
-        if command == []:
-            args = self.parser.parse_args()
-        else :
-            args = self.parser.parse_args(command)
+    #     if command == []:
+    #         args = self.parser.parse_args()
+    #     else :
+    #         args = self.parser.parse_args(command)
 
-        return args
+    #     return args
 
     def main(self, args) :
 

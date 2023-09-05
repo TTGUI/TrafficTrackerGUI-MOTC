@@ -1,5 +1,10 @@
 ## Changelog
 
+### v3.9.1a (2023/09/05)
+#### Improvements
+- add Model/tool/ECC_Rater.py : return two images similarity score.
+- add Model/tool/ECC_RaterScript.py
+
 ### v3.9.1 (2023/08/28)
 #### Improvements
 - Model/Stab_ECC_GPU_source/eccgpu_sourceCode.cpp : Avoid different FPS of the input video causing the output video to be different from the real speed.
