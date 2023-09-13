@@ -287,15 +287,25 @@ class csvParse():
 
         if args.removeClass:
             self.inputCsvLine = [line for i, line in enumerate(self.inputCsvLine) if self.getClass(line) not in args.removeClass]
+            print(f"Remove Class >> {args.removeClass}")
 
         if args.removeId:
             self.inputCsvLine = [line for i, line in enumerate(self.inputCsvLine) if self.getID(line) != args.removeId]
+            print(f"Remove Id >> {args.removeId}")
         
         if args.removeInFrameTime:
+            to_remove = [line for line in self.inputCsvLine if int(self.getINframe(line)) < args.removeInFrameTime]
             self.inputCsvLine = [line for i, line in enumerate(self.inputCsvLine) if int(self.getINframe(line)) >= args.removeInFrameTime]
+            print(f"Remove earlier then >> {args.removeInFrameTime}")
+            for item in to_remove:
+                print(f"\t >> {item}")
         
         if args.removeOutFrameTime:
+            to_remove = [line for line in self.inputCsvLine if int(self.getINframe(line)) > args.removeOutFrameTime]
             self.inputCsvLine = [line for i, line in enumerate(self.inputCsvLine) if int(self.getOUTframe(line)) <= args.removeOutFrameTime]
+            print(f"Remove later then >> {args.removeOutFrameTime}")
+            for item in to_remove:
+                print(f"\t >> {item}")
 
         if args.appendCsv:
             f = open(args.appendCsv, 'r')

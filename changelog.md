@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.9.1b (2023/09/13)
+#### Improvements
+- Model/tool/scvParser.py : add more log print.
+
 ### v3.9.1a (2023/09/05)
 #### Improvements
 - add Model/tool/ECC_Rater.py : return two images similarity score.
