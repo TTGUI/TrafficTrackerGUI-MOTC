@@ -1,5 +1,13 @@
 ## Changelog
 
+### v3.9.2 (2024/06/07)
+#### Document
+- update about [_gate.csv format](doc\TrafficTrackerGUI_introduction.docx)
+#### Improvements
+- update Model/tracking7_6.py
+#### Organize
+- move/add tracking7_4, tracking7_5 to [abandonedcodes](abandonedcodes).
+
 ### v3.9.1b (2023/09/13)
 #### Improvements
 - Model/tool/scvParser.py : add more log print.

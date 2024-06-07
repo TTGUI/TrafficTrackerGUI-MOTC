@@ -39,12 +39,10 @@ def con_step2(stab_video, yolo_txt, yolo_model) :
     print("[SEPT2 Done.]")
 
 def con_step3(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set) :
-    # from Model import Mtracking_all # Old version
-    from Model import tracking7_4      # New version
+    from Model import tracking7_6      # New version
     start = time.time()
 
-    # Mtracking_all.Tracking_main(stab_video,yolo_txt,tracking_csv) # Old version
-    tracking7_4.main(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set)     # New version
+    tracking7_6.main(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set)     # New version
     end = time.time()
     logger.info( "[Step 3] ->> Cost time : " + str(end-start)  )
     print("[SEPT3 Done.]")
