@@ -51,6 +51,8 @@ const std::string keys =
 "{e epsilon      | 0.0001        | ECC's convergence epsilon }"
 "{v verbose      | 1             | display current process frame }"
 "{l log      | 1             | output log information file }"
+"{h output_height | 1080 | ECC and output video height}"
+"{w output_width | 1920 | ECC and output video width}"
 ;
 
 
@@ -123,7 +125,9 @@ int main(const int argc, const char* argv[])
 	string videoDirCAP = videoDir + "/*.MP4"; 
 	string videoDirLOWER = videoDir + "/*.mp4"; // 小寫
 	string outputVideoName = parser.get<string>(1); // 輸出影片名稱
-	Size outputSize = Size(1920, 1080); // 輸出影片長寬
+	int width = parser.get<int>("w");
+	int height = parser.get<int>("h");
+	Size outputSize = Size(width, height); // 輸出影片長寬
 	double outputFPS = 9.99; // 輸出影片FPS
 	int outputFourcc = VideoWriter::fourcc('X', 'V', 'I', 'D'); // 輸出影片編碼
 	vector<String> videoListCAP; // 空拍影片路徑清單
@@ -222,7 +226,7 @@ int main(const int argc, const char* argv[])
 			{	// 讀取並記錄template_image
 				cap.set(CAP_PROP_POS_FRAMES, (cutinfoList[i].key)); // 將讀取位置設定為 key frame
 				cap.read(frame);
-				resize(frame, frame, Size(1920, 1080), 0, 0, INTER_CUBIC);
+				resize(frame, frame, outputSize, 0, 0, INTER_CUBIC);
 				cvtColor(frame, frame, COLOR_BGR2GRAY);
 				template_image = frame;
 				cout << "Read key frame : " << cutinfoList[i].key  << endl;
@@ -236,7 +240,7 @@ int main(const int argc, const char* argv[])
 				
 				if (allFrameCounter % int( inputFPS / outputFPS ) == 0)
 				{
-					resize(frame, frame, Size(1920, 1080), 0, 0, INTER_CUBIC);
+					resize(frame, frame, outputSize, 0, 0, INTER_CUBIC);
 
 					
 					Mat frame_gray;

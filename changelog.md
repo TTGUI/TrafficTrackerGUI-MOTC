@@ -1,5 +1,13 @@
 ## Changelog
 
+### v3.9.3 (2024/07/16)
+#### Improvements
+- update Model\Kstabilization_GPU.py, Model\Stab_ECC_GPU_source\eccgpu_sourceCode.cpp : add ECC and Output Video size optional parameter (use same parameter).
+- add Model\tool\videoResize.py : resize video to 1920x1080.
+- add Model\tool\div2.py : change gate.csv coordinate from 3840x2160 to 1920x1080.
+- add Model\tool\reshapevideo_2rows.py : reshape video to 1920x1920.
+- add Model\tool\Relocation_single_2rows.py : relocate csv coordinate from 1920x1920 to 3840x2160
+
 ### v3.9.2 (2024/06/07)
 #### Document
 - update about [_gate.csv format](doc\TrafficTrackerGUI_introduction.docx)
