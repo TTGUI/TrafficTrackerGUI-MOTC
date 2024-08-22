@@ -1,8 +1,8 @@
 import csv
 
 # 定義讀取和寫入的檔案名稱
-input_file = r'E:\Traffic\Block17\桃園市\1130705_桃園市中壢區中華路一段成功路口_120M\D架次\空拍影片\HD(穩像影片)\桃園市中壢區中華路一段成功路口D_gate.csv'
-output_file = r'E:\Traffic\Block17\桃園市\1130705_桃園市中壢區中華路一段成功路口_120M\D架次\空拍影片\HD(穩像影片)\桃園市中壢區中華路一段成功路口D_gateHD.csv'
+input_file = r'E:\Traffic\Block17\桃園市\1130705_桃園市中壢區中華路一段成功路口_120M\D架次\空拍影片\HD(穩像影片)\HD\桃園市中壢區中華路一段成功路口D.csv'
+output_file = r'E:\Traffic\Block17\桃園市\1130705_桃園市中壢區中華路一段成功路口_120M\D架次\空拍影片\HD(穩像影片)\HD\桃園市中壢區中華路一段成功路口D_HD.csv'
 
 # 打開輸入檔案進行讀取
 with open(input_file, newline='', encoding='utf-8') as csvfile:

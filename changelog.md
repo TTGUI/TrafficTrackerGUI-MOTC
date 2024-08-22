@@ -1,5 +1,17 @@
 ## Changelog
 
+### v3.9.5 (2024/08/20)
+#### Bud Fixed
+- fix Model\IOadded2.py : tracking AIBO failing when only have 2 intersection line.
+- fix Model\Nbackground_median.py : background image generating fail sometime.
+
+#### Improvements
+- update config\conf.py : add output video layout format.
+
+### v3.9.4 (2024/07/31)
+#### Improvements
+- update Model\Nbackground_median.py : change video read frame logic from one by one to skip frame.
+
 ### v3.9.3 (2024/07/16)
 #### Improvements
 - update Model\Kstabilization_GPU.py, Model\Stab_ECC_GPU_source\eccgpu_sourceCode.cpp : add ECC and Output Video size optional parameter (use same parameter).

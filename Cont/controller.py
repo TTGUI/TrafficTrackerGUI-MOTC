@@ -1,6 +1,7 @@
 from logs import logger
 from View import viewer
 import time
+from config import conf
 
 class Controller() :
 
@@ -12,10 +13,11 @@ class Controller() :
 def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
     from Model import Kstabilization_GPU
     from Model import Kstabilization_T0N
-
+    output_height = conf.getOutput_height()
+    output_width = conf.getOutput_width()
     start = time.time()
     if StabMode == 'GPU':
-        Kstabilization_GPU.stab_main(stab_input,stab_output,show,cut_txt)
+        Kstabilization_GPU.stab_main(stab_input,stab_output,show,cut_txt, output_height, output_width)
     elif StabMode == 'CPU':
         Kstabilization_T0N.stab_main(stab_input,stab_output,show,cut_txt)
 

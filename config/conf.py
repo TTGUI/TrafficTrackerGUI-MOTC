@@ -22,6 +22,8 @@ ID_YoloModel = 4
 ID_TIVingore = 5
 ID_TIVextend = 6
 ID_TIVPmode = 7
+ID_Output_height = 8
+ID_Output_width = 9
 
 # config.txt Titles
 configTitle = [
@@ -32,7 +34,9 @@ configTitle = [
 "YoloModel",
 "TIVingoreFrames",
 "TIVP_ExtendPrintFrame",
-"TIVPmode"
+"TIVPmode",
+"Output_height",
+"Output_width"
 ]
 
 def __init__():
@@ -123,6 +127,18 @@ def getTIVPMode():
 
 def setTIVPMode(mode):
     setConfigData(ID_TIVPmode, mode)
+
+def getOutput_height():
+    return int(getConfData(ID_Output_height))
+
+def setOutput_height(size):
+    setConfigData(ID_Output_height, size)
+
+def getOutput_width():
+    return int(getConfData(ID_Output_width))
+
+def setOutput_width(size):
+    setConfigData(ID_Output_width, size)
 
 def RTVersion():
     ver = 'TrafficTrackerGUI - ' + getVersion()

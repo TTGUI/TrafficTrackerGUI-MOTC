@@ -127,6 +127,7 @@ int main(const int argc, const char* argv[])
 	string outputVideoName = parser.get<string>(1); // 輸出影片名稱
 	int width = parser.get<int>("w");
 	int height = parser.get<int>("h");
+	cout << "<< ECC_GPU output layout : width:" << width << ", height:" << height << endl;
 	Size outputSize = Size(width, height); // 輸出影片長寬
 	double outputFPS = 9.99; // 輸出影片FPS
 	int outputFourcc = VideoWriter::fourcc('X', 'V', 'I', 'D'); // 輸出影片編碼

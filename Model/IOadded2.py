@@ -136,14 +136,14 @@ def IOadded_main(gateLineIO_txt, tracking_csv, gate_tracking_csv) :
                 if not firstenter:
                     firstenter = True
                     
-                    minidx = len(bordertype)-2
+                    minidx = len(bordertype)-1
                     if bordertype[minidx] > 0:
                         mindist = P2L(pts[minidx], pts[0], (Cx,Cy))
                     else:
                         mindist = 9999
 
                     k = 0                    
-                    for k in range(0, len(bordertype)-2):
+                    for k in range(0, len(bordertype)-1):
                         if bordertype[k] > 0:
                             dist = P2L(pts[k], pts[k+1], (Cx,Cy))
                             if dist < mindist:
@@ -157,14 +157,14 @@ def IOadded_main(gateLineIO_txt, tracking_csv, gate_tracking_csv) :
                 lastenter = True    
                 
             elif lastenter:
-                minidx = len(bordertype)-2
+                minidx = len(bordertype)-1
                 if bordertype[minidx] < 0:
                     mindist = P2L(pts[minidx], pts[0], (Cx,Cy))
                 else:
                     mindist = 9999
 
                 k = 0                    
-                for k in range(0, len(bordertype)-2):
+                for k in range(0, len(bordertype)-1):
                     if bordertype[k] < 0:
                         dist = P2L(pts[k], pts[k+1], (Cx,Cy))
                         if dist < mindist:
