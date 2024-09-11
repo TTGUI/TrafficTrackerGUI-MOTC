@@ -11,6 +11,9 @@ loggerLevel = 'debug'
 # [ 5 ] - TIV ignore frame, ignore top and end frames to calculate TIV : <900>
 # [ 6 ] - Extend Print Frame, When generating issue track vidoe, this number will be the extra length at the beginning and end of the video : <100>
 # [ 7 ] - TIVPrint mode : <1> Video output mode | <2> background output mode | <3> Real Time Display.
+# [ 8 ] - Output video height : stab and result video output height : <1080, 2160, ect. >
+# [ 9 ] - Output video width : stab and result video output width : <1920, 3840, ect. >
+# [ 10 ] - section Mode : cnange traffic section between <Intersection> or <Roadsection>  
 
 
 # config index
@@ -24,6 +27,7 @@ ID_TIVextend = 6
 ID_TIVPmode = 7
 ID_Output_height = 8
 ID_Output_width = 9
+ID_SectionMode = 10
 
 # config.txt Titles
 configTitle = [
@@ -36,7 +40,8 @@ configTitle = [
 "TIVP_ExtendPrintFrame",
 "TIVPmode",
 "Output_height",
-"Output_width"
+"Output_width",
+"Section_Mode"
 ]
 
 def __init__():
@@ -139,6 +144,12 @@ def getOutput_width():
 
 def setOutput_width(size):
     setConfigData(ID_Output_width, size)
+
+def getSection_mode():
+    return getConfData(ID_SectionMode)
+
+def setSection_mode(mode):
+    setConfigData(ID_SectionMode, mode)
 
 def RTVersion():
     ver = 'TrafficTrackerGUI - ' + getVersion()

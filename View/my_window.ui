@@ -630,6 +630,7 @@
     <addaction name="bar_3"/>
     <addaction name="bar_4"/>
     <addaction name="Change_Tracking_Setting"/>
+    <addaction name="Change_Section_Mode"/>
    </widget>
    <addaction name="menudebugMode"/>
   </widget>
@@ -657,6 +658,11 @@
   <action name="Change_Tracking_Setting">
    <property name="text">
     <string>Change Tracking Setting</string>
+   </property>
+  </action>
+  <action name="Change_Section_Mode">
+   <property name="text">
+    <string>Change_Section_Mode</string>
    </property>
   </action>
  </widget>

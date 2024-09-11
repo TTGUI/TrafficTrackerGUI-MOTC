@@ -131,7 +131,12 @@ class MainWindow(object):
             logger.warning(f" Icon file not found : [{self.iconPath}]")
 
         """Setup label"""
-        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel)
+        self.section = ""
+        
+        if conf.getSection_mode() == "intersection" : self.section = "intersection"
+        elif conf.getSection_mode() == "roadsection" : self.section = "roadsection"
+
+        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
         self._window.setWindowTitle(conf.RTVersion())
         self._window.cutinfo.setText('')
         self._window.display.setText('')
@@ -156,6 +161,8 @@ class MainWindow(object):
         self._window.bar_2.triggered.connect(self.changeStabMode)
         self._window.bar_3.triggered.connect(self.changeYoloModel)
         self._window.bar_4.triggered.connect(self.changeTIVPbMode)
+        self._window.Change_Tracking_Setting.triggered.connect(self.changeTrackingSet)
+        self._window.Change_Section_Mode.triggered.connect(self.changeSectionMode)
         if self.stabMode == 'CPU':
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
         elif self.stabMode == 'GPU':
@@ -168,7 +175,7 @@ class MainWindow(object):
         elif self.TIVPmode == 3:
             self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
 
-        self._window.Change_Tracking_Setting.triggered.connect(self.changeTrackingSet)
+        
 
         #### Step Board ########################################################################
         self._window.DroneFolder_btn.setText('Set Drone Folder')
@@ -365,7 +372,7 @@ class MainWindow(object):
             conf.setStabMode('CPU')
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
             self._window.step1_btn.setText('[STEP 1] (C)\nStable')
-        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel)
+        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
     
     @QtCore.Slot()
     def changeYoloModel(self):
@@ -377,7 +384,7 @@ class MainWindow(object):
         
             print(tempName[-1])
             self.yoloModel = tempName[-1]
-            self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel)
+            self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
             conf.setYoloModel(self.yoloModel)
         else :
             print("[CANCEL] YoloModel change cancel.")
@@ -416,6 +423,15 @@ class MainWindow(object):
         self.CTS_dialog.CTS_submitButton.clicked.connect(self.submitTrackingSet)
 
         self.CTS_dialog.show()
+
+    def changeSectionMode(self):
+        if self.section == "intersection":
+            self.section = "roadsection"
+            conf.setSection_mode(self.section)
+        elif self.section == "roadsection":
+            self.section = "intersection"
+            conf.setSection_mode(self.section)
+        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
 
     def submitTrackingSet(self):
         if self.CTS_dialog.CTS_Edit_1.text() != '':

@@ -11,14 +11,14 @@ class Controller() :
 
 
 def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
-    from Model import Kstabilization_GPU
-    from Model import Kstabilization_T0N
     output_height = conf.getOutput_height()
     output_width = conf.getOutput_width()
     start = time.time()
     if StabMode == 'GPU':
+        from Model import Kstabilization_GPU
         Kstabilization_GPU.stab_main(stab_input,stab_output,show,cut_txt, output_height, output_width)
     elif StabMode == 'CPU':
+        from Model import Kstabilization_T0N
         Kstabilization_T0N.stab_main(stab_input,stab_output,show,cut_txt)
 
     end = time.time()
@@ -60,12 +60,15 @@ def con_step4(stab_video,background_img) :
     print("[SEPT4 Done.]")
 
 def con_step5(IOtxt,background) :
-    from Model import drawIO2
-    current = drawIO2.Draw(IOtxt,background)
+    if conf.getSection_mode() == "intersection":
+        from Model import drawIO2
+        current = drawIO2.Draw(IOtxt,background)
+    elif conf.getSection_mode() == "roadsection":
+        from Model import drawIO3
+        current = drawIO3.Draw(IOtxt,background)
+
     start = time.time()
-
     current.main()
-
     end = time.time()
     logger.info( "[Step 5] ->> Cost time : " + str(end-start)  )
     print("[SEPT5 Done.]")
@@ -73,11 +76,15 @@ def con_step5(IOtxt,background) :
     del current
 
 def con_step6(gateLineIO_txt, tracking_csv, gate_tracking_csv) :
-    # from Model import PIOadded
-    from Model import IOadded2
     start = time.time()
-    IOadded2.IOadded_main(gateLineIO_txt, tracking_csv, gate_tracking_csv)
+    if conf.getSection_mode() == "intersection":
+        from Model import IOadded2    
+        IOadded2.IOadded_main(gateLineIO_txt, tracking_csv, gate_tracking_csv)
+    elif conf.getSection_mode() == "roadsection":
+        from Model import IOadded3 
+        IOadded3.IOadded_main(gateLineIO_txt, tracking_csv, gate_tracking_csv)
     end = time.time()
+        
     logger.info( "[Step 6] ->> Cost time : " + str(end-start)  )
     print("[SEPT6 Done.]")
 

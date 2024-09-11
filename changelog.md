@@ -1,5 +1,12 @@
 ## Changelog
 
+### v3.10.0 (2024/09/11)
+#### Improvements
+- add Model\drawIO3.py, IOadded3.py : New traffic section process, roadsection.
+- update config\conf.py, config.txt : add section mode info.
+- update View\main_windwo.py, my_window.ui : add change section mode.
+- update Cont\controller.py : add diffrent section activate function.
+
 ### v3.9.5 (2024/08/20)
 #### Bud Fixed
 - fix Model\IOadded2.py : tracking AIBO failing when only have 2 intersection line.

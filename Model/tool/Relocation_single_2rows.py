@@ -21,8 +21,11 @@ with open(input_file_path, 'r') as infile, open(output_file_path, 'w') as outfil
             x4, y4 = int(fields[data_start_index + 8]), int(fields[data_start_index + 9])
             
             # Tw = Bw = 1920, Bh: no use                                                                                                                                                                    #5452x3056
-            Tx, Ty, Th = 600, 800, 960 # Top road region
-            Bx, By = 1960, 800 # Bottom road region
+            # Tx, Ty, Th = 600, 800, 960 # Top road region
+            # Bx, By = 1960, 800 # Bottom road region
+
+            Tx, Ty, Th = 300, 500, 960 # Top road region
+            Bx, By = 1960, 500 # Bottom road region
 
             if y1 < Th:
                 x1 += Tx

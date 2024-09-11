@@ -8,3 +8,4 @@ TIVP_ExtendPrintFrame=100
 TIVPmode=3
 Output_height=2160
 Output_width=3840
+Section_Mode=roadsection

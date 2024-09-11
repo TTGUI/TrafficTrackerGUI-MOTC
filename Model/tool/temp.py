@@ -1,36 +1,25 @@
-import cv2
+# 設定根目錄
+root_folder = r'E:\Traffic\Block18'
+
+# 儲存符合條件的文件檔案路徑
+input_files = []
+processed_files = []
 import os
 
-# 設定影像資料夾路徑
-image_folder = r'C:\Users\Lab602_assistant\AppData\Roaming\PotPlayerMini64\Capture'
-# 設定輸出影片檔案名稱
-video_name = r'E:\data\temp\output_video_stab.avi'
-# 設定影格率（每秒顯示的影像數）
-frame_rate = 30
-
-# 讀取所有影像檔案名稱
-images = [img for img in os.listdir(image_folder) if img.endswith((".png", ".jpg", ".jpeg"))]
-# 對影像檔案名稱進行排序（假設影像檔名具有順序）
-images.sort()
-
-# 確保資料夾中有影像
-if not images:
-    raise ValueError("No images found in the provided folder.")
-
-# 讀取第一張影像來獲取影像的尺寸
-frame = cv2.imread(os.path.join(image_folder, images[0]))
-height, width, layers = frame.shape
-
-# 設定影片編碼器和輸出影片物件
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-video = cv2.VideoWriter(video_name, fourcc, frame_rate, (width, height))
-
-# 將每一張影像加入影片中
-for image in images:
-    img_path = os.path.join(image_folder, image)
-    frame = cv2.imread(img_path)
-    video.write(frame)
-
-# 釋放影片物件
-video.release()
-print(f"影片已成功輸出為 {video_name}")
+# 更換檔名
+for foldername, subfolders, filenames in os.walk(root_folder):
+    for filename in filenames:
+        if filename.endswith('_OR_stab_reshape.avi'):
+            # 取得原始檔案的完整路徑
+            old_file_path = os.path.join(foldername, filename)
+            
+            # 新檔案名稱
+            new_filename = filename.replace('_OR_stab_reshape.avi', '_stab.avi')
+            
+            # 取得新的檔案完整路徑
+            new_file_path = os.path.join(foldername, new_filename)
+            
+            # 進行檔案改名
+            os.rename(old_file_path, new_file_path)
+            
+            print(f"檔案已更名: {old_file_path} -> {new_file_path}")
