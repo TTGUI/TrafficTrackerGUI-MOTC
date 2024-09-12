@@ -175,8 +175,6 @@ class MainWindow(object):
         elif self.TIVPmode == 3:
             self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
 
-        
-
         #### Step Board ########################################################################
         self._window.DroneFolder_btn.setText('Set Drone Folder')
         self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
@@ -209,7 +207,10 @@ class MainWindow(object):
         self._window.step4_btn.setText('[STEP 4]\nBackground')
         self._window.step4_btn.clicked.connect(self.step4)
 
-        self._window.step5_btn.setText('[STEP 5]\nDrawIO')
+        if self.section == 'intersection':
+            self._window.step5_btn.setText('[STEP 5] (I)\nDrawIO')
+        elif self.section == 'roadsection':
+            self._window.step5_btn.setText('[STEP 5] (R)\nDrawIO')
         self._window.step5_btn.clicked.connect(self.step5)
 
         self._window.step6_btn.setText('[STEP 6]\nIO Added')
@@ -432,7 +433,10 @@ class MainWindow(object):
             self.section = "intersection"
             conf.setSection_mode(self.section)
         self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
-
+        if self.section == 'intersection':
+            self._window.step5_btn.setText('[STEP 5] (I)\nDrawIO')
+        elif self.section == 'roadsection':
+            self._window.step5_btn.setText('[STEP 5] (R)\nDrawIO')
     def submitTrackingSet(self):
         if self.CTS_dialog.CTS_Edit_1.text() != '':
             trk1 = self.CTS_dialog.CTS_Edit_1.text()

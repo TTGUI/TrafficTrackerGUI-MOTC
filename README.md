@@ -15,8 +15,8 @@
 
 ## Installation
 ### 安裝與使用說明文件位於[doc](./doc)資料夾中
-- 詳細安裝流程請參考[TrafficTrackerGUI_introduction.docx](./doc/TrafficTrackerGUI_introduction.docx)
-- 穩定影像步驟預設內建CPU版本，欲安裝GPU版本請參考[GPU_ECC安裝教學](./doc/GPU_ECC_install_introduction_3.0.1.docx)/[Google線上文件](https://docs.google.com/document/d/1x2xtYWFi6JJ_wzsxm2_RiXn20cEqbD33gZbXYUxyU5Q/edit?usp=sharing)。
+- 詳細安裝流程請參考[TrafficTrackerGUI_introduction.docx](./doc/TrafficTrackerGUI_introduction.docx)/[Google線上文件](https://docs.google.com/document/d/1_0h-pkgsuWSCED1gfbsh3dF7N0c0qbjx/edit?usp=sharing&ouid=100398044648873202865&rtpof=true&sd=true)
+- 穩定影像步驟預設內建CPU版本，欲安裝GPU版本請參考[GPU_ECC安裝教學](./doc/GPU_ECC_install_introduction.docx)/[Google線上文件](https://docs.google.com/document/d/1x2xtYWFi6JJ_wzsxm2_RiXn20cEqbD33gZbXYUxyU5Q/edit?usp=sharing)。
 ### YOLO模型
 - 由於模型檔案大小無法上傳至GitHub，請[下載](https://mega.nz/folder/cT9lnJID#2L2coFONYwYCCajv0wA5aA)後放置於[weights](.\Model\YOLOv4\weights)
 

@@ -1,5 +1,17 @@
 ## Changelog
 
+### v3.10.2 (2024/09/12)
+#### Improvements
+- add start_gui_anacondaEnv.bat : add new start bat when environment build by anaconda. Need to change path for environment and ttgui codes.
+- Model\Kstabilization_T0N.py : close all frame window when process end.
+#### Organize
+- relocate Model\Stab_ECC_GPU_source
+- rebuild Model\YOLOv4\data\classes_vehicle8cls.txt : file missing some reason, recovered.
+#### Document
+- update README.md
+- update doc\GPU_ECC_install_introduction.docx : verify the process on windows11 RTX4060 cuda11.1 .
+- update doc\TrafficTrackerGUI_introduction.docx 
+
 ### v3.10.1 (2024/09/12)
 #### Improvements
 - add Model\tool\recursiveChangeName.py

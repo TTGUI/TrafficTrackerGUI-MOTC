@@ -1,0 +1,8 @@
+sedan
+truck
+bus
+tractor
+trailer
+person
+bike
+moto

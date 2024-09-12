@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1066</width>
+    <width>1225</width>
     <height>809</height>
    </rect>
   </property>
@@ -617,8 +617,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1066</width>
-     <height>21</height>
+     <width>1225</width>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menudebugMode">
@@ -662,7 +662,7 @@
   </action>
   <action name="Change_Section_Mode">
    <property name="text">
-    <string>Change_Section_Mode</string>
+    <string>Change Section Mode</string>
    </property>
   </action>
  </widget>

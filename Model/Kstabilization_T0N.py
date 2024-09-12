@@ -153,6 +153,8 @@ class StableVideo:
 
         out.release()
         workingTime = time.time() - startTime
+        if is_Show:
+            cv2.destroyAllWindows() 
         logger.info("[Step 1] ->> Type 0 NEW.")
         logger.info(f"[Step 1] ->> [In % Out] FPS = paNumber : [ {self.target_fps} % {self.output_fps} ] = {self.paNumber}.")
         logger.info("[Step 1] ->> ECC_costTime :" + str(self.ECC_costTime))
