@@ -1,5 +1,9 @@
 ## Changelog
 
+### v3.10.2a - 2024/09/12
+#### Improvements
+- update .gitignore: It seems the Visual Studio folder structure differs between Windows 10 and Windows 11, make sure .gitignore works properly on both.
+
 ### v3.10.2 (2024/09/12)
 #### Improvements
 - add start_gui_anacondaEnv.bat : add new start bat when environment build by anaconda. Need to change path for environment and ttgui codes.

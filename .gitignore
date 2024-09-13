@@ -21,8 +21,18 @@ Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source/Stab_ECC_GPU_source.vcxproj.user
 Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source.sln
 
 Model/tool/label_it_v1.13_jpgver/labeltool-v113-env
+View/icon.png
+Model/YOLOv4/data/train_vehicle8cls_723.txt
+Model/YOLOv4/data/val_vehicle8cls_180.txt
+Model/YOLOv4/data/vehicle8cls_obb_1920_1080_total903train723val180.yaml
+Model/YOLOv4/data/yolov4_hyp.scratch.yaml
+Model/Stab_ECC_GPU_source/demo/
+Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source.vcxproj.filters
+Model/Stab_ECC_GPU_source/Stab_ECC_GPU_source.vcxproj
+Model/Stab_ECC_GPU_source/output.avi
 
 # Visual Studio generated files
+.vscode/
 .vs/
 *.user
 *.suo
@@ -131,4 +141,4 @@ ENV/
 .pyre/
 cython_debug/
 
-View/icon.png
+
