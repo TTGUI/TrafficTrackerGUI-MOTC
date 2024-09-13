@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1225</width>
-    <height>809</height>
+    <height>806</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -631,6 +631,7 @@
     <addaction name="bar_4"/>
     <addaction name="Change_Tracking_Setting"/>
     <addaction name="Change_Section_Mode"/>
+    <addaction name="Change_Output_WxH"/>
    </widget>
    <addaction name="menudebugMode"/>
   </widget>
@@ -663,6 +664,11 @@
   <action name="Change_Section_Mode">
    <property name="text">
     <string>Change Section Mode</string>
+   </property>
+  </action>
+  <action name="Change_Output_WxH">
+   <property name="text">
+    <string>Change Output WxH</string>
    </property>
   </action>
  </widget>

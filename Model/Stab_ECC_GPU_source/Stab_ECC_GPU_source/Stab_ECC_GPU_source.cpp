@@ -16,7 +16,6 @@
 
 #include "ecc_cuda.h"
 
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/core/core.hpp>
@@ -25,7 +24,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/video.hpp>
-#include <opencv2/imgproc.hpp> 
+#include <opencv2/imgproc.hpp>
 #include <opencv2/core/utility.hpp>
 
 #include <stdio.h>
@@ -37,11 +36,8 @@
 
 #include <ctime>
 
-
-
 using namespace cv;
 using namespace std;
-
 
 const std::string keys =
 "{@inputVideoFolderPath    |./demo | input video folder path }"
@@ -55,258 +51,257 @@ const std::string keys =
 "{w output_width | 1920 | ECC and output video width}"
 ;
 
-
 struct cutinfo
 {
-	int key = -1;
-	int start = -1;
-	int end = -1;
+    int key = -1;
+    int start = -1;
+    int end = -1;
 };
 
+string formatTime(double seconds)
+{
+    int h = int(seconds / 3600);
+    int m = int((seconds - h * 3600) / 60);
+    int s = int(seconds - h * 3600 - m * 60);
+    char buffer[9];
+    snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", h, m, s);
+    return string(buffer);
+}
+
+void printProgressBar(int current, int total, double elapsed_seconds, double remaining_seconds, int barWidth = 50)
+{
+    double percentage = double(current) / total;
+    std::cout << "\r[";
+    int pos = int(barWidth * percentage);
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "=";
+        else if (i == pos) std::cout << ">";
+        else std::cout << " ";
+    }
+    std::cout << "] " << int(percentage * 100.0) << "% ";
+    std::cout << current << "/" << total << " ";
+    std::cout << "Elapsed: " << formatTime(elapsed_seconds) << " ";
+    std::cout << "Remaining: " << formatTime(remaining_seconds);
+    std::cout.flush();
+}
 
 int main(const int argc, const char* argv[])
 {
+    cout << "<< ECC_GPU.exe Running... >>" << endl;
+    CommandLineParser parser(argc, argv, keys);
 
+    vector <cutinfo> cutinfoList;
+    string cutFileName = parser.get<string>(2);
 
+    ifstream myfile(cutFileName);
+    string outFileName = "./logs/logs_tutorial/ECC_GPU_log.txt";
+    ofstream outFile(outFileName);
 
-	cout << "<< ECC_GPU.exe Running... >>" << endl;
-	CommandLineParser parser(argc, argv, keys);
+    int data;
+    int count = 0;
+    if (myfile.is_open()) {
+        // Read cutinfo
+        cutinfo tempInfo;
+        while (!myfile.eof())
+        {
+            count = count + 1;
+            myfile >> data;
+            if (count == 1)
+            {
+                tempInfo.key = data;
+            }
+            else if (count == 2)
+            {
+                tempInfo.start = data;
+            }
+            else if (count == 3)
+            {
+                tempInfo.end = data;
+                cutinfoList.push_back(tempInfo);
+                count = 0;
+            }
+        }
+    }
+    else {
+        cout << "Unable to open file : " << cutFileName << endl;
+    }
+    myfile.close();
+    for (int i = 0; i < cutinfoList.size(); i++)
+    {
+        cout << "[" << i + 1 << "]\tK : " << cutinfoList[i].key << "\tS : " << cutinfoList[i].start << "\tE : " << cutinfoList[i].end << endl;
+    }
 
-	vector <cutinfo> cutinfoList;
-	string cutFileName = parser.get<string>(2);
+    int verbose = parser.get<int>("v");
+    int log = parser.get<int>("l");
+    string videoDir = parser.get<string>(0);  // Input video folder path
+    string videoDirCAP = videoDir + "/*.MP4";
+    string videoDirLOWER = videoDir + "/*.mp4"; // Lowercase
+    string outputVideoName = parser.get<string>(1); // Output video name
+    int width = parser.get<int>("w");
+    int height = parser.get<int>("h");
+    cout << "<< ECC_GPU output layout : width:" << width << ", height:" << height << endl;
+    Size outputSize = Size(width, height); // Output video size
+    double outputFPS = 9.99; // Output video FPS
+    int outputFourcc = VideoWriter::fourcc('X', 'V', 'I', 'D'); // Output video codec
+    vector<String> videoListCAP; // Video file paths
+    vector<String> videoListLOWER; // Video file paths
+    glob(videoDirCAP, videoListCAP, false); // Get file paths
+    glob(videoDirLOWER, videoListLOWER, false); // Lowercase
+    double start_time = 0; // ECC start time
+    double ecd_time = 0; // ECC end time
 
-	ifstream myfile(cutFileName);
-	string outFileName = "./logs/logs_tutorial/ECC_GPU_log.txt";
-	ofstream outFile(outFileName);
+    if (log == 1)
+    {
+        if (outFile.is_open())
+        {
+            outFile << "[STEP 1] : input path : " << videoDir << endl;
+            outFile << "[STEP 1] : output video : " << outputVideoName << endl;
+        }
+        else
+        {
+            cout << "log file opened fail." << endl;
+        }
+    }
 
-	int data;
-	int count = 0;
-	if (myfile.is_open()) {
-		// 讀取cutinfo
-		cutinfo tempInfo;
-		while (!myfile.eof())
-		{
-			count= count+1;
-			myfile >> data;
-			if (count == 1)
-			{
-				tempInfo.key = data;
-			}
+    if (videoListCAP.size() != 0 && videoListLOWER.size() != 0)
+    {   // Error if both uppercase and lowercase extensions are detected
+        cout << "<< Error : Also detect upper and lower case file extensions, please unify the format. >>" << endl;
+        return 0;
+    }
 
-			else if (count == 2)
-			{
-				tempInfo.start = data;
-			}
+    if (videoListLOWER.size() != 0)
+    { // Use videoListCAP to store paths
+        videoListCAP.clear();
+        for (int i = 0; i < videoListLOWER.size(); i++)
+            videoListCAP.push_back(videoListLOWER[i]);
+    }
 
-			else if (count == 3)
-			{
-				tempInfo.end = data;
-				cutinfoList.push_back(tempInfo);
-				count = 0;
-			}
+    int allFrameCounter = 0;
 
-		}
+    VideoCapture cap;
+    double inputFPS = 0.0; // Input video FPS
+    cap.open(videoListCAP[0]);
+    if (!cap.isOpened())
+    {
+        cout << "cv2 videoCapture can not open this file : " << videoListCAP[0] << endl;
+        return 0;
+    }
+    else
+    {
+        inputFPS = cap.get(CAP_PROP_FPS);
+    }
 
-	}
-	else {
-		cout << "Unable to open file : " << cutFileName << endl;
-	}
-	myfile.close();
-	for (int i = 0; i < cutinfoList.size(); i++)
-	{
-		cout << "[" << i + 1 << "]\tK : " << cutinfoList[i].key << "\tS : " << cutinfoList[i].start << "\tE : " << cutinfoList[i].end << endl;
-	}
+    if (videoListCAP.size() != 0)
+    {
+        VideoCapture cap;
+        VideoWriter writer;
+        Mat template_image; // Key frame
+        writer.open(outputVideoName, outputFourcc, outputFPS, outputSize, true);
 
+        Mat warp_matrix = Mat::eye(3, 3, CV_32F); // Transformation matrix for ECC
+        int warp_mode = MOTION_HOMOGRAPHY;
 
+        int number_of_iterations = parser.get<int>("n");
+        double termination_eps = parser.get<double>("e");;
+        int gaussian_size = 5;
 
-	int verbose = parser.get<int>("v");
-	int log = parser.get<int>("l");
-	string videoDir = parser.get<string>(0);  // 空拍影片資料夾 根據UNIX風格路徑模式
-	string videoDirCAP = videoDir + "/*.MP4"; 
-	string videoDirLOWER = videoDir + "/*.mp4"; // 小寫
-	string outputVideoName = parser.get<string>(1); // 輸出影片名稱
-	int width = parser.get<int>("w");
-	int height = parser.get<int>("h");
-	cout << "<< ECC_GPU output layout : width:" << width << ", height:" << height << endl;
-	Size outputSize = Size(width, height); // 輸出影片長寬
-	double outputFPS = 9.99; // 輸出影片FPS
-	int outputFourcc = VideoWriter::fourcc('X', 'V', 'I', 'D'); // 輸出影片編碼
-	vector<String> videoListCAP; // 空拍影片路徑清單
-	vector<String> videoListLOWER; // 空拍影片路徑清單
-	glob(videoDirCAP, videoListCAP, false); // 取得資料夾下檔案路徑
-	glob(videoDirLOWER, videoListLOWER, false); // 小寫
-	double start_time = 0; // 開始ECC時間
-	double ecd_time = 0; // 結束ECC時間
+        int frame_step = int(inputFPS / outputFPS);
 
+        for (int i = 0; i < videoListCAP.size(); i++)
+        {
+            Mat frame;
 
+            while (cutinfoList[i].key == -1 && cutinfoList[i].start == -1 && cutinfoList[i].end == -1)
+            { // Skip videos not to be processed
+                cout << "[SKIP] > " << videoListCAP[i] << endl;
+                if (i < videoListCAP.size())
+                    i++;
+                else
+                    break;
+            }
 
-	if (log == 1)
-	{
-		if (outFile.is_open())
-		{
-			outFile << "[STEP 1] : input path : " << videoDir << endl;
-			outFile << "[STEP 1] : output video : " << outputVideoName << endl;
-		}
-		else
-		{
-			cout << "log file opened fail." << endl;
-		}
-	}
+            if (i == videoListCAP.size())
+                break;
 
-	if (videoListCAP.size() != 0 && videoListLOWER.size() != 0)
-	{	// 同時有大小寫副檔名時報錯
-		cout << "<< Error : Also detect upper and lower case file extensions, please unify the format. >>" << endl;
-		return 0;
-	}
-	
-	if (videoListLOWER.size() != 0)
-	{ // 將資料統一使用videoListCAP來存儲
-		videoListCAP.clear();
-		for (int i = 0; i < videoListLOWER.size(); i++)
-			videoListCAP.push_back(videoListLOWER[i]);
-		
-	}
+            cout << "[PROCESS " << i + 1 << " ] > " << videoListCAP[i] << endl;
+            cap.open(videoListCAP[i]);
+            if (!cap.isOpened())
+            {
+                cout << "cv2 videoCapture can not open this file : " << videoListCAP[i] << endl;
+                break;
+            }
 
-	int allFrameCounter = 0;
+            if (cutinfoList[i].key != -1)
+            {   // Read and record template_image
+                cap.set(CAP_PROP_POS_FRAMES, (cutinfoList[i].key)); // Set to key frame
+                cap.read(frame);
+                resize(frame, frame, outputSize, 0, 0, INTER_CUBIC);
+                cvtColor(frame, frame, COLOR_BGR2GRAY);
+                template_image = frame;
+                cout << "Read key frame : " << cutinfoList[i].key << endl;
+                start_time = clock();
+            }
 
-	// ofstream outPrint("GPU_PRINT.txt");
+            cap.set(CAP_PROP_POS_FRAMES, (cutinfoList[i].start)); // Set to start frame
 
-	VideoCapture cap;
-	double inputFPS = 0.0; // 輸入影片FPS
-	cap.open(videoListCAP[0]);
-	if (!cap.isOpened())
-	{
-		cout << "cv2 videoCapture can not open this file : " << videoListCAP[0] << endl;
-		return 0;
-	}
-	else
-	{
-		inputFPS = cap.get(CAP_PROP_FPS);
-	}
+            int frames_in_video = cutinfoList[i].end - cutinfoList[i].start + 1;
+            int total_frames_in_video = (frames_in_video + frame_step - 1) / frame_step;
+            int frames_processed = 0;
+            clock_t video_start_time = clock();
 
-	if (videoListCAP.size() != 0)
-	{
-		VideoCapture cap;
-		VideoWriter writer;
-		Mat template_image; // KEY frame 靜止畫面的標準
-		writer.open(outputVideoName, outputFourcc, outputFPS, outputSize, true);
+            while (cap.read(frame) && cap.get(CAP_PROP_POS_FRAMES) != cutinfoList[i].end + 1)
+            {
+                if (allFrameCounter % frame_step == 0)
+                {
+                    resize(frame, frame, outputSize, 0, 0, INTER_CUBIC);
+                    Mat frame_gray;
+                    cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
 
-		Mat warp_matrix = Mat::eye(3, 3, CV_32F); // ECC用轉換矩陣，每次迭代使用
-		int warp_mode = MOTION_HOMOGRAPHY;
-		
-		int number_of_iterations = parser.get<int>("n");
-		double termination_eps = parser.get<double>("e");;
-		int gaussian_size = 5;
+                    double cc = findTransformECCGpu(template_image, frame_gray, warp_matrix, warp_mode,
+                        TermCriteria(TermCriteria::COUNT + TermCriteria::EPS,
+                            number_of_iterations, termination_eps), gaussian_size);
 
-		for (int i = 0; i < videoListCAP.size(); i++)
-		{
-			Mat frame;
-			
-			
-			while  (cutinfoList[i].key == -1 && cutinfoList[i].start == -1 && cutinfoList[i].end == -1)
-			{ // 遇到不處理影片
-				cout << "[SKIP] > " << videoListCAP[i] << endl;
-				if (i < videoListCAP.size())
-					i++;
-				else
-					break;
-			}
+                    warpPerspective(frame, frame, warp_matrix, frame.size(), INTER_CUBIC + WARP_INVERSE_MAP);
+                    writer.write(frame);
 
-			if (i == videoListCAP.size())
-				break;
+                    frames_processed++;
 
-			cout << "[PROCESS " << i+1 << " ] > " << videoListCAP[i] << endl;
-			cap.open(videoListCAP[i]);
-			if (!cap.isOpened())
-			{
-				cout << "cv2 videoCapture can not open this file : " << videoListCAP[i] << endl;
-				break;
-			}
+                    double percentage = double(frames_processed) / total_frames_in_video;
+                    double elapsed_seconds = double(clock() - video_start_time) / CLOCKS_PER_SEC;
+                    double estimated_total_time = elapsed_seconds / percentage;
+                    double remaining_seconds = estimated_total_time - elapsed_seconds;
 
-			if (cutinfoList[i].key != -1)
-			{	// 讀取並記錄template_image
-				cap.set(CAP_PROP_POS_FRAMES, (cutinfoList[i].key)); // 將讀取位置設定為 key frame
-				cap.read(frame);
-				resize(frame, frame, outputSize, 0, 0, INTER_CUBIC);
-				cvtColor(frame, frame, COLOR_BGR2GRAY);
-				template_image = frame;
-				cout << "Read key frame : " << cutinfoList[i].key  << endl;
-				start_time = clock();
-			}
-		
-			cap.set(CAP_PROP_POS_FRAMES, (cutinfoList[i].start)); // 將讀取位置設定為 start frame
-			
-			while (cap.read(frame) && cap.get(CAP_PROP_POS_FRAMES) != cutinfoList[i].end + 1)
-			{
-				
-				if (allFrameCounter % int( inputFPS / outputFPS ) == 0)
-				{
-					resize(frame, frame, outputSize, 0, 0, INTER_CUBIC);
+                    // Update progress bar
+                    printProgressBar(frames_processed, total_frames_in_video, elapsed_seconds, remaining_seconds);
 
-					
-					Mat frame_gray;
-					cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
-					
-					double cc = findTransformECCGpu(template_image, frame_gray, warp_matrix, warp_mode,
-						TermCriteria(TermCriteria::COUNT + TermCriteria::EPS,
-							number_of_iterations, termination_eps), gaussian_size);
-					cout << "\rECC Frame : " << cap.get(CAP_PROP_POS_FRAMES) << "\t cc : " << cc;
-					// cout << cap.get(CAP_PROP_POS_FRAMES) << endl;
-					// outPrint << cap.get(CAP_PROP_POS_FRAMES) << endl;
-					warpPerspective(frame, frame, warp_matrix, frame.size(), INTER_CUBIC + WARP_INVERSE_MAP);
-					writer.write(frame);
-					if(verbose == 1)
-					{
-						imshow("frame", frame);
-						waitKey(1);
-					}
+                    if (verbose == 1)
+                    {
+                        imshow("frame", frame);
+                        waitKey(1);
+                    }
+                }
+                else
+                {
+                    // Skipped frame
+                }
+                allFrameCounter++;
+            }
+            std::cout << std::endl; // Move to next line after progress bar
+            cout << "Finished processing video " << i + 1 << "/" << videoListCAP.size() << endl;
+        }
+        cap.release();
+        writer.release();
+        ecd_time = clock();
+        cout << "\n[STEP 1] : cost time : " << (ecd_time - start_time) / CLOCKS_PER_SEC << endl;
 
-				}
-				else
-				{
-					// outPrint << "\t" << cap.get(CAP_PROP_POS_FRAMES) << endl;
-					// cout << "\t" << cap.get(CAP_PROP_POS_FRAMES) << endl;
-				}
+        if (log == 1)
+        {
+            if (outFile.is_open())
+                outFile << "[STEP 1] : cost time : " << (ecd_time - start_time) / CLOCKS_PER_SEC << endl;
+            else
+                cout << "log file opened fail." << endl;
+        }
+    }
 
-				
-				/*
-				if (allFrameCounter % 3 == 0)
-				{
-
-
-					cout << cap.get(CAP_PROP_POS_FRAMES) << endl;
-					outPrint << cap.get(CAP_PROP_POS_FRAMES) << endl;
-					writer.write(frame);
-
-
-				}
-				else
-				{
-					outPrint << "\t" << cap.get(CAP_PROP_POS_FRAMES) << endl;
-					cout << "\t" << cap.get(CAP_PROP_POS_FRAMES) << endl;
-				}
-				*/
-
-				allFrameCounter++;
-			}
-			
-			cout << endl;
-		}
-		cap.release();
-		writer.release();
-		ecd_time = clock();
-		cout << "\n[STEP 1] : cost time : " << (ecd_time - start_time) / CLOCKS_PER_SEC << endl;
-
-		if (log == 1)
-		{
-			if (outFile.is_open())			
-				outFile << "[STEP 1] : cost time : " << (ecd_time - start_time)/ CLOCKS_PER_SEC << endl;
-			else			
-				cout << "log file opened fail." << endl;			
-		}		
-	}
-
-	outFile.close();
+    outFile.close();
 }
-
-

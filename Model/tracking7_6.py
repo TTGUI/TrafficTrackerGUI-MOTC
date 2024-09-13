@@ -5,6 +5,7 @@ import csv
 from collections import Counter
 from Model.sort7 import SORT
 from shapely.geometry import Polygon
+from tqdm import tqdm
 
 def read_file(file_name):
     with open(file_name, 'r') as f:
@@ -274,62 +275,48 @@ def process_trajectory(quadrilateral_positions):
 
     return new_positions
 
-def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set=(10, 2, 0.1)):
-    # file_name = '台北市信義區松仁路_信義路五段路口80米_C_stab'
-    # lines = read_file(file_name+'_8cls.txt')   
-    lines = read_file(yolo_txt)   
-    
-    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+def main(stab_video, yolo_txt, tracking_csv, show, trk1_set=(10, 2, 0.05), trk2_set=(10, 2, 0.1)):
+    lines = read_file(yolo_txt)
+
     if show:
         cap = cv2.VideoCapture(stab_video)
-    # out = cv2.VideoWriter(file_name+'_result.mp4', fourcc, 9.99, (1920, 1080))
 
-    # trackers_1 = SORT(max_age=10, min_hits=2, iou_threshold=0.01)
-    # trackers_2 = SORT(max_age=10, min_hits=2, iou_threshold=0.2)
-    trackers_1 = SORT(trk1_set[0], trk1_set[1], trk1_set[2]) # 大車 (汽車、卡車、公車)
-    trackers_2 = SORT(trk2_set[0], trk2_set[1], trk2_set[2]) # 小車 (人、機車、自行車)
+    trackers_1 = SORT(trk1_set[0], trk1_set[1], trk1_set[2])  # 大車 (汽車、卡車、公車)
+    trackers_2 = SORT(trk2_set[0], trk2_set[1], trk2_set[2])  # 小車 (人、機車、自行車)
 
     track1 = {} 
-    track2 = {} 
-    for line in lines:
+    track2 = {}
 
+    # Wrap the loop with tqdm to display progress
+    for line in tqdm(lines, desc="Processing frames", total=len(lines)):
         frame_no, rects_raw = parse_line(line)
-        print(f"{frame_no} / {len(lines)}", end='\r')
+
         if show:
             ret, frame = cap.read()
-        
+
         polygons = []
         for rect in rects_raw:
             class_id, conf, points = rect            
             points = points.astype(np.int32)
-          # 將每個四邊形轉換為Polygon對象
             polygons.append(Polygon(points.reshape(4,2)))
-        # 使用迴圈檢查並移除交集面積超過自身面積一半的四邊形
+
+        # Use loop to check and remove rectangles with large intersection
         rects = []
-        i = 0
-        for rect in rects_raw:
+        for i, rect in enumerate(rects_raw):
             if i == 0:
-                rects.append(rect)                
-            # 檢查這個四邊形是否與前面的四邊形交集面積超過自身面積一半
+                rects.append(rect)
             elif not any(polygons[i].intersection(polygons[j]).area / polygons[i].area > 0.5 for j in range(i)):
                 rects.append(rect)
-            i = i+1
-        
-        i = 0 
+
         group1 = []
         group2 = []
         for rect in rects:
-            i = i+1
             class_id, conf, points = rect
             points = points.astype(np.int32)
-            # cv2.polylines(frame, [points], True, (0, 255, 255), 4)
-            # cv2.line(frame, points[0], points[1], (0, 0, 255), 3)
-            center = np.mean(points, axis=0).astype(np.int32)
-            # cv2.putText(frame, f"{i}", tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
-         
+
             rect_5_params = rotated_rect_to_5_params(points)
             fullparams = np.concatenate((np.array(rect_5_params).flatten('C'), np.array(points).flatten('C'), [class_id]), axis=0)
-                       
+
             if class_id in [0, 1, 2]:
                 group1.append(fullparams)
             else:
@@ -339,63 +326,41 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
         tracked_objects_2 = trackers_2.update(np.array(group2))
 
         for track_id, rect, rect2, vote in tracked_objects_1:
-            # boxPoints角度定義不同
-            box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
+            box2 = cv2.boxPoints([(rect[0], rect[1]), (rect[2], rect[3]), 180-rect[4]])
             box = np.intp(box2) 
-            # t0 = int(rect[0]+rect[2]/2*math.cos(rect[4] / 180.0 * np.pi))
-            # t1 = int(rect[1]-rect[2]/2*math.sin(rect[4] / 180.0 * np.pi))
-            # cv2.line(frame, (int(rect[0]), int(rect[1])), (t0, t1), (255, 255, 255), 3)
-            # cv2.drawContours(frame, [box], 0, (255, 0, 0), 3)
-            # cv2.line(frame, box[0], box[1], (255, 128, 128), 3)
-       
-            rect3 = rect2.astype(int).reshape(-1, 2)
-            if show:
-                cv2.line(frame, rect3[0], rect3[1], (0, 0, 255), 2)
-                cv2.polylines(frame, [rect3], True, (128, 128, 255), 3)
-                cv2.putText(frame, str(track_id), (int(rect[0]), int(rect[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)    
-            
-            # if rect2[0] == 0 and rect2[1] == 0:
-                # track1 = add_trajectory(track1, track_id, frame_no, vote, np.zeros((1,8), dtype=np.int32))
-            # else:
-            track1 = add_trajectory(track1, track_id, frame_no, vote, rect3.reshape(1,8))
-         
-        for track_id, rect, rect2, vote in tracked_objects_2:
-            # boxPoints角度定義不同qq
-            box2 = cv2.boxPoints([(rect[0],rect[1]),(rect[2],rect[3]),180-rect[4]])
-            box = np.intp(box2) 
-            # cv2.drawContours(frame, [box], 0, (255, 0, 0), 3)
-            # cv2.line(frame, box[0], box[1], (255, 128, 128), 3)
-       
+
             rect3 = rect2.astype(int).reshape(-1, 2)
             if show:
                 cv2.line(frame, rect3[0], rect3[1], (0, 0, 255), 2)
                 cv2.polylines(frame, [rect3], True, (128, 128, 255), 3)
                 cv2.putText(frame, str(track_id), (int(rect[0]), int(rect[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
 
-            if rect2[0] == 0 and rect2[1] == 0:
-                track2 = add_trajectory(track2, track_id, frame_no, vote, np.zeros((1,8), dtype=np.int32))
-            else:
-                track2 = add_trajectory(track2, track_id, frame_no, vote, rect3.reshape(1,8))
+            track1 = add_trajectory(track1, track_id, frame_no, vote, rect3.reshape(1, 8))
 
-        # out.write(frame)
+        for track_id, rect, rect2, vote in tracked_objects_2:
+            box2 = cv2.boxPoints([(rect[0], rect[1]), (rect[2], rect[3]), 180-rect[4]])
+            box = np.intp(box2) 
+
+            rect3 = rect2.astype(int).reshape(-1, 2)
+            if show:
+                cv2.line(frame, rect3[0], rect3[1], (0, 0, 255), 2)
+                cv2.polylines(frame, [rect3], True, (128, 128, 255), 3)
+                cv2.putText(frame, str(track_id), (int(rect[0]), int(rect[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
+
+            track2 = add_trajectory(track2, track_id, frame_no, vote, rect3.reshape(1, 8))
+
         if show:
             frame2_resized = cv2.resize(frame, (960, 540), cv2.INTER_AREA)
             cv2.imshow('Frame', frame2_resized)
-            # cv2.imwrite(str(frame_no)+'.jpg', frame)
         
-            # print(frame_no)
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):
                 break
 
-        # if frame_no > 150:
-        #     break
-
-    # 開啟文件，並用寫入模式 'w'
+    # Output CSV file
     V_type = "pumctbhg" 
     with open(tracking_csv, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        
         i = 0
         for id, data in track2.items():
             if len(data[11]) > 20:
@@ -405,7 +370,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
                 traj, zero_ratio = interpolate_zeros(reorder_data)
                 if zero_ratio < 0.4:
                     writer.writerow([i, data[1], data[1]+len(traj)-1, 'X', 'X', V_type[np.argmax(data[3:11])]] + list(np.array(traj).flatten()) )
-                    i = i+1
+                    i += 1
                 
         for id, data in track1.items():
             if len(data[11]) > 20:
@@ -415,7 +380,7 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
                     traj = process_trajectory(traj)
                     if zero_ratio < 0.8:
                         writer.writerow([i, data[1], data[1]+len(traj)-1, 'X', 'X', V_type[np.argmax(data[3:11])]] + list(np.array(traj).flatten()) )
-                        i = i+1                    
+                        i += 1
                     continue
                 traj = np.array(data[11]).reshape(-1, 8)               
                 traj = np.array(del_outliers(traj, 15)).reshape(-1, 8)
@@ -423,13 +388,11 @@ def main(stab_video,yolo_txt,tracking_csv,show, trk1_set=(10, 2, 0.05), trk2_set
                 traj, zero_ratio = interpolate_zeros(reorder_data)
                 if zero_ratio < 0.7:
                     writer.writerow([i, data[1], data[1]+len(traj)-1, 'X', 'X', V_type[np.argmax(data[3:11])]] + list(np.array(traj).flatten()) )
-                    i = i+1
-    
+                    i += 1
+
     cap.release()    
-    # out.release()
     csvfile.close()
     cv2.destroyAllWindows()
-
 if __name__ == "__main__":
     main()
 

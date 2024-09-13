@@ -19,7 +19,7 @@ def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
         Kstabilization_GPU.stab_main(stab_input,stab_output,show,cut_txt, output_height, output_width)
     elif StabMode == 'CPU':
         from Model import Kstabilization_T0N
-        Kstabilization_T0N.stab_main(stab_input,stab_output,show,cut_txt)
+        Kstabilization_T0N.stab_main(stab_input,stab_output,show,cut_txt, output_height, output_width)
 
     end = time.time()
 

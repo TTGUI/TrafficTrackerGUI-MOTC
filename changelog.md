@@ -1,10 +1,20 @@
+# TTGUI - Traffic Tracker GUI
 ## Changelog
+
+### v3.10.3 - 2024/09/13
+#### Improvements
+- update Cont\controller.py : add arrgument to controll Kstabilization.py.
+- update Model\Kstabilization.py : add new timer for ETA. add argument to change cpu stab video's layer.
+- update Model\Replay2.py : add new timer for ETA.
+- update Model\tracking7_6.py : add new timer for ETA.
+- update Model\Stab_ECC_GPU_source\Stab_ECC_GPU_source\Stab_ECC_GPU_source.cpp : add new timer for ETA.
+- add/update View\WH_dialog.ui, main_window.py, my_window.ui : add edit dialog to change output video's layer.
 
 ### v3.10.2a - 2024/09/12
 #### Improvements
 - update .gitignore: It seems the Visual Studio folder structure differs between Windows 10 and Windows 11, make sure .gitignore works properly on both.
 
-### v3.10.2 (2024/09/12)
+### v3.10.2 - 2024/09/12
 #### Improvements
 - add start_gui_anacondaEnv.bat : add new start bat when environment build by anaconda. Need to change path for environment and ttgui codes.
 - Model\Kstabilization_T0N.py : close all frame window when process end.

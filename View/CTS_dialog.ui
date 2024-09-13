@@ -116,6 +116,12 @@
      </item>
      <item>
       <widget class="QLabel" name="CTS_trackingSetText2">
+       <property name="font">
+        <font>
+         <family>Agency FB</family>
+         <pointsize>14</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>TextLabel</string>
        </property>

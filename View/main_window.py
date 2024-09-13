@@ -163,6 +163,8 @@ class MainWindow(object):
         self._window.bar_4.triggered.connect(self.changeTIVPbMode)
         self._window.Change_Tracking_Setting.triggered.connect(self.changeTrackingSet)
         self._window.Change_Section_Mode.triggered.connect(self.changeSectionMode)
+        self._window.Change_Output_WxH.triggered.connect(self.changeOutputWH)
+
         if self.stabMode == 'CPU':
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
         elif self.stabMode == 'GPU':
@@ -425,18 +427,6 @@ class MainWindow(object):
 
         self.CTS_dialog.show()
 
-    def changeSectionMode(self):
-        if self.section == "intersection":
-            self.section = "roadsection"
-            conf.setSection_mode(self.section)
-        elif self.section == "roadsection":
-            self.section = "intersection"
-            conf.setSection_mode(self.section)
-        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
-        if self.section == 'intersection':
-            self._window.step5_btn.setText('[STEP 5] (I)\nDrawIO')
-        elif self.section == 'roadsection':
-            self._window.step5_btn.setText('[STEP 5] (R)\nDrawIO')
     def submitTrackingSet(self):
         if self.CTS_dialog.CTS_Edit_1.text() != '':
             trk1 = self.CTS_dialog.CTS_Edit_1.text()
@@ -450,7 +440,44 @@ class MainWindow(object):
 
         self.CTS_dialog.close()
 
+    def changeSectionMode(self):
+        if self.section == "intersection":
+            self.section = "roadsection"
+            conf.setSection_mode(self.section)
+        elif self.section == "roadsection":
+            self.section = "intersection"
+            conf.setSection_mode(self.section)
+        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
+        if self.section == 'intersection':
+            self._window.step5_btn.setText('[STEP 5] (I)\nDrawIO')
+        elif self.section == 'roadsection':
+            self._window.step5_btn.setText('[STEP 5] (R)\nDrawIO')
 
+    def changeOutputWH(self):
+        self.WH_dialog = QDialog()
+        ui_file_name = './View/WH_dialog.ui'
+        file = QFile(ui_file_name)
+        loader = QUiLoader()
+        self.WH_dialog = loader.load(file)
+        file.close()
+        self.WH_dialog.setWindowTitle('Change output video width & height')
+        self.WH_dialog.WH_Height.setText(f'{conf.getOutput_height()}')
+        self.WH_dialog.WH_Width.setText(f'{conf.getOutput_width()}')
+        self.WH_dialog.WH_ok_btn.clicked.connect(self.setOutputWH)
+        self.WH_dialog.show()
+
+    def setOutputWH(self):
+        if self.WH_dialog.WH_HeightEdit.text() != '':
+            height = self.WH_dialog.WH_HeightEdit.text()
+            conf.setOutput_height(height)
+            print(f"output height change to : {height}")
+        if self.WH_dialog.WH_WidthEdit.text() != '':
+            width = self.WH_dialog.WH_WidthEdit.text()
+            conf.setOutput_width(width) 
+            print(f"output width change to : {width}")
+        self.WH_dialog.WH_Height.setText(f'{conf.getOutput_height()}')
+        self.WH_dialog.WH_Width.setText(f'{conf.getOutput_width()}')
+            
     #### Player Board ################################################################
 
     @QtCore.Slot()
