@@ -4,7 +4,7 @@ import scipy.ndimage
 from config import conf
 import os
 
-def Backgroung_main(stab_video, background_img):
+def Backgroung_main(stab_video, background_img, display_callBack):
     cap = cv2.VideoCapture(stab_video)
     frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -21,9 +21,9 @@ def Backgroung_main(stab_video, background_img):
         ret, frame = cap.read()
         if ret and fc % skipframes == 0:
             buf.append(frame)
-            cv2.imshow("background", frame)
+            # cv2.imshow("background", frame)
             cv2.waitKey(20)
-
+            display_callBack(frame)
         fc += skipframes
 
     cap.release()

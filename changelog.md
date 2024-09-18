@@ -1,6 +1,14 @@
 # TTGUI - Traffic Tracker GUI
-
 ## Changelog
+### v3.10.5b - 2024/09/18
+#### Organize
+- update View\my_window.py : improve code structure.
+- update Model\Kstabilization.py : display frame on GUI.
+- update Model\Replay2.py : display frame on GUI.
+- update Model\tracking7_6.py : display frame on GUI.
+- update Model\Nbackground_median.py : display frame on GUI.
+- update Cont\controller.pt : add parameter and argument for display frame call back.
+
 ### v3.10.5a - 2024/09/18
 #### Organize
 - update View\my_window.py : improve code structure.

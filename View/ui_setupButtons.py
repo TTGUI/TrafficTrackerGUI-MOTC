@@ -1,3 +1,5 @@
+from .ui_Schedule import ScheduleMode
+
 def set_Developer(window, main_window):
     """Bind developer option buttons"""
     window.bar_1.triggered.connect(main_window.runPedestrian)
@@ -28,6 +30,9 @@ def set_Developer(window, main_window):
     elif main_window.TIVPmode == 3:
         window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
 
+
+  
+  
   
 def set_Step_Board(window, main_window):
     """Set text for step buttons"""
@@ -184,11 +189,11 @@ def set_Player(window, main_window):
     window.SetEndFrame_btn.setText('Set End Frame')
     window.SetEndFrame_btn.clicked.connect(main_window.setEndFrame)
 
-def setup_all_buttons(window, main_window):
+def setup_all_buttons(main_window):
     """Call all text and binding functions"""
-    set_Developer(window, main_window)
-    set_Step_Board(window, main_window)
-    set_Schedule(window, main_window)
-    set_Player(window, main_window)
+    set_Developer(main_window._window, main_window)
+    set_Step_Board(main_window._window, main_window)
+    set_Schedule(main_window._window, main_window)
+    set_Player(main_window._window, main_window)
 
 

@@ -275,7 +275,7 @@ def process_trajectory(quadrilateral_positions):
 
     return new_positions
 
-def main(stab_video, yolo_txt, tracking_csv, show, trk1_set=(10, 2, 0.05), trk2_set=(10, 2, 0.1)):
+def main(stab_video, yolo_txt, tracking_csv, show, display_callback, trk1_set=(10, 2, 0.05), trk2_set=(10, 2, 0.1) ):
     lines = read_file(yolo_txt)
 
     if show:
@@ -351,7 +351,8 @@ def main(stab_video, yolo_txt, tracking_csv, show, trk1_set=(10, 2, 0.05), trk2_
 
         if show:
             frame2_resized = cv2.resize(frame, (960, 540), cv2.INTER_AREA)
-            cv2.imshow('Frame', frame2_resized)
+            # cv2.imshow('Frame', frame2_resized)
+            display_callback(frame2_resized)
         
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):

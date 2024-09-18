@@ -8,6 +8,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox, QDialog
 from Model.tool import TrackIntegrityVerificationTool
 from pathlib import Path
 
+
 # https://github.com/vispy/vispy/blob/main/vispy/app/backends/_pyside2.py
 from PySide2 import QtTest
 if not hasattr(QtTest.QTest, 'qWait'):
@@ -31,8 +32,6 @@ import os
 from .ui_setup import load_ui
 from .ui_setupFont import set_window_title, set_font, reset_ui_labels
 from .ui_setupButtons import setup_all_buttons
-
-# WARNING : def_setResultFolder() have a potentiality error for path setting when code running on LunixOS
 
 class MainWindow(object):
 
@@ -121,16 +120,13 @@ class MainWindow(object):
     def setup_ui(self):
         self._window = load_ui(self._window)
         self.set_font()
-        setup_all_buttons(self._window, self)
+        setup_all_buttons( self)
 
     def set_font(self):
         """Set window title, icon, and fonts"""
         set_window_title(self._window, conf, self.stabMode, self.yoloModel, self.section)
         set_font(self._window)
         reset_ui_labels(self._window)
-
-
-
 
     def set_video(self, type):
         if type == 1 : # Step 0 Cut Info Player Mode
@@ -316,22 +312,18 @@ class MainWindow(object):
     #### Player Board ################################################################
 
     @QtCore.Slot()
-    def frameDisplay(self, frame) :
-
-        if self.TIVPmode == 3 and self.currentStep == 9 :
+    def frameDisplay(self, frame):
+        if self.TIVPmode == 3 and self.currentStep == 9:
             frame = self.issueFramePrint(frame)
 
-        fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+        fps = str(int(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1))
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 6, cv2.LINE_AA)
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
-        self._window.FPS.setText(fps[:-2])
-        nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
-        self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))
-        frame = cv2.resize(frame, (1440, 810))
-        show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
-        self._window.display.setScaledContents(True) # 自適應邊框  
-        self._window.display.setPixmap(QPixmap.fromImage(showImage))
+        self._window.FPS.setText(fps)
+        now_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
+        self._window.timingSlider.setValue(int((now_frame / self.allFream) * 100))
+
+        self.qtFrameDisplay(frame)
 
     def issueFramePrint(self, frame):
         def RTcenter(points):
@@ -580,6 +572,24 @@ class MainWindow(object):
                 cv2.putText(frame, typecode[cls], (pts[0], pts[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, new_colors[cls], 2)
 
         return frame
+
+    @QtCore.Slot()
+    def qtFrameDisplay(self, frame):
+        # Ensure the frame is in the correct format and contiguous
+        show = frame[..., ::-1].copy()  # Convert BGR to RGB and make contiguous
+
+        height, width, channel = show.shape
+        bytes_per_line = 3 * width
+
+        # Create QImage from numpy data
+        show_image = QImage(show.data, width, height, bytes_per_line, QImage.Format_RGB888)
+
+        # Create QPixmap from QImage
+        pixmap = QPixmap.fromImage(show_image)
+
+        # Set scaled contents to True to let QLabel handle scaling
+        self._window.display.setScaledContents(True)
+        self._window.display.setPixmap(pixmap)
 
     @QtCore.Slot()
     def load(self):
@@ -1013,13 +1023,13 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def setResultFolder(self):
-        temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
-      
-        if temp == "/" :
+        temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath)
+    
+        if not temp:
             print("[CANCEL] Set Result Folder Cancel.")
-            
-        else :
-            self.resultPath = temp
+        else:
+            # Ensure there is a trailing separator
+            self.resultPath = os.path.join(temp, '')
             self.setResultFolderBtnText()
             logger.info(f"[Set resultFolder] ->> {self.resultPath}")
             self.changeActionName()
@@ -1037,13 +1047,14 @@ class MainWindow(object):
         self._window.setResultFolder_btn.setText('Set Result Folder\n['+ out +']')
 
     def openResultFolder(self):
-        if os.path.isdir(self.resultPath) :
-            if os.name == 'nt' :
-                QProcess.startDetached('explorer', [os.path.normpath(self.resultPath)])
+        if os.path.isdir(self.resultPath):
+            normalized_path = os.path.normpath(self.resultPath)
+            if os.name == 'nt':
+                QProcess.startDetached('explorer', [normalized_path])
             else:
-                subprocess.call(['xdg-open', os.path.normpath(self.resultPath)])
-        else :
-            print("<< Warinig : Your Result Folder is not exist.")
+                QProcess.startDetached('xdg-open', [normalized_path])
+        else:
+            print("<< Warning: Your Result Folder does not exist.")
 
     def changeStep(self, sp):
         self.currentStep = sp
@@ -1076,7 +1087,7 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 1]")
             if self.precursorCheck():
-                controller.con_step1(self.stab_input, self.stab_output, self.show, self.cutinfo_txt, self.stabMode)
+                controller.con_step1(self.stab_input, self.stab_output, self.show, self.cutinfo_txt, self.stabMode, self.qtFrameDisplay)
                
     @QtCore.Slot()
     def step2(self): # Yolo
@@ -1100,7 +1111,7 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 3]")
             if self.precursorCheck():
-                controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv,self.show, conf.getTrk1_Set(), conf.getTrk2_Set())
+                controller.con_step3(self.stab_video, self.yolo_txt, self.tracking_csv, self.show, self.qtFrameDisplay, conf.getTrk1_Set(), conf.getTrk2_Set())
 
     @QtCore.Slot()
     def step4(self): # BackGround
@@ -1112,8 +1123,8 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 4]")
             if self.precursorCheck():
-                controller.con_step4(self.stab_video,self.background_img)
-            
+                controller.con_step4(self.stab_video, self.background_img, self.qtFrameDisplay)
+
     @QtCore.Slot()
     def step5(self): # DrawIO
         self.changeStep(5)
@@ -1148,7 +1159,7 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 7]")
             if self.precursorCheck():
-                controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
+                controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show, self.qtFrameDisplay)
 
     @QtCore.Slot()
     def step8_singleTIV(self):
