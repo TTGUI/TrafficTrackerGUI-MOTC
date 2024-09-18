@@ -245,7 +245,7 @@ class MainWindow(object):
         self._window.showTracking_btn.clicked.connect(self.showTracking)
         self._window.showTracking_btn.setToolTip('[S9] Show tracking info or not.')
 
-        self._window.ActionName_btn.setText('Edit Action Name')
+        self._window.ActionName_btn.setText('Edit Action Name\n[]')
         self._window.ActionName_btn.clicked.connect(self.changeActionName)
 
         self._window.selectName_btn.setText('Select Action Name from File')
@@ -1036,7 +1036,7 @@ class MainWindow(object):
                 out = out + '\n'
                 counter = 0
 
-        self._window.ActionName_btn.setText("Edit ActionName\n[" + out + ']')
+        self._window.ActionName_btn.setText("Edit Action Name\n[" + out + ']')
 
     @QtCore.Slot()
     def changeActionName(self) : # user odering actionName.

@@ -1,4 +1,10 @@
 # TTGUI - Traffic Tracker GUI
+
+## Changelog
+### v3.10.4a - 2024/09/18
+#### Improvements
+- update View\my_window.py : content fixed.
+
 ## Changelog
 ### v3.10.4 - 2024/09/16
 #### Improvements
