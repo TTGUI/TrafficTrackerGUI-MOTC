@@ -1,6 +1,14 @@
 # TTGUI - Traffic Tracker GUI
 
 ## Changelog
+### v3.10.5a - 2024/09/18
+#### Organize
+- update View\my_window.py : improve code structure.
+- add View\ui_setup.py : improve code structure.
+- add View\ui_setupButtens.py : improve code structure.
+- add View\ui_setupFont.py:  improve code structure.
+
+## Changelog
 ### v3.10.4a - 2024/09/18
 #### Improvements
 - update View\my_window.py : content fixed.
