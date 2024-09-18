@@ -164,6 +164,7 @@ class MainWindow(object):
         self._window.Change_Tracking_Setting.triggered.connect(self.changeTrackingSet)
         self._window.Change_Section_Mode.triggered.connect(self.changeSectionMode)
         self._window.Change_Output_WxH.triggered.connect(self.changeOutputWH)
+        self._window.TIV_Setting.triggered.connect(self.changeTIVsetting)
 
         if self.stabMode == 'CPU':
             self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
@@ -477,7 +478,33 @@ class MainWindow(object):
             print(f"output width change to : {width}")
         self.WH_dialog.WH_Height.setText(f'{conf.getOutput_height()}')
         self.WH_dialog.WH_Width.setText(f'{conf.getOutput_width()}')
-            
+
+    def changeTIVsetting(self):        
+        self.TIV_dialog = QDialog()
+        ui_file_name = './View/TIV_dialog.ui'
+        file = QFile(ui_file_name)
+        loader = QUiLoader()
+        self.TIV_dialog = loader.load(file)
+        file.close()
+        self.TIV_dialog.setWindowTitle('Change TIV Setting')
+        self.TIV_dialog.TIV_IingoreFrames.setText(f'{conf.getTIV_ignoreFrame()}')
+        self.TIV_dialog.TIV_ExtendPrintFrame.setText(f'{conf.getTIVP_ExtendPrintFrame()}')
+        self.TIV_dialog.TIV_ok_btn.clicked.connect(self.setTIVSetting)
+        self.TIV_dialog.show()
+
+    def setTIVSetting(self):
+        if self.TIV_dialog.TIV_IingoreFramesEdit.text() != '':
+            Iingore = self.TIV_dialog.TIV_IingoreFramesEdit.text()
+            conf.setTIV_ignoreFrame(Iingore)
+            print(f"TIV Iingore Frames change to : {Iingore}")
+        if self.TIV_dialog.TIV_ExtendPrintFrameEdit.text() != '':
+            ExtendPrintFrame = self.TIV_dialog.TIV_ExtendPrintFrameEdit.text()
+            conf.setTIVP_ExtendPrintFrame(ExtendPrintFrame) 
+            print(f"output width change to : {ExtendPrintFrame}")
+        self.TIV_dialog.TIV_IingoreFrames.setText(f'{conf.getTIV_ignoreFrame()}')
+        self.TIV_dialog.TIV_ExtendPrintFrame.setText(f'{conf.getTIVP_ExtendPrintFrame()}')
+
+
     #### Player Board ################################################################
 
     @QtCore.Slot()
@@ -539,35 +566,160 @@ class MainWindow(object):
 
         ### Add Issue Tracking ###
 
-        findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)) # 老師的gate_csv是以1為frame數起點，因此在此不需要-1來取得當前frame的index，與其他地方不同
-        j = 0
-        if len(self.TIVIsampleList) != 0 :
-            while int(self.V[j][0] != self.TIVIsampleList[self.currentIssueIndex].split(',')[0])  :
-                j += 1
 
 
-        linePoints = self.V[j]
-        centers = []
-        temp = []
-        for count in range (6,len(linePoints)):
-            if len(temp) < 8 :
-                temp.append(linePoints[count])
-            else :
-                centers.append(RTcenter(temp))            
-                temp = []
-                temp.append(linePoints[count])
-        
-        centerIndex = int(linePoints[1])
-        k = 0
-        while centerIndex <= findex and centerIndex <= int(linePoints[2]) :
- 
-            if k == len(centers) - 1 :
-                cv2.circle(frame, (centers[k][0],centers[k][1]), 7, (0, 255, 255), -1)
-                cv2.circle(frame, (centers[k][0],centers[k][1]), 11, (0, 255, 255), 2)
-            elif k < len(centers) - 1 :
-                cv2.circle(frame, (centers[k][0],centers[k][1]), 3, (127, 255, 0), 2)
-            k += 1
-            centerIndex += 1
+        findex = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))  # Current frame index
+
+        # Prepare a set of issue IDs from self.TIVIsampleList
+        # Assuming that self.TIVIsampleList contains strings where the issue ID is the first element when split by ','
+        issue_ids_to_draw = set()
+        for issue_str in self.TIVIsampleList:
+            issue_id = int(issue_str.split(',')[0])
+            issue_ids_to_draw.add(issue_id)
+
+        # Create an overlay for semi-transparent drawing
+        overlay = frame.copy()
+
+        # Initialize alpha to zero
+        alpha = 0.0  # Default transparency factor
+
+        # Flag to check if any drawing was performed
+        drawing_performed = False
+
+        # Initialize list to store trajectory lines to draw after blending
+        trajectory_lines = []
+
+        # Loop through all issues in self.V and only process those in issue_ids_to_draw
+        for j in range(len(self.V)):
+            linePoints = self.V[j]
+            issue_id = int(linePoints[0])
+
+            # Only process issues that are in the TIVP issue list
+            if issue_id in issue_ids_to_draw:
+                start_frame = int(linePoints[1])  # Start frame of the object
+                end_frame = int(linePoints[2])    # End frame of the object
+
+                # Check if the issue is active at the current frame
+                if start_frame <= findex <= end_frame:
+                    drawing_performed = True  # We will perform drawing
+
+                    # Assign colors and alpha inside the loop
+                    if issue_id == int(self.TIVIsampleList[self.currentIssueIndex].split(',')[0]):
+                        # Current issue - use distinct colors
+                        fill_color = (0, 255, 255)    # Cyan
+                        box_color = (0, 0, 255)       # Red box
+                        center_color = (0, 255, 255)  # Cyan center
+                        trajectory_color = (0, 255, 255)  # Cyan for trajectory lines
+                        alpha = max(alpha, 0.4)       # Use the maximum alpha value
+                    else:
+                        # Other issues
+                        fill_color = (0, 255, 0)      # Green
+                        box_color = (0, 255, 0)       # Green box
+                        center_color = (0, 255, 0)    # Green center
+                        trajectory_color = (0, 255, 0)    # Green for trajectory lines
+                        alpha = max(alpha, 0.2)       # Use the maximum alpha value
+
+                    # Number of frames to process is from start_frame to min(findex, end_frame)
+                    frames_to_process = findex - start_frame + 1
+
+                    centers = []
+                    corners_list = []
+                    temp = []
+
+                    # Extract corner points for the frames up to the current frame
+                    for count in range(6, 6 + frames_to_process * 8):
+                        temp.append(int(linePoints[count]))
+                        if len(temp) == 8:
+                            centers.append(RTcenter(temp))
+                            corners_list.append(temp.copy())
+                            temp = []
+
+                    # Prepare lists for each corner point trajectory
+                    corner0_list = []
+                    corner1_list = []
+                    corner2_list = []
+                    corner3_list = []
+
+                    for corners in corners_list:
+                        corner0_list.append((corners[0], corners[1]))
+                        corner1_list.append((corners[2], corners[3]))
+                        corner2_list.append((corners[4], corners[5]))
+                        corner3_list.append((corners[6], corners[7]))
+
+                    # Draw filled polygons for the trajectory between frames
+                    for i in range(1, len(corners_list)):
+                        prev_corners = corners_list[i - 1]
+                        curr_corners = corners_list[i]
+
+                        # Create polygons for previous and current positions
+                        poly_prev = np.array([
+                            [prev_corners[0], prev_corners[1]],
+                            [prev_corners[2], prev_corners[3]],
+                            [prev_corners[4], prev_corners[5]],
+                            [prev_corners[6], prev_corners[7]]
+                        ], dtype=np.int32)
+
+                        poly_curr = np.array([
+                            [curr_corners[0], curr_corners[1]],
+                            [curr_corners[2], curr_corners[3]],
+                            [curr_corners[4], curr_corners[5]],
+                            [curr_corners[6], curr_corners[7]]
+                        ], dtype=np.int32)
+
+                        # Combine polygons to form a quadrilateral between frames
+                        combined_poly = np.vstack((poly_prev, poly_curr[::-1]))
+
+                        # Draw the filled polygon on the overlay
+                        cv2.fillConvexPoly(overlay, combined_poly, fill_color)
+
+                    # Store the trajectory lines to draw after blending
+                    for c_list in [corner0_list, corner1_list, corner2_list, corner3_list]:
+                        for i in range(1, len(c_list)):
+                            x_prev, y_prev = c_list[i - 1]
+                            x_curr, y_curr = c_list[i]
+                            # Store the line to draw later
+                            trajectory_lines.append(((x_prev, y_prev), (x_curr, y_curr), trajectory_color))
+
+                    # Draw box and center at the start position
+                    if len(corners_list) > 0:
+                        # Start position
+                        start_pts = corners_list[0]
+                        start_corners = [
+                            (start_pts[0], start_pts[1]),
+                            (start_pts[2], start_pts[3]),
+                            (start_pts[4], start_pts[5]),
+                            (start_pts[6], start_pts[7])
+                        ]
+                        cv2.polylines(overlay, [np.array(start_corners)], isClosed=True, color=box_color, thickness=2)
+
+                        start_center = centers[0]
+                        cv2.circle(overlay, (start_center[0], start_center[1]), 7, center_color, -1)
+                        cv2.circle(overlay, (start_center[0], start_center[1]), 11, center_color, 2)
+
+                    # Draw box and center at the current position
+                    if len(corners_list) > 0:
+                        # Current position
+                        end_pts = corners_list[-1]
+                        end_corners = [
+                            (end_pts[0], end_pts[1]),
+                            (end_pts[2], end_pts[3]),
+                            (end_pts[4], end_pts[5]),
+                            (end_pts[6], end_pts[7])
+                        ]
+                        cv2.polylines(overlay, [np.array(end_corners)], isClosed=True, color=box_color, thickness=2)
+
+                        end_center = centers[-1]
+                        cv2.circle(overlay, (end_center[0], end_center[1]), 7, center_color, -1)
+                        cv2.circle(overlay, (end_center[0], end_center[1]), 11, center_color, 2)
+
+        # Blend the overlay with the original frame only if drawing was performed
+        if drawing_performed:
+            cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+
+            # Now draw the trajectory lines directly on the frame after blending
+            for line in trajectory_lines:
+                pt1, pt2, color = line
+                cv2.line(frame, pt1, pt2, color, thickness=2)
 
         ### Add Tracking lines ###
         colors = [(50,0,255), (50,138,255), (50,255,255), (255,255,235), (50,255,50), (255,235,50), (255,50,235), (255,50,50)]
@@ -594,12 +746,12 @@ class MainWindow(object):
                         cv2.line(frame, (pos[6], pos[7]), (pos[0], pos[1]), colors[typecode.find(str(self.V[j][5]))], thickness)       
 
                     if self.displayType :
-                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
-                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
+                        cv2.putText(frame, str(self.V[j][0])+", "+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
+                        cv2.putText(frame, str(self.V[j][0])+", "+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
 
                     elif len(self.TIVIsampleList)!=0 and int(self.V[j][0] == self.TIVIsampleList[self.currentIssueIndex].split(',')[0]) :
-                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
-                        cv2.putText(frame, str(self.V[j][0])+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
+                        cv2.putText(frame, str(self.V[j][0])+", "+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,0,0), 3)
+                        cv2.putText(frame, str(self.V[j][0])+", "+self.V[j][3]+">"+self.V[j][4], (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
 
         if self.show : # display yolo detect.
             new_colors = [(0,0,255), (0,128,255), (0,255,255), (255,40,255), (0,255,0), (255,100,0), (255,0,100), (100,0,0)] 

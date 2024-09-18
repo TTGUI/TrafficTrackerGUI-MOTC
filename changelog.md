@@ -1,5 +1,9 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
+### v3.10.4 - 2024/09/16
+#### Improvements
+- update View\my_window.py : add new TIVP replay UI, add TIV dialog to change TIV setting.
+
 
 ### v3.10.3 - 2024/09/13
 #### Improvements

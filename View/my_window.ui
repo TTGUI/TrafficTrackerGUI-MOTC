@@ -632,6 +632,7 @@
     <addaction name="Change_Tracking_Setting"/>
     <addaction name="Change_Section_Mode"/>
     <addaction name="Change_Output_WxH"/>
+    <addaction name="TIV_Setting"/>
    </widget>
    <addaction name="menudebugMode"/>
   </widget>
@@ -669,6 +670,11 @@
   <action name="Change_Output_WxH">
    <property name="text">
     <string>Change Output WxH</string>
+   </property>
+  </action>
+  <action name="TIV_Setting">
+   <property name="text">
+    <string>TIV Setting</string>
    </property>
   </action>
  </widget>

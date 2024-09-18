@@ -72,7 +72,10 @@ class TIVT:
         if lineSp[3][0] != 'X' and lineSp[4][0] != 'X' and lineSp[3][0] == lineSp[4][0] :
             # print("same " + lineSp[3] + " " + lineSp[4])
             return True
-        else :
+        elif lineSp[3] != 'X' and lineSp[4] != 'X' and lineSp[3] == lineSp[4] :
+            return True
+        else:
+
             return False
 
     def div(self, A, B) :

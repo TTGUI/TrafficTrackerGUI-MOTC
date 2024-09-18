@@ -74,10 +74,10 @@ def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, dis
                     cv2.line(frame, (pos[6], pos[7]), (pos[0], pos[1]), colors[typecode.find(str(V[j][5]))], 4)
 
                     if displayType:
-                        cv2.putText(frame, str(V[j][0])+","+V[j][3]+">"+V[j][4], 
+                        cv2.putText(frame, str(V[j][0])+", "+V[j][3]+">"+V[j][4], 
                                     (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 3)
-                        cv2.putText(frame, str(V[j][0])+","+V[j][3]+">"+V[j][4], 
+                        cv2.putText(frame, str(V[j][0])+", "+V[j][3]+">"+V[j][4], 
                                     (int((pos[0]+pos[4])/2)-50, int((pos[1]+pos[5])/2)+10), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
 
