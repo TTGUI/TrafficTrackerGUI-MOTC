@@ -1,10 +1,13 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
 
-### v3.10.6 - 2024/09/19
-#### BugFixed
-- fix Model\tracking7_6.py : cap not define when undisplay mode.
+### v3.10.7 - 2024/09/19
+#### Bug Fixed
+- fix Model\drawIO2.py, drawIO3.py : read image in BGR mode.
 
+### v3.10.6 - 2024/09/19
+#### Bug Fixed
+- fix Model\tracking7_6.py : cap not define when undisplay mode.
 
 ### v3.10.5b - 2024/09/18
 #### Organize

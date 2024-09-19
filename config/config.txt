@@ -1,4 +1,4 @@
-Version=v3.10.6
+Version=v3.10.7
 Step1_StabMode=CPU
 Trk1_Set=10,2,0.05
 Trk2_Set=10,2,0.1

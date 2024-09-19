@@ -124,7 +124,7 @@ class Draw:
         import os
         if os.name == 'nt':
             frame = cv2.imdecode(np.fromfile(self.bk_jpg,dtype=np.uint8),-1)
-            frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)
+            # frame = cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)
         else:
             frame = cv2.imread(self.bk_jpg)
 
