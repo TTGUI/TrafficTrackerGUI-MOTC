@@ -29,7 +29,7 @@
 
 ### v3.10.3 - 2024/09/13
 #### Improvements
-- update Cont\controller.py : add arrgument to controll Kstabilization.py.
+- update Cont\controller.py : add argument to controll Kstabilization.py.
 - update Model\Kstabilization.py : add new timer for ETA. add argument to change cpu stab video's layer.
 - update Model\Replay2.py : add new timer for ETA.
 - update Model\tracking7_6.py : add new timer for ETA.
