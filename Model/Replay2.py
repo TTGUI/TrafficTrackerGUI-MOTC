@@ -6,7 +6,7 @@ import re
 from logs import logger
 from tqdm import tqdm
 
-def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show) :
+def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show , display_callback) :
     # video = cv2.VideoCapture("台北市信義區松仁路_信義路五段路口80米_A_stab.avi")
     video = cv2.VideoCapture(stab_video)
     
@@ -83,7 +83,8 @@ def Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, dis
 
         frame = cv2.resize(frame, (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))), cv2.INTER_AREA)
         if show:
-            cv2.imshow('frame', frame)
+            # cv2.imshow('frame', frame)
+            display_callback(frame)
         out.write(frame)
 
         cv2.waitKey(1)

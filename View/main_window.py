@@ -8,6 +8,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox, QDialog
 from Model.tool import TrackIntegrityVerificationTool
 from pathlib import Path
 
+
 # https://github.com/vispy/vispy/blob/main/vispy/app/backends/_pyside2.py
 from PySide2 import QtTest
 if not hasattr(QtTest.QTest, 'qWait'):
@@ -28,7 +29,9 @@ from pathlib import Path
 import cv2
 import os
 
-# WARNING : def_setResultFolder() have a potentiality error for path setting when code running on LunixOS
+from .ui_setup import load_ui
+from .ui_setupFont import set_window_title, set_font, reset_ui_labels
+from .ui_setupButtons import setup_all_buttons
 
 class MainWindow(object):
 
@@ -41,6 +44,10 @@ class MainWindow(object):
         Raises:
           None
         """
+        # Main Setting
+        self.actionName = "inital_action_name"
+        self.resultPath = "./result/"
+
         # Deveploer Bar
         self.stabMode = conf.getStabMode() # 'CPU' 'GPU'
         self.yoloModel = conf.getYoloModel() #  20211109172733_last_200_1920.pt / ect.
@@ -62,13 +69,8 @@ class MainWindow(object):
         self.page = 0
         self.pageLen = 10
 
-        # UI
-        self._window = None
-        self.setup_ui()
-        self.actionName = "inital_action_name"
-        self.resultPath = "./result/"
-
         # Prepare
+        self.video_init = False
         self.droneFolderPath = "./data"
         self.cutinfo_txt = self.resultPath + self.actionName + "_cutInfo.txt"
         self.currentStartID = -1
@@ -78,6 +80,7 @@ class MainWindow(object):
         self.stab_input = self.droneFolderPath
         self.stab_output = self.resultPath + self.actionName + "_stab.mp4"
         self.show = True
+        
 
         # Mtracking 
         self.stab_video = self.stab_output
@@ -88,7 +91,7 @@ class MainWindow(object):
         self.background_img = self.resultPath+ self.actionName +"_background.jpg" # English Path only....
 
         # OdrawIO & PIOadded
-
+        self.section = conf.getSection_mode()
         self.gateLineIO_txt = self.resultPath + self.actionName + "_IO.txt"
         self.gate_tracking_csv = self.resultPath + self.actionName + "_gate.csv"
 
@@ -101,6 +104,10 @@ class MainWindow(object):
         self.singelTIVpath = self.resultPath + self.actionName + "_TIV.csv"
         self.showTrackingBool = True
 
+        # UI
+        self._window = None
+        self.setup_ui()
+
         """
         YOU ALOS NEED TO MODIFY FUNCTION 'changeActionName'
         """
@@ -111,218 +118,15 @@ class MainWindow(object):
         return self._window
 
     def setup_ui(self):
-        loader = QUiLoader()
-        file = QFile('./View/my_window.ui')
-        file.open(QFile.ReadOnly)
-        self._window = loader.load(file)
-        file.close()
+        self._window = load_ui(self._window)
+        self.set_font()
+        setup_all_buttons( self)
 
-        self.set_title()
-        self.set_buttons()
-
-        self.video_init = False
-        
-    def set_title(self):
-        """Setup icon"""
-        self.iconPath = './View/icon.png'
-        if Path(self.iconPath).is_file():
-            self._window.setWindowIcon(QIcon(self.iconPath))
-        else:
-            logger.warning(f" Icon file not found : [{self.iconPath}]")
-
-        """Setup label"""
-        self.section = ""
-        
-        if conf.getSection_mode() == "intersection" : self.section = "intersection"
-        elif conf.getSection_mode() == "roadsection" : self.section = "roadsection"
-
-        self._window.title.setText(str(conf.RTVersion()) + " | " + self.stabMode + " | " + self.yoloModel + " | " + self.section)
-        self._window.setWindowTitle(conf.RTVersion())
-        self._window.cutinfo.setText('')
-        self._window.display.setText('')
-        self._window.FPS.setText('')
-        self._window.ActionName_edit.setText('inital_action_name')
-
-        # set font
-        font = QFont("Arial", 15, QFont.Bold)
-        self._window.title.setFont(font)
-        font = QFont("Arial", 11)
-        self._window.setFont(font)
-        # set widget size (x, y, width, height)
-        # self._window.title.setGeometry(0, 0, 300, 30)
-        # set alignment
-        # self._window.title.setAlignment(Qt.AlignBottom | Qt.AlignCenter)
-
-    def set_buttons(self):
-        """Setup buttons"""
-
-        #### Developer Options ################################################################
-        self._window.bar_1.triggered.connect(self.runPedestrian)
-        self._window.bar_2.triggered.connect(self.changeStabMode)
-        self._window.bar_3.triggered.connect(self.changeYoloModel)
-        self._window.bar_4.triggered.connect(self.changeTIVPbMode)
-        self._window.Change_Tracking_Setting.triggered.connect(self.changeTrackingSet)
-        self._window.Change_Section_Mode.triggered.connect(self.changeSectionMode)
-        self._window.Change_Output_WxH.triggered.connect(self.changeOutputWH)
-        self._window.TIV_Setting.triggered.connect(self.changeTIVsetting)
-
-        if self.stabMode == 'CPU':
-            self._window.bar_2.setText("Change Stabilazation Mode | [ CPU ]")
-        elif self.stabMode == 'GPU':
-            self._window.bar_2.setText("Change Stabilazation Mode | [ GPU ]")
-
-        if self.TIVPmode == 1:
-            self._window.bar_4.setText("Change TIVP Mode | [ Video ]")
-        elif self.TIVPmode == 2:
-            self._window.bar_4.setText("Change TIVP Mode | [ Image ]")
-        elif self.TIVPmode == 3:
-            self._window.bar_4.setText("Change TIVP Mode | [ Real Time Display ]")
-
-        #### Step Board ########################################################################
-        self._window.DroneFolder_btn.setText('Set Drone Folder')
-        self._window.DroneFolder_btn.clicked.connect(self.droneFolder)
-
-
-        self._window.openFolder_btn_2.setText('O\np\ne\nn')
-        self._window.openFolder_btn_2.clicked.connect(self.openDroneFolder)
-
-        self._window.setResultFolder_btn.setText('Set Result Folder\n[./result/]')
-        self._window.setResultFolder_btn.clicked.connect(self.setResultFolder)
-
-        self._window.openFolder_btn.setText('O\np\ne\nn')
-        self._window.openFolder_btn.clicked.connect(self.openResultFolder)
-
-        self._window.step0_btn.setText('[STEP 0]\nVideo Cut Set')
-        self._window.step0_btn.clicked.connect(self.step0)
-        
-        if self.stabMode == 'CPU':
-            self._window.step1_btn.setText('[STEP 1] (C)\nStable')
-        elif self.stabMode == 'GPU':
-            self._window.step1_btn.setText('[STEP 1] (G)\nStable')
-        self._window.step1_btn.clicked.connect(self.step1)
-
-        self._window.step2_btn.setText('[STEP 2]\nYolo')
-        self._window.step2_btn.clicked.connect(self.step2)
-
-        self._window.step3_btn.setText('[STEP 3]\nTracking')
-        self._window.step3_btn.clicked.connect(self.step3)
-
-        self._window.step4_btn.setText('[STEP 4]\nBackground')
-        self._window.step4_btn.clicked.connect(self.step4)
-
-        if self.section == 'intersection':
-            self._window.step5_btn.setText('[STEP 5] (I)\nDrawIO')
-        elif self.section == 'roadsection':
-            self._window.step5_btn.setText('[STEP 5] (R)\nDrawIO')
-        self._window.step5_btn.clicked.connect(self.step5)
-
-        self._window.step6_btn.setText('[STEP 6]\nIO Added')
-        self._window.step6_btn.clicked.connect(self.step6)
-
-        self._window.step7_btn.setText('[STEP 7]\nReplay')
-        self._window.step7_btn.clicked.connect(self.step7)
-
-        self._window.TIV_btn.setText("[STEP 8]\nTrackIntegrityVerification")
-        self._window.TIV_btn.clicked.connect(self.step8_singleTIV)
-
-        if self.TIVPmode == 1:
-            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (V)')
-        elif self.TIVPmode == 2:
-            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (I)')
-        elif self.TIVPmode == 3:
-            self._window.TIVPrinter_btn.setText('[STEP 9]\nTIV Printer (R)')
-        self._window.TIVPrinter_btn.clicked.connect(self.step9_TIVPrinter)
-
-        self._window.show_btn.setText('Show')
-        self._window.show_btn.clicked.connect(self.show)
-        self._window.show_btn.setToolTip('[S1,3,7] Show process frame or background.')
-
-        self._window.DisplayType_btn.setText('Display ID')
-        self._window.DisplayType_btn.clicked.connect(self.DisplayType)
-        self._window.DisplayType_btn.setToolTip('[S7,9] Show tracking ID or not.')
-
-        self._window.showTracking_btn.setText('Show Tracking')
-        self._window.showTracking_btn.clicked.connect(self.showTracking)
-        self._window.showTracking_btn.setToolTip('[S9] Show tracking info or not.')
-
-        self._window.ActionName_btn.setText('Edit Action Name\n[]')
-        self._window.ActionName_btn.clicked.connect(self.changeActionName)
-
-        self._window.selectName_btn.setText('Select Action Name from File')
-        self._window.selectName_btn.clicked.connect(self.selectName)        
-
-        #### Schedule Board ################################################################
-        self._window.ScheduleMode_btn.setText('Schedule Mode <OFF>')
-        self._window.ScheduleMode_btn.clicked.connect(self.ScheduleMode)
-
-        self._window.StartSchedule_btn.setText('Start Schedule')
-        self._window.StartSchedule_btn.clicked.connect(self.StartSchedule)
-
-        self._window.GetSchedule_btn.setText('Get Scheudle')
-        self._window.GetSchedule_btn.clicked.connect(self.GetSchedule)
-        self._window.GetSchedule_btn.setToolTip('Load current schedule item\nto workspace setting.')
-
-        self._window.SetSchedule_btn.setText('Set Scheudle')
-        self._window.SetSchedule_btn.clicked.connect(self.SetSchedule)
-        self._window.SetSchedule_btn.setToolTip('Replace current schedule item\nwith workspace setting.')
-
-        self._window.DeleteSchedule_btn.setText('Delete Schedule')
-        self._window.DeleteSchedule_btn.clicked.connect(self.DeleteSchedule)
-        self._window.DeleteSchedule_btn.setToolTip('Delete current schedule item.')
-
-        self._window.LoadScheduleFile_btn.setText('Load Schedule File')
-        self._window.LoadScheduleFile_btn.clicked.connect(self.loadSchedule)       
-
-        self._window.SaveScheduleFile_btn.setText('Save Schedule File')
-        self._window.SaveScheduleFile_btn.clicked.connect(self.saveSchedule)    
-
-        self._window.ForwardPage_btn.setText('<<== Page')
-        self._window.ForwardPage_btn.clicked.connect(self.forwardPage)
-
-        self._window.NextPage_btn.setText('Page ==>>')
-        self._window.NextPage_btn.clicked.connect(self.nextPage)
-
-        ##### Player Board ################################################################
-
-        self._window.pause_btn.setText('Pause')
-        self._window.pause_btn.clicked.connect(self.pause)
-
-        self._window.play_btn.setText('Play')
-        self._window.play_btn.clicked.connect(self.play)
-
-        self._window.stop_btn.setText('Stop')
-        self._window.stop_btn.clicked.connect(self.stop)
-
-        self._window.fpsback100_btn.setText('<<<')
-        self._window.fpsback100_btn.clicked.connect(self.fpsback100)
-
-        self._window.fpsnext100_btn.setText('>>>')
-        self._window.fpsnext100_btn.clicked.connect(self.fpsnext100)
-
-        self._window.fpsback1_btn.setText('<')
-        self._window.fpsback1_btn.clicked.connect(self.fpsback1)
-
-        self._window.fpsnext1_btn.setText('>')
-        self._window.fpsnext1_btn.clicked.connect(self.fpsnext1)
-        self._window.jump_btn.setText('Jump')
-        self._window.jump_btn.clicked.connect(self.jump)
-        self._window.jump_btn.setToolTip('In TIVP-R : add `i` before issue ID\nwhich you want to add.\nex`i999`')
-        
-
-        self._window.timingSlider.sliderMoved.connect(self.video_position)
-
-        self._window.Back_btn.setText('▲ Back')
-        self._window.Back_btn.clicked.connect(self.back)
-
-        self._window.Next_btn.setText('▼ Next')
-        self._window.Next_btn.clicked.connect(self.next)
-
-        self._window.SetStartFrame_btn.setText('SetStartFrame')
-        self._window.SetStartFrame_btn.clicked.connect(self.setStartFrame)
-
-        self._window.SetEndFrame_btn.setText('SetEndFrame')
-        self._window.SetEndFrame_btn.clicked.connect(self.setEndFrame)
-
+    def set_font(self):
+        """Set window title, icon, and fonts"""
+        set_window_title(self._window, conf, self.stabMode, self.yoloModel, self.section)
+        set_font(self._window)
+        reset_ui_labels(self._window)
 
     def set_video(self, type):
         if type == 1 : # Step 0 Cut Info Player Mode
@@ -508,22 +312,18 @@ class MainWindow(object):
     #### Player Board ################################################################
 
     @QtCore.Slot()
-    def frameDisplay(self, frame) :
-
-        if self.TIVPmode == 3 and self.currentStep == 9 :
+    def frameDisplay(self, frame):
+        if self.TIVPmode == 3 and self.currentStep == 9:
             frame = self.issueFramePrint(frame)
 
-        fps = str(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1)
+        fps = str(int(self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1))
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 6, cv2.LINE_AA)
         cv2.putText(frame, fps, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3, cv2.LINE_AA)
-        self._window.FPS.setText(fps[:-2])
-        nowFream = self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
-        self._window.timingSlider.setValue(int((nowFream/self.allFream)*100))
-        frame = cv2.resize(frame, (1440, 810))
-        show = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        showImage = QImage(show.data, show.shape[1], show.shape[0], QImage.Format_RGB888)
-        self._window.display.setScaledContents(True) # 自適應邊框  
-        self._window.display.setPixmap(QPixmap.fromImage(showImage))
+        self._window.FPS.setText(fps)
+        now_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
+        self._window.timingSlider.setValue(int((now_frame / self.allFream) * 100))
+
+        self.qtFrameDisplay(frame)
 
     def issueFramePrint(self, frame):
         def RTcenter(points):
@@ -772,6 +572,24 @@ class MainWindow(object):
                 cv2.putText(frame, typecode[cls], (pts[0], pts[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, new_colors[cls], 2)
 
         return frame
+
+    @QtCore.Slot()
+    def qtFrameDisplay(self, frame):
+        # Ensure the frame is in the correct format and contiguous
+        show = frame[..., ::-1].copy()  # Convert BGR to RGB and make contiguous
+
+        height, width, channel = show.shape
+        bytes_per_line = 3 * width
+
+        # Create QImage from numpy data
+        show_image = QImage(show.data, width, height, bytes_per_line, QImage.Format_RGB888)
+
+        # Create QPixmap from QImage
+        pixmap = QPixmap.fromImage(show_image)
+
+        # Set scaled contents to True to let QLabel handle scaling
+        self._window.display.setScaledContents(True)
+        self._window.display.setPixmap(pixmap)
 
     @QtCore.Slot()
     def load(self):
@@ -1114,7 +932,7 @@ class MainWindow(object):
             # self._window.cutinfo.setText("coutinfo save as\n" + self.cutinfo_txt)
 
     @QtCore.Slot()
-    def show(self):
+    def show_btn_act(self):
         if self.scheduleType == 'off' and self.TIVPmode == 3 and self.currentStep == 9 : # TIVP real time mode edit by user.
             self._window.show_btn.setToolTip('[S9] Show yolo detect.')
         else:
@@ -1205,13 +1023,13 @@ class MainWindow(object):
 
     @QtCore.Slot()
     def setResultFolder(self):
-        temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath) + '/' # Warning : the path setting maybe can not runnung on Lunix OS
-      
-        if temp == "/" :
+        temp = QFileDialog.getExistingDirectory(self._window, 'Select Folder to Result.', self.resultPath)
+    
+        if not temp:
             print("[CANCEL] Set Result Folder Cancel.")
-            
-        else :
-            self.resultPath = temp
+        else:
+            # Ensure there is a trailing separator
+            self.resultPath = os.path.join(temp, '')
             self.setResultFolderBtnText()
             logger.info(f"[Set resultFolder] ->> {self.resultPath}")
             self.changeActionName()
@@ -1229,13 +1047,14 @@ class MainWindow(object):
         self._window.setResultFolder_btn.setText('Set Result Folder\n['+ out +']')
 
     def openResultFolder(self):
-        if os.path.isdir(self.resultPath) :
-            if os.name == 'nt' :
-                QProcess.startDetached('explorer', [os.path.normpath(self.resultPath)])
+        if os.path.isdir(self.resultPath):
+            normalized_path = os.path.normpath(self.resultPath)
+            if os.name == 'nt':
+                QProcess.startDetached('explorer', [normalized_path])
             else:
-                subprocess.call(['xdg-open', os.path.normpath(self.resultPath)])
-        else :
-            print("<< Warinig : Your Result Folder is not exist.")
+                QProcess.startDetached('xdg-open', [normalized_path])
+        else:
+            print("<< Warning: Your Result Folder does not exist.")
 
     def changeStep(self, sp):
         self.currentStep = sp
@@ -1268,7 +1087,7 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 1]")
             if self.precursorCheck():
-                controller.con_step1(self.stab_input, self.stab_output, self.show, self.cutinfo_txt, self.stabMode)
+                controller.con_step1(self.stab_input, self.stab_output, self.show, self.cutinfo_txt, self.stabMode, self.qtFrameDisplay)
                
     @QtCore.Slot()
     def step2(self): # Yolo
@@ -1292,7 +1111,7 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 3]")
             if self.precursorCheck():
-                controller.con_step3(self.stab_video,self.yolo_txt,self.tracking_csv,self.show, conf.getTrk1_Set(), conf.getTrk2_Set())
+                controller.con_step3(self.stab_video, self.yolo_txt, self.tracking_csv, self.show, self.qtFrameDisplay, conf.getTrk1_Set(), conf.getTrk2_Set())
 
     @QtCore.Slot()
     def step4(self): # BackGround
@@ -1304,8 +1123,8 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 4]")
             if self.precursorCheck():
-                controller.con_step4(self.stab_video,self.background_img)
-            
+                controller.con_step4(self.stab_video, self.background_img, self.qtFrameDisplay)
+
     @QtCore.Slot()
     def step5(self): # DrawIO
         self.changeStep(5)
@@ -1340,7 +1159,7 @@ class MainWindow(object):
             if self.scheduleType == 'off':
                 print("[STEP 7]")
             if self.precursorCheck():
-                controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show)
+                controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show, self.qtFrameDisplay)
 
     @QtCore.Slot()
     def step8_singleTIV(self):

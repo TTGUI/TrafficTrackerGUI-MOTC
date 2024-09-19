@@ -10,7 +10,7 @@ class Controller() :
 
 
 
-def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
+def con_step1(stab_input, stab_output, show, cut_txt, StabMode, display_callBack) :
     output_height = conf.getOutput_height()
     output_width = conf.getOutput_width()
     start = time.time()
@@ -19,7 +19,7 @@ def con_step1(stab_input,stab_output,show,cut_txt,StabMode) :
         Kstabilization_GPU.stab_main(stab_input,stab_output,show,cut_txt, output_height, output_width)
     elif StabMode == 'CPU':
         from Model import Kstabilization_T0N
-        Kstabilization_T0N.stab_main(stab_input,stab_output,show,cut_txt, output_height, output_width)
+        Kstabilization_T0N.stab_main(stab_input,stab_output,show,cut_txt, output_height, output_width, display_callBack)
 
     end = time.time()
 
@@ -40,20 +40,20 @@ def con_step2(stab_video, yolo_txt, yolo_model) :
     logger.info( "[Step 2] ->> Cost time : " + str(end-start)  )
     print("[SEPT2 Done.]")
 
-def con_step3(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set) :
+def con_step3(stab_video, yolo_txt, tracking_csv, show, display_callback, trk1_set, trk2_set) :
     from Model import tracking7_6      # New version
     start = time.time()
 
-    tracking7_6.main(stab_video,yolo_txt,tracking_csv,show, trk1_set, trk2_set)     # New version
+    tracking7_6.main(stab_video, yolo_txt, tracking_csv, show, display_callback, trk1_set, trk2_set)     # New version
     end = time.time()
     logger.info( "[Step 3] ->> Cost time : " + str(end-start)  )
     print("[SEPT3 Done.]")
 
-def con_step4(stab_video,background_img) :
+def con_step4(stab_video, background_img, display_callBack) :
     from Model import Nbackground_median
     start = time.time()
 
-    Nbackground_median.Backgroung_main(stab_video,background_img)
+    Nbackground_median.Backgroung_main(stab_video, background_img, display_callBack)
 
     end = time.time()
     logger.info( "[Step 4] ->> Cost time : " + str(end-start)  )
@@ -88,12 +88,12 @@ def con_step6(gateLineIO_txt, tracking_csv, gate_tracking_csv) :
     logger.info( "[Step 6] ->> Cost time : " + str(end-start)  )
     print("[SEPT6 Done.]")
 
-def con_step7(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show) :
+def con_step7(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show, display_callback) :
     # from Model import QReplay
     from Model import Replay2
     start = time.time()
 
-    Replay2.Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show)
+    Replay2.Replay_main(stab_video, result_video, gate_tracking_csv, gateLineIO_txt, displayType, show, display_callback)
 
     end = time.time()
     logger.info( "[Step 7] ->> Cost time : " + str(end-start)  )

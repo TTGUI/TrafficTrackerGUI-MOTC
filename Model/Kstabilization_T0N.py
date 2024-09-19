@@ -37,7 +37,7 @@ class StableVideo:
         self.termination_eps = 5 * 1e-4
         self.criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, self.number_of_iterations, self.termination_eps)
 
-    def stableVideoWithOutputpath(self, outputpath, is_Show=False):
+    def stableVideoWithOutputpath(self, outputpath, display_callBack, is_Show=False ):
         index = 0
         while index < len(self.videolist):
             if self.cutInfoList[index].getKey() != -1:
@@ -113,7 +113,8 @@ class StableVideo:
                     self.Write_costTime += (self.write_E - self.write_S)
 
                     if is_Show:
-                        cv2.imshow('frame', frame)
+                        # cv2.imshow('frame', frame)
+                        display_callBack(frame)
                         if cv2.waitKey(1) == ord('q'):
                             print("Step1 break for keyboard >q< .")
                             break
@@ -204,6 +205,6 @@ if __name__ == '__main__':
     current_STAB = StableVideo('1.mp4', 'cut.txt', 1920, 1080)
     current_STAB.stableVideoWithOutputpath(outputpath='2.avi')
 
-def stab_main(stab_input, stab_output, show, cut_txt, output_height, output_width):
+def stab_main(stab_input, stab_output, show, cut_txt, output_height, output_width, display_callBack):
     current_STAB = StableVideo(stab_input, cut_txt, output_width, output_height)
-    current_STAB.stableVideoWithOutputpath(stab_output, show)
+    current_STAB.stableVideoWithOutputpath(stab_output, display_callBack, show )
