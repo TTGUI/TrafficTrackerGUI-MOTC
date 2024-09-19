@@ -1,5 +1,11 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
+
+### v3.10.6 - 2024/09/19
+#### BugFixed
+- fix Model\tracking7_6.py : cap not define when undisplay mode.
+
+
 ### v3.10.5b - 2024/09/18
 #### Organize
 - update View\my_window.py : improve code structure.
