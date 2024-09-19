@@ -390,8 +390,8 @@ def main(stab_video, yolo_txt, tracking_csv, show, display_callback, trk1_set=(1
                 if zero_ratio < 0.7:
                     writer.writerow([i, data[1], data[1]+len(traj)-1, 'X', 'X', V_type[np.argmax(data[3:11])]] + list(np.array(traj).flatten()) )
                     i += 1
-
-    cap.release()    
+    if show:
+        cap.release()    
     csvfile.close()
     cv2.destroyAllWindows()
 if __name__ == "__main__":
