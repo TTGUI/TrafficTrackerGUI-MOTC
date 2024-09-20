@@ -46,7 +46,7 @@ Model/Stab_ECC_GPU_source/output.avi
 
 # C++ compiled files
 *.obj
-*.exe
+
 *.dll
 *.lib
 *.pdb
@@ -56,8 +56,6 @@ Model/Stab_ECC_GPU_source/output.avi
 
 # Build folders
 Debug/
-Release/
-x64/
 x86/
 
 # CMake generated files

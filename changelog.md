@@ -1,6 +1,11 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
 
+### v3.10.7a - 2024/09/20
+### ORganize
+- add \Model\Stab_ECC_GPU_source\x64\Release\Stab_ECC_GPU_source.exe : prebuild exe file for git clone.
+- update .gitgnore
+
 ### v3.10.7 - 2024/09/19
 #### Bug Fixed
 - fix Model\drawIO2.py, drawIO3.py : read image in BGR mode.
