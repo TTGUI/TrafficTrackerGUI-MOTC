@@ -1,8 +1,13 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
 
+### v3.10.8 - 2024/09/23
+### Improment
+- add Model\tool\temp.ipynb : a test code.
+- update Model\tool\listFiles.py : a tool for visualize files tree.
+
 ### v3.10.7a - 2024/09/20
-### ORganize
+### Organize
 - add \Model\Stab_ECC_GPU_source\x64\Release\Stab_ECC_GPU_source.exe : prebuild exe file for git clone.
 - update .gitgnore
 
