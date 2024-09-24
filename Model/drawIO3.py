@@ -114,7 +114,23 @@ class Draw:
                 fp.write("\n")
                 for i in range(len(self.tpPointsChoose)):
                     fp.write(str(int(self.tpPointsChoose[i][0]*2)) + "," + str(int(self.tpPointsChoose[i][1]*2)) + ",")
-
+        elif event == cv2.EVENT_LBUTTONDOWN and len(self.tpPointsChoose) >= 3 and self.drawing == False:
+            if len(self.pts[self.p_area_num-1]) == 0 and border == True:
+                self.pts[self.p_area_num-1].append((x,y))
+            elif border == True:
+                self.pts[self.p_area_num-1].append((x,y))
+            
+                fp = open(self.io_txt, "a")            
+                fp.write("\n")
+                j = 0
+                for j in range(len(self.pts[self.p_area_num-1])):
+                    fp.write(str(int(self.pts[self.p_area_num-1][j][0]*2))+","+str(int(self.pts[self.p_area_num-1][j][1]*2))+",")
+                fp.close()    
+                
+                self.pts.append([])
+                self.p_area_num = self.p_area_num+1
+            else:
+                self.pts[self.p_area_num-1].append((x,y))
         # Mouse move: Update current position
         elif event == cv2.EVENT_MOUSEMOVE:
             self.point1 = (x, y)
@@ -131,6 +147,7 @@ class Draw:
         self.h, self.w = frame.shape[:2]
         frame = cv2.resize(frame, (int(self.w/2), int(self.h/2)), interpolation=cv2.INTER_CUBIC)
         cv2.setMouseCallback('scene',self.draw_ROI)
+        colors = [(255, 255, 255), (0, 255, 0), (0, 0, 255), (255, 0, 0)]
 
         while True:
             frame2 = frame.copy()
@@ -145,10 +162,18 @@ class Draw:
                 for i in range(-1, len(self.tpPointsChoose)-1):
                     cv2.line(frame2, self.tpPointsChoose[i], self.tpPointsChoose[i+1], self.colors[self.gate[i]], 2)
                 i = 0
+                for i in range(self.p_area_num):
+                    j = 0
+                    for j in range(1, len(self.pts[i])):
+                        cv2.line(frame2, self.pts[i][j-1], self.pts[i][j], colors[3], 2)
+                if len(self.pts[self.p_area_num-1]) > 0:
+                    cv2.line(frame2, self.pts[self.p_area_num-1][-1], self.point1, colors[3], 2)
 
             cv2.imshow('scene', frame2)
-            if cv2.waitKey(1) & 0xFF == ord('q'):  # 按q键退出
+            cv_key = cv2.waitKey(1) 
+            if cv_key == ord('q') or cv_key == ord('Q'):  # 檢查 q 或 Q
                 break
+
             
         cv2.destroyAllWindows() 
         logger.info("[drawIO3.py] ->> save file : " + self.io_txt) 

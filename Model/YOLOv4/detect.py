@@ -293,7 +293,6 @@ def obb_object_detect(source_path='', output_detect_result_path='', yolo_model='
     weight_file_path = yolo_root / 'weights' / yolo_model
     cls_file_path = yolo_root / 'data' / 'classes_vehicle8cls.txt'
     
-    print ( "Yolo Model : " + str(yolo_model))
     with torch.no_grad():
         out, source, weights, view_img, save_txt, imgsz, cfg, names, theta_format, \
         save_img_before_nms, which_dataset, save_label_car_tool_format_txt, \

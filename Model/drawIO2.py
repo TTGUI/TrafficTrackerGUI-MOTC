@@ -144,7 +144,8 @@ class Draw:
                     cv2.line(frame2, self.pts[self.p_area_num-1][-1], self.point1, colors[3], 2)
 
             cv2.imshow('scene', frame2)
-            if cv2.waitKey(1) & 0xFF == ord('q'):  # 按q键退出
+            cv_key = cv2.waitKey(1) 
+            if cv_key == ord('q') or cv_key == ord('Q'):  # 檢查 q 或 Q
                 break
             
         cv2.destroyAllWindows()

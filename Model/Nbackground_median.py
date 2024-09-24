@@ -1,8 +1,7 @@
 import numpy as np
 import cv2
-import scipy.ndimage
-from config import conf
 import os
+from tqdm import tqdm
 
 def Backgroung_main(stab_video, background_img, display_callBack):
     cap = cv2.VideoCapture(stab_video)
@@ -16,19 +15,22 @@ def Backgroung_main(stab_video, background_img, display_callBack):
     fc = 0
     ret = True
 
-    while fc < frameCount and ret:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, fc)
-        ret, frame = cap.read()
-        if ret and fc % skipframes == 0:
-            buf.append(frame)
-            # cv2.imshow("background", frame)
-            cv2.waitKey(20)
-            display_callBack(frame)
-        fc += skipframes
+    with tqdm(total=frameCount, desc="Reading Video Frames", unit="frame") as pbar:
+        while fc < frameCount and ret:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, fc)
+            ret, frame = cap.read()
+            if ret and fc % skipframes == 0:
+                buf.append(frame)
+                # cv2.imshow("background", frame)
+                cv2.waitKey(20)
+                display_callBack(frame)
+            fc += skipframes
+            pbar.update(skipframes)
 
     cap.release()
 
     if len(buf) > 0:
+        print("Merging median pixel...")
         median = np.median(np.array(buf), axis=0).astype(np.uint8)
         
         if os.name == 'nt':

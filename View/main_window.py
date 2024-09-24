@@ -32,6 +32,7 @@ import os
 from .ui_setup import load_ui
 from .ui_setupFont import set_window_title, set_font, reset_ui_labels
 from .ui_setupButtons import setup_all_buttons
+from .ui_Schedule import *
 
 class MainWindow(object):
 
@@ -1067,10 +1068,7 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 0 ")            
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 0]")
-            if self.precursorCheck():
-                
+            if self.scheduleType == 'off' and self.precursorCheck():
                 self.currentEndID = -1
                 self.currentStartID = len(os.listdir(self.droneFolderPath))
 
@@ -1084,8 +1082,6 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 1 ")            
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 1]")
             if self.precursorCheck():
                 controller.con_step1(self.stab_input, self.stab_output, self.show, self.cutinfo_txt, self.stabMode, self.qtFrameDisplay)
                
@@ -1096,8 +1092,6 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 2 ")            
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 2]")
             if self.precursorCheck():
                 controller.con_step2(self.stab_video, self.yolo_txt, self.yoloModel )
 
@@ -1108,8 +1102,6 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 3 ")
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 3]")
             if self.precursorCheck():
                 controller.con_step3(self.stab_video, self.yolo_txt, self.tracking_csv, self.show, self.qtFrameDisplay, conf.getTrk1_Set(), conf.getTrk2_Set())
 
@@ -1120,8 +1112,6 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 4 ")            
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 4]")
             if self.precursorCheck():
                 controller.con_step4(self.stab_video, self.background_img, self.qtFrameDisplay)
 
@@ -1132,8 +1122,6 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 5 ")            
             self.AddScheudle()
         else :  
-            if self.scheduleType == 'off':
-                print("[STEP 5]")
             if self.precursorCheck():
                 controller.con_step5(self.gateLineIO_txt,self.background_img)
 
@@ -1144,8 +1132,6 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 6 ")            
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 6]")
             if self.precursorCheck():    
                 controller.con_step6(self.gateLineIO_txt, self.tracking_csv, self.gate_tracking_csv)
 
@@ -1156,8 +1142,6 @@ class MainWindow(object):
             print("Current Schedule Item Step >> 7 ")            
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 7]")
             if self.precursorCheck():
                 controller.con_step7(self.stab_video, self.result_video, self.gate_tracking_csv, self.gateLineIO_txt, self.displayType, self.show, self.qtFrameDisplay)
 
@@ -1168,9 +1152,7 @@ class MainWindow(object):
             print("Current Schedule Item Step >> TIV ")            
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 8 - TIV]")
-            if self.precursorCheck():
+            if self.scheduleType == 'off' and self.precursorCheck():
                 return controller.con_TIVT(self.gate_tracking_csv, self.singelTIVpath)
 
     @QtCore.Slot()  
@@ -1180,10 +1162,8 @@ class MainWindow(object):
             print("Current Schedule Item Step >> TIVPrinter ")
             self.AddScheudle()
         else :
-            if self.scheduleType == 'off':
-                print("[STEP 9 - TIVP]")
-            if self.TIVPmode == 3 :
-                if self.precursorCheck():
+            if self.TIVPmode == 3 and self.precursorCheck():
+                    print("[STEP 9 - TIVP-R]")
                     def read_file(file_name):
                         with open(file_name, 'r') as f:
                             lines = f.readlines()
@@ -1191,8 +1171,7 @@ class MainWindow(object):
                     
                     self.currentTIVP8cls = read_file(self.yolo_txt)
                     self.TIVfileLoad()
-            else :
-                if self.precursorCheck():
+            elif self.precursorCheck():
                     controller.con_TIVP(self.singelTIVpath, self.gateLineIO_txt, self.stab_video, self.resultPath, self.actionName, self.gate_tracking_csv, self.background_img )  
     
     def TIVfileLoad(self):
@@ -1502,7 +1481,8 @@ class MainWindow(object):
         for i in range(self.currentScheduleIndex ,len(self.ScheduleList)):
             self.currentScheduleIndex = i
             self.displayInfo(3)
-            sch = '=====================================\n[Schedule ' + str(i+1) +' / ' + str(len(self.ScheduleList))+' ]'
+
+            sch = '==================[Schedule ' + str(i+1) +' / ' + str(len(self.ScheduleList))+' ]'
             self.displayType = self.ScheduleList[i].DisplayID
             self.show = self.ScheduleList[i].Show
             
@@ -1512,35 +1492,35 @@ class MainWindow(object):
             self.flashActionName()
 
             if self.ScheduleList[i].step == 0:
-                logger.info(sch + " - [STEP 0]")
+                logger.info(sch + " - [STEP 0]==================")
                 self.step0()
                 return
             elif self.ScheduleList[i].step == 1:
-                logger.info(sch + " - [STEP 1]")
+                logger.info(sch + " - [STEP 1]==================")
                 self.step1()
             elif self.ScheduleList[i].step == 2:
-                logger.info(sch + " - [STEP 2]")
+                logger.info(sch + " - [STEP 2]==================")
                 self.step2()
             elif self.ScheduleList[i].step == 3:
-                logger.info(sch + " - [STEP 3]")
+                logger.info(sch + " - [STEP 3]==================")
                 self.step3()                
             elif self.ScheduleList[i].step == 4:
-                logger.info(sch + " - [STEP 4]")
+                logger.info(sch + " - [STEP 4]==================")
                 self.step4()                
             elif self.ScheduleList[i].step == 5:
-                logger.info(sch + " - [STEP 5]")
+                logger.info(sch + " - [STEP 5]==================")
                 self.step5()
             elif self.ScheduleList[i].step == 6:
-                logger.info(sch + " - [STEP 6]")
+                logger.info(sch + " - [STEP 6]==================")
                 self.step6()
             elif self.ScheduleList[i].step == 7:
-                logger.info(sch + " - [STEP 7]")
+                logger.info(sch + " - [STEP 7]==================")
                 self.step7()
             elif self.ScheduleList[i].step == 8:
-                logger.info(sch + " - [STEP 8 - TIV]")
+                logger.info(sch + " - [STEP 8 - TIV]==================")
                 self.step8_singleTIV()
             elif self.ScheduleList[i].step == 9:
-                logger.info(sch + " - [STEP 9 - TIVP]")
+                logger.info(sch + " - [STEP 9 - TIVP]==================")
                 self.step9_TIVPrinter()
         
         if self.scheduleTIVFolderPath == "" :

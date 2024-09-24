@@ -1,5 +1,5 @@
-Version=v3.10.8
-Step1_StabMode=CPU
+Version=v3.10.9
+Step1_StabMode=GPU
 Trk1_Set=10,2,0.05
 Trk2_Set=10,2,0.1
 YoloModel=best_20230414_7.4.2.pt

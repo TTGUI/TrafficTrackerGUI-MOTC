@@ -1,13 +1,22 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
 
+### v3.10.9 - 2024/09/24
+#### Improment
+- update Model\drawIO3.py : add back drawing pedestriantion area.
+- update Model\drawIO2.py, drawIO3.py : break function by both 'q' and 'Q' key.
+- update logs\logger.py : fix wrong text.
+#### Organize
+- update cont\controller.py, logs\logger.pt, Model\YOLOv5\detect.py, View\main_window.py : update log format.
+- update Model\Nbackground_median.py : update timer.
+
 ### v3.10.8 - 2024/09/23
-### Improment
+#### Improment
 - add Model\tool\temp.ipynb : a test code.
 - update Model\tool\listFiles.py : a tool for visualize files tree.
 
 ### v3.10.7a - 2024/09/20
-### Organize
+#### Organize
 - add \Model\Stab_ECC_GPU_source\x64\Release\Stab_ECC_GPU_source.exe : prebuild exe file for git clone.
 - update .gitgnore
 
