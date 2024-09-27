@@ -1,5 +1,13 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
+### v3.11.0 - 2024/09/27
+#### Improment
+- add Model\sort8.py : new tracking logic for tracking7_6.py.
+- update Model\tracking7_6.py : use new tracking logic sort8. Now stab video are not necessary.
+#### Organize
+- update View\main_window.py : new code structure.
+- add View\ui_BaseManager.py, ui_Developer.py, ui_DisplayInfo.py, ui_Player.py, ui_Schedule.py, ui_Step.py, ui_setupFont.py : new code structure.
+- move Model\sort6.py to abandonedCodes.
 
 ### v3.10.9 - 2024/09/24
 #### Improment

@@ -3,7 +3,7 @@ import math
 import numpy as np
 import csv
 from collections import Counter
-from Model.sort7 import SORT
+from Model.sort8 import SORT
 from shapely.geometry import Polygon
 from tqdm import tqdm
 
@@ -275,7 +275,7 @@ def process_trajectory(quadrilateral_positions):
 
     return new_positions
 
-def main(stab_video, yolo_txt, tracking_csv, show, display_callback, trk1_set=(10, 2, 0.05), trk2_set=(10, 2, 0.1) ):
+def main(yolo_txt, tracking_csv, show, display_callback, trk1_set=(10, 2, 0.05), trk2_set=(10, 2, 0.1) , stab_video=None):
     lines = read_file(yolo_txt)
 
     if show:

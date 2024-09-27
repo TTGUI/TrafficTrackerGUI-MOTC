@@ -5,7 +5,7 @@ from config import conf
 from PySide2.QtWidgets import QSizePolicy
 from PySide2 import QtCore
 
-def set_window_title(window, conf, stab_mode, yolo_model, section, icon_path = './View/icon.png'):
+def set_window_title(window,  stab_mode, yolo_model, section, icon_path = './View/icon.png'):
     """Setup window icon and title"""
     
     if Path(icon_path).is_file():
