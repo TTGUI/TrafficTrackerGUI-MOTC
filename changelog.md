@@ -1,5 +1,10 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
+
+### v3.11.1 - 2024/10/07
+#### Bug Fixed
+- fix View\ui_Step.py : setResultBtnText failed. 
+
 ### v3.11.0 - 2024/09/27
 #### Improment
 - add Model\sort8.py : new tracking logic for tracking7_6.py.
@@ -7,7 +12,7 @@
 #### Organize
 - update View\main_window.py : new code structure.
 - add View\ui_BaseManager.py, ui_Developer.py, ui_DisplayInfo.py, ui_Player.py, ui_Schedule.py, ui_Step.py, ui_setupFont.py : new code structure.
-- move Model\sort6.py to abandonedCodes.
+- move Model\sort7.py to abandonedCodes.
 
 ### v3.10.9 - 2024/09/24
 #### Improment

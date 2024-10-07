@@ -117,7 +117,7 @@ class StepManager(BaseManager):
         else:
             # Ensure there is a trailing separator
             self.main_window.resultPath = os.path.join(temp, '')
-            self.main_window.setResultFolderBtnText()
+            self.setResultFolderBtnText()
             logger.info(f"[Set resultFolder] ->> {self.main_window.resultPath}")
             self.changeActionName()
     Slot()           

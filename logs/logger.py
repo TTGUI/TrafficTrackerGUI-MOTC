@@ -35,6 +35,7 @@ else:
 #filehandler=logging.FileHandler(logfile)
 filehandler.setFormatter(formatter)
 logger.addHandler(filehandler)
+logger.info(r"///////////////////////////////////////////////////////////////////////////////////////")
 logger.info(f"[PID {os.getpid()}]\t[LOGGER START RECORD.][TTGUI {conf.getVersion()}][LOGGIN LEVEL {logger.level}]")
 
 def debug(msg):
