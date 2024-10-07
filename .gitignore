@@ -33,6 +33,12 @@ Model/Stab_ECC_GPU_source/output.avi
 Model/Stab_ECC_GPU_source/x64/Release/output.avi
 Model/Stab_ECC_GPU_source/x64/Release/cut.txt
 Model/Stab_ECC_GPU_source/x64/Release/demo/
+Model/Stab_ECC_GPU_source/x64/Release/Stab_ECC_GPU_source.exe.recipe
+Model/Stab_ECC_GPU_source/x64/Release/Stab_ECC_GPU_source.iobj
+Model/Stab_ECC_GPU_source/x64/Release/Stab_ECC_GPU_source.ipdb
+Model/Stab_ECC_GPU_source/x64/Release/Stab_ECC_GPU_source.vcxproj.FileListAbsolute.txt
+*.exe
+Model/Stab_ECC_GPU_source/x64/Release/Stab_ECC_GPU_source.exe
 
 # Visual Studio generated files
 .vscode/
@@ -141,6 +147,8 @@ ENV/
 .pytype/
 .pyre/
 cython_debug/
+
+
 
 
 

@@ -1,6 +1,10 @@
 # TTGUI - Traffic Tracker GUI
 ## Changelog
 
+### v3.11.1a - 2024/10/07
+#### Organize
+- update .gitignore
+
 ### v3.11.1 - 2024/10/07
 #### Bug Fixed
 - fix View\ui_Step.py : setResultBtnText failed. 
